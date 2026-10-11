@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : drupal. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit 427f4f7fc93e, 2026-10-04), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <paas_spec_version>v2.9.0</paas_spec_version>
+  <app><name>drupal</name><version>11.4.7</version></app>
+  <build><runtime>php</runtime><runtime_version>8.4.26</runtime_version>
+    <recipe>php-8.4.26-apache-alpine-iconv-v7</recipe><catalogue>2026.10.04.php.20</catalogue>
+    <php><extensions><item>apcu</item><item>ctype</item><item>gmp</item><item>iconv</item><item>intl</item><item>opcache</item><item>pcntl</item><item>pdo_mysql</item><item>pdo_sqlite</item><item>posix</item><item>simplexml</item><item>sodium</item><item>tokenizer</item><item>xmlreader</item><item>xmlwriter</item></extensions>
+      <dependency_mode>composer-install-lock-v1</dependency_mode><composer_version>2.10.3</composer_version>
+      <composer_local_packages>true</composer_local_packages><composer_root_version>11.4.7</composer_root_version>
+      <composer_plugins><item>symfony/runtime</item></composer_plugins>
+      <composer_lock_patch_sha256>4d2c2f58ad83b12872518f64adae629bb6689a4b37a0ae61ad4c4d5650544e54</composer_lock_patch_sha256>
+      <runtime_exclude_paths><item>core/modules/package_manager/tests</item></runtime_exclude_paths>
+      <ini><memory_limit>512M</memory_limit><upload_max_filesize>24M</upload_max_filesize><post_max_size>26M</post_max_size></ini>
+    </php><test><command>php -l index.php &amp;&amp; php -l core/install.php</command></test>
+  </build>
+  <processes><item><name>web</name><type>web</type><replicas>1</replicas><argv><item>httpd</item><item>-DFOREGROUND</item></argv><port>8080</port></item></processes>
+  <resources><cpu>1</cpu><memory>1Gi</memory></resources>
+  <healthcheck><path>/user/login</path><port>8080</port></healthcheck>
+  <web><https>true</https><front_controller>index.php</front_controller>
+    <deny><item>vendor</item><item>sites/default/settings.php</item><item>sites/default/services.yml</item><item>core/scripts</item><item>core/recipes</item></deny>
+    <static_paths><item>sites/default/files</item></static_paths>
+    <fallback><item>sites/default/files/css</item><item>sites/default/files/js</item><item>sites/default/files/styles</item></fallback>
+  </web>
+  <services><database><type>mysql</type><version>8.4.10</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls><ca_file>/data/mysql-ca.pem</ca_file>
+    <env><DRUPAL_DB_HOST>{{services.database.host}}</DRUPAL_DB_HOST><DRUPAL_DB_PORT>{{services.database.port}}</DRUPAL_DB_PORT><DRUPAL_DB_USER>{{services.database.user}}</DRUPAL_DB_USER><DRUPAL_DB_PASSWORD>{{services.database.password}}</DRUPAL_DB_PASSWORD><DRUPAL_DB_NAME>{{services.database.database}}</DRUPAL_DB_NAME><DRUPAL_DB_CA>{{services.database.ca_file}}</DRUPAL_DB_CA></env>
+  </database></services>
+  <storage><volumes>
+    <item><name>state</name><mount>/data</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item>
+    <item><name>files</name><mount>/app/sites/default/files</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item>
+  </volumes>
+  </storage>
+  <lifecycle><lock>true</lock><interrupted>resume</interrupted><state_directory>/data/lifecycle</state_directory>
+    <install_php><requires><item>autoload.php</item><item>core/includes/install.core.inc</item></requires>
+      <function>install_drupal</function><timeout_seconds>900</timeout_seconds>
+      <arguments><item><require_result>autoload.php</require_result></item><item><json><![CDATA[{
+        "interactive": false, "site_path": "sites/default",
+        "parameters": {"profile": "", "recipe": "/app/core/recipes/paas-site", "langcode": "en"},
+        "forms": {"install_configure_form": {
+          "site_name": "{{account.title}}", "site_mail": "{{account.email}}",
+          "account": {"name": "{{account.username}}", "mail": "{{account.email}}", "pass": {"pass1": "{{account.password}}", "pass2": "{{account.password}}"}},
+          "enable_update_status_module": false, "enable_update_status_emails": null
+        }}
+      }]]></json></item></arguments>
+    </install_php>
+    <upgrade><argv><item>php</item><item>core/scripts/dr</item><item>recipe</item><item>core/recipes/paas-content</item><item>--no-interaction</item></argv><timeout_seconds>600</timeout_seconds></upgrade>
+    <checks>
+      <item><phase>before-install</phase><service>database</service><query>SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()</query><parameters/><equals>0</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM users_field_data WHERE uid = 1 AND name = ? AND mail = ? AND status = 1</query><parameters><item>{{account.username}}</item><item>{{account.email}}</item></parameters><equals>1</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM config WHERE name IN ('node.type.article', 'node.type.page')</query><parameters/><equals>2</equals></item>
+      <item><phase>before-upgrade</phase><service>database</service><query>SELECT COUNT(*) FROM users_field_data WHERE uid = 1 AND name = ? AND mail = ? AND status = 1</query><parameters><item>{{account.username}}</item><item>{{account.email}}</item></parameters><equals>1</equals></item>
+    </checks>
+  </lifecycle>
+  <account><username>administrator</username><email>administrator@example.invalid</email><title>Drupal PaaS XML</title><constraints><password_min>32</password_min><password_max>64</password_max></constraints></account>
+  <!-- Compte de test paasadmin : mot de passe scellé pour la plateforme, créé par les formulaires natifs. -->
+  <accounts><item><username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <http><timeout_seconds>180</timeout_seconds><steps>
+      <item><method>POST</method><path>/index.php/user/login</path>
+        <form><name>{{account.username}}</name><pass>{{account.password}}</pass><op>Log in</op></form></item>
+      <item><method>POST</method><path>/index.php/admin/people/create</path>
+        <form><mail>{{user.email}}</mail><name>{{user.username}}</name>
+          <entry key="pass[pass1]">{{user.password}}</entry><entry key="pass[pass2]">{{user.password}}</entry>
+          <status>1</status><entry key="roles[administrator]">administrator</entry><op>Create new account</op>
+        </form><expect_body>Created a new user account for</expect_body></item>
+    </steps></http>
+  </item></accounts>
+  <secrets><HASH_SALT><generate>hex</generate><bytes>32</bytes><rotate>never</rotate></HASH_SALT>
+    <PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+  <files><item><path>sites/default/settings.php</path><mode>0440</mode><render>build</render><template><![CDATA[<?php
+$databases['default']['default'] = [
+  'driver' => 'mysql', 'namespace' => 'Drupal\\mysql\\Driver\\Database\\mysql',
+  'autoload' => 'core/modules/mysql/src/Driver/Database/mysql/',
+  'host' => getenv('DRUPAL_DB_HOST'), 'port' => getenv('DRUPAL_DB_PORT'),
+  'database' => getenv('DRUPAL_DB_NAME'), 'username' => getenv('DRUPAL_DB_USER'),
+  'prefix' => '',
+  'pdo' => [PDO::MYSQL_ATTR_SSL_CA => getenv('DRUPAL_DB_CA'), PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true],
+  'init_commands' => ['isolation_level' => 'SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED']
+];
+$databases['default']['default']['password'] = getenv('DRUPAL_DB_PASSWORD');
+$settings['hash_salt'] = getenv('HASH_SALT');
+$settings['config_sync_directory'] = '/data/config/sync';
+$settings['file_public_path'] = 'sites/default/files';
+$settings['file_private_path'] = '/data/private';
+]]></template></item>
+    <item><path>core/recipes/paas-site/recipe.yml</path><mode>0444</mode><render>build</render><template><![CDATA[name: PaaS site
+description: Standard Drupal site with articles and pages.
+type: Site
+recipes:
+  - core/recipes/standard
+  - core/recipes/article_content_type
+  - core/recipes/page_content_type
+]]></template></item>
+    <item><path>core/recipes/paas-content/recipe.yml</path><mode>0444</mode><render>build</render><template><![CDATA[name: PaaS content types
+description: Native article and page configuration.
+type: Content type
+recipes:
+  - core/recipes/article_content_type
+  - core/recipes/page_content_type
+]]></template></item>
+    <item><path>/data/config/sync/.paas-directory</path><mode>0640</mode><render>start</render><template>Drupal configuration sync directory</template></item>
+    <item><path>/data/private/.paas-directory</path><mode>0640</mode><render>start</render><template>Drupal private files directory</template></item>
+  </files>
+</paas>

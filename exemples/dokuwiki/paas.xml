@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : dokuwiki. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit 149950137c8d, 2026-10-04), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <paas_spec_version>v2.9.0</paas_spec_version>
+  <app><name>dokuwiki</name><version>2026-07-14c</version></app>
+  <build>
+    <runtime>php</runtime><runtime_version>8.4.26</runtime_version>
+    <recipe>php-8.4.26-apache-alpine-iconv-v7</recipe><catalogue>2026.10.04.php.20</catalogue>
+    <php><extensions><item>apcu</item><item>ctype</item><item>gmp</item><item>iconv</item><item>intl</item><item>opcache</item><item>pcntl</item><item>pdo_mysql</item><item>pdo_sqlite</item><item>posix</item><item>simplexml</item><item>sodium</item><item>tokenizer</item><item>xmlreader</item><item>xmlwriter</item></extensions>
+      <dependency_mode>composer-locked-git-v2</dependency_mode>
+      <vendor_policy>production-packages-only</vendor_policy>
+      <ini><memory_limit>256M</memory_limit><upload_max_filesize>24M</upload_max_filesize><post_max_size>26M</post_max_size></ini>
+    </php>
+    <test><command>php -l index.php &amp;&amp; php -l doku.php</command></test>
+  </build>
+  <processes><item><name>web</name><type>web</type><replicas>1</replicas><argv><item>httpd</item><item>-DFOREGROUND</item></argv><port>8080</port></item></processes>
+  <resources><cpu>1</cpu><memory>512Mi</memory></resources>
+  <healthcheck><path>/doku.php</path><port>8080</port></healthcheck>
+  <web><https>true</https><deny><item>conf</item><item>data</item><item>inc</item><item>vendor</item><item>bin</item><item>_test</item><item>install.php</item></deny></web>
+  <storage>
+    <volumes><item><name>state</name><mount>/data</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item></volumes>
+    <links><item><path>/app/data</path><target>/data/data</target></item><item><path>/app/conf</path><target>/data/conf</target></item></links>
+    <seeds><item><from>/app/data</from><to>/data/data</to><policy>absent-only</policy></item><item><from>/app/conf</from><to>/data/conf</to><policy>absent-only</policy></item></seeds>
+  </storage>
+  <lifecycle><lock>true</lock><interrupted>resume</interrupted><state_directory>/data/lifecycle</state_directory>
+    <install_http><timeout_seconds>120</timeout_seconds><steps><item>
+      <method>POST</method><path>/install.php?l=en</path>
+      <form><submit>Save</submit><l>en</l>
+        <entry key="d[title]">{{account.title}}</entry><entry key="d[acl]">1</entry>
+        <entry key="d[superuser]">{{account.username}}</entry><entry key="d[fullname]">{{account.username}}</entry>
+        <entry key="d[email]">{{account.email}}</entry><entry key="d[password]">{{account.password}}</entry>
+        <entry key="d[confirm]">{{account.password}}</entry><entry key="d[policy]">2</entry>
+        <entry key="d[allowreg]">0</entry><entry key="d[license]">cc-by-sa</entry>
+      </form><expect_body>The configuration was finished successfully.</expect_body>
+    </item></steps></install_http>
+    <file_checks>
+      <item><phase>ready</phase><path>/data/conf/users.auth.php</path><contains>{{account.username}}:</contains></item>
+      <item><phase>ready</phase><path>/data/conf/users.auth.php</path><contains>:{{account.email}}:admin,user</contains></item>
+      <item><phase>before-upgrade</phase><path>/data/conf/users.auth.php</path><contains>:{{account.email}}:admin,user</contains></item>
+    </file_checks>
+  </lifecycle>
+  <account><username>administrator</username><email>administrator@example.invalid</email><title>DokuWiki PaaS XML</title>
+    <constraints><password_min>32</password_min><password_max>64</password_max></constraints>
+  </account>
+  <!-- Compte de test paasadmin : mot de passe scellé pour la plateforme, créé par le gestionnaire d'utilisateurs natif. -->
+  <accounts><item><username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <http><timeout_seconds>120</timeout_seconds><steps>
+      <item><method>POST</method><path>/doku.php?do=login</path>
+        <form><u>{{account.username}}</u><p>{{account.password}}</p></form></item>
+      <item><method>POST</method><path>/doku.php?do=admin&amp;page=usermanager</path>
+        <form><entry key="fn[add]">Add</entry><userid>{{user.username}}</userid>
+          <userpass>{{user.password}}</userpass><userpass2>{{user.password}}</userpass2>
+          <username>{{user.username}}</username><usermail>{{user.email}}</usermail><usergroups>admin,user</usergroups>
+        </form><expect_body>User added successfully</expect_body></item>
+    </steps></http>
+  </item></accounts>
+  <secrets><PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+</paas>

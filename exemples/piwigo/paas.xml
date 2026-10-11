@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : piwigo. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit f36c5e6bb66d, 2026-10-08), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <!-- Piwigo 16.4.0 : arbre du tag officiel (GitHub Piwigo/Piwigo, tag 16.4.0, commit bef1a4ac424b4e986589e4cfc9f4d134f1b16f15),
+       inchangé ; seul ajout au contenu amont : ce fichier. -->
+  <paas_spec_version>v2.23.0</paas_spec_version>
+  <app><name>piwigo</name><version>16.4.0</version></app>
+  <build>
+    <runtime>php</runtime><runtime_version>8.4.26</runtime_version>
+    <recipe>php-8.4.26-apache-alpine-cache-v5</recipe><catalogue>2026.10.07.php.21</catalogue>
+    <php>
+      <!-- Recette avec pcntl et posix : supervision du cycle de vie et relais MySQL local de la plateforme ; GD (de base) pour les vignettes. -->
+      <extensions><item>apcu</item><item>ctype</item><item>gmp</item><item>intl</item><item>opcache</item><item>pcntl</item><item>pdo_mysql</item>
+        <item>pdo_sqlite</item><item>posix</item><item>simplexml</item><item>sodium</item><item>tokenizer</item><item>xmlreader</item><item>xmlwriter</item></extensions>
+      <!-- Piwigo livre ses bibliothèques dans son arbre, sans gestionnaire de paquets. -->
+      <dependency_mode>bundled-git-v1</dependency_mode>
+      <ini><memory_limit>256M</memory_limit><upload_max_filesize>64M</upload_max_filesize><post_max_size>70M</post_max_size></ini>
+    </php>
+    <test><command>php -l index.php &amp;&amp; php -l ws.php &amp;&amp; php -l install.php &amp;&amp; php -l i.php</command></test>
+  </build>
+  <processes><item><name>web</name><type>web</type><replicas>1</replicas><argv><item>httpd</item><item>-DFOREGROUND</item></argv><port>8080</port></item></processes>
+  <resources><cpu>1</cpu><memory>1Gi</memory></resources>
+  <healthcheck><path>/</path><port>8080</port></healthcheck>
+  <!-- La galerie, l'administration (admin.php) et l'API (ws.php) sont servies ; l'installateur, la configuration locale,
+       les outils, les gabarits compilés, les caches et les journaux ne le sont jamais. Les répertoires du volume
+       (photos, envois, dérivés, ressources combinées, personnalisation locale) sont statiques : aucun PHP n'y
+       s'exécute. L'adresse de la requête est celle du client vue par la passerelle (relais de la plateforme approuvés). -->
+  <web><https>true</https><front_controller>index.php</front_controller><trusted_proxies>platform</trusted_proxies>
+    <deny><item>install</item><item>install.php</item><item>upgrade.php</item><item>local/config</item><item>local/language</item><item>tools</item><item>doc</item><item>docs</item>
+      <item>_data/templates_c</item><item>_data/cache</item><item>_data/logs</item><item>_data/tmp</item></deny>
+    <static_paths><item>upload</item><item>galleries</item><item>_data</item><item>local</item></static_paths>
+  </web>
+  <!-- MySQL dédié ; Piwigo (mysqli) n'ouvre pas TLS lui-même : il passe par le relais local de la plateforme, qui chiffre
+       la connexion et vérifie le certificat du service. -->
+  <services><database>
+    <type>mysql</type><version>8.4.10</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls>
+    <ca_file>/data/mysql-ca.pem</ca_file>
+    <local_endpoint><port>13306</port></local_endpoint>
+  </database></services>
+  <!-- La configuration locale (écrite par l'installateur), les données de travail (_data), les photos (galleries) et les
+       envois vivent dans le volume ; _data et upload n'existent pas avant que Piwigo les crée. -->
+  <storage>
+    <volumes><item><name>state</name><mount>/data</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item></volumes>
+    <links>
+      <item><path>/app/local</path><target>/data/local</target></item>
+      <item><path>/app/galleries</path><target>/data/galleries</target></item>
+      <item><path>/app/_data</path><target>/data/_data</target><create>directory</create></item>
+      <item><path>/app/upload</path><target>/data/upload</target><create>directory</create></item>
+    </links>
+    <seeds>
+      <item><from>/app/local</from><to>/data/local</to><policy>absent-only</policy></item>
+      <item><from>/app/galleries</from><to>/data/galleries</to><policy>absent-only</policy></item>
+    </seeds>
+  </storage>
+  <!-- Configuration locale de Piwigo (local/config/config.inc.php, lue après sa configuration par défaut), rendue à
+       chaque démarrage, sans aucune surcharge : l'adresse du client est celle que la passerelle a vue
+       (web.trusted_proxies), la session liée à l'adresse (réglage d'origine) fonctionne telle quelle. -->
+  <files>
+    <item><path>/data/local/config/config.inc.php</path><mode>0640</mode><render>start</render><template><![CDATA[<?php
+// Piwigo — configuration locale rendue par la plateforme (paas.xml) à chaque démarrage : aucune surcharge.
+// L'adresse du client est celle que la passerelle de la plateforme a vue (web.trusted_proxies).
+]]></template></item>
+  </files>
+  <lifecycle><lock>true</lock><interrupted>resume</interrupted><state_directory>/data/lifecycle</state_directory>
+    <!-- Installateur web natif de Piwigo : base (relais local), schéma et compte webmestre ; sans abonnement à la lettre
+       d'information ni envoi des identifiants par courrier. -->
+    <install_http><timeout_seconds>600</timeout_seconds><steps>
+      <item><method>POST</method><path>/install.php?language=en_UK</path>
+        <form><dbhost>127.0.0.1:{{services.database.local_port}}</dbhost><dbuser>{{services.database.user}}</dbuser>
+          <dbpasswd>{{services.database.password}}</dbpasswd><dbname>{{services.database.database}}</dbname><prefix>piwigo_</prefix>
+          <admin_name>{{account.username}}</admin_name><admin_pass1>{{account.password}}</admin_pass1>
+          <admin_pass2>{{account.password}}</admin_pass2><admin_mail>{{account.email}}</admin_mail><install>Start installation</install></form>
+        <expect_body>Congratulations, Piwigo installation is completed</expect_body></item>
+    </steps></install_http>
+    <checks>
+      <item><phase>before-install</phase><service>database</service><query>SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()</query><equals>0</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM piwigo_users u JOIN piwigo_user_infos i ON i.user_id = u.id WHERE u.username = ? AND u.mail_address = ? AND i.status = 'webmaster'</query><parameters><item>{{account.username}}</item><item>{{account.email}}</item></parameters><equals>1</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM piwigo_users u JOIN piwigo_user_infos i ON i.user_id = u.id WHERE u.username = 'paasadmin' AND u.mail_address = 'paasadmin@example.com' AND i.status = 'normal'</query><equals>1</equals></item>
+      <item><phase>before-upgrade</phase><service>database</service><query>SELECT COUNT(*) FROM piwigo_users WHERE username = ?</query><parameters><item>{{account.username}}</item></parameters><equals>1</equals></item>
+    </checks>
+  </lifecycle>
+  <account><username>administrator</username><email>administrator@example.invalid</email><title>Piwigo PaaS XML</title>
+    <constraints><password_min>32</password_min><password_max>64</password_max></constraints>
+  </account>
+  <!-- Compte de test paasadmin (utilisateur ordinaire) : API native de Piwigo, après connexion du webmestre ; le jeton anti-CSRF
+       de la session (pwg_token) est relu dans le statut de la session. -->
+  <accounts><item><username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <http><timeout_seconds>120</timeout_seconds><steps>
+      <item><method>POST</method><path>/ws.php?format=json&amp;method=pwg.session.login</path><direct>true</direct>
+        <form><username>{{account.username}}</username><password>{{account.password}}</password></form><expect_body>"stat":"ok"</expect_body></item>
+      <item><method>GET</method><path>/ws.php?format=json&amp;method=pwg.session.getStatus</path>
+        <expect_body>"status":"webmaster"</expect_body><capture><token>/result/pwg_token</token></capture></item>
+      <item><method>POST</method><path>/ws.php?format=json&amp;method=pwg.users.add</path><direct>true</direct>
+        <form><username>{{user.username}}</username><password>{{user.password}}</password><password_confirm>{{user.password}}</password_confirm>
+          <email>{{user.email}}</email><send_password_by_mail>false</send_password_by_mail><pwg_token>{{capture.token}}</pwg_token></form>
+        <expect_body>"stat":"ok"</expect_body></item>
+    </steps></http>
+  </item></accounts>
+  <secrets><PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+</paas>

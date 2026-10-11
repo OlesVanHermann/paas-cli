@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : bookstack. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit ce317476b2f7, 2026-10-04), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <!-- Sources GitHub v26.09.1, commit 31d94dd8b98e3334dc01b66bed6d514719a2f85d.
+       Le seul ajout au contenu amont est ce fichier XML.
+       Les capacités encore absentes sont consignées dans le cahier des charges PaaS. -->
+  <paas_spec_version>v2.9.0</paas_spec_version>
+  <app><name>bookstack</name><version>26.09.1</version></app>
+  <build>
+    <runtime>php</runtime>
+    <runtime_version>8.4.26</runtime_version>
+    <distribution>alpine</distribution>
+    <platform>linux/amd64</platform>
+    <recipe>php-8.4.26-apache-alpine-iconv-v7</recipe>
+    <catalogue>2026.10.04.php.20</catalogue>
+    <php>
+      <extensions>
+        <item>apcu</item><item>ctype</item><item>gmp</item><item>iconv</item>
+        <item>intl</item><item>opcache</item><item>pcntl</item><item>pdo_mysql</item>
+        <item>pdo_sqlite</item><item>posix</item><item>simplexml</item><item>sodium</item>
+        <item>tokenizer</item><item>xmlreader</item><item>xmlwriter</item>
+      </extensions>
+      <dependency_mode>composer-install-lock-v1</dependency_mode>
+      <composer_version>2.10.3</composer_version>
+      <ini>
+        <memory_limit>512M</memory_limit>
+        <upload_max_filesize>50M</upload_max_filesize>
+        <post_max_size>55M</post_max_size>
+      </ini>
+    </php>
+    <frontend><mode>prebuilt-public-git-v1</mode></frontend>
+    <test><command>php -l public/index.php &amp;&amp; php -l artisan</command></test>
+  </build>
+  <processes><item>
+    <name>web</name><type>web</type><replicas>1</replicas>
+    <argv><item>httpd</item><item>-DFOREGROUND</item></argv><port>8080</port>
+  </item></processes>
+  <resources><cpu>1</cpu><memory>1Gi</memory></resources>
+  <healthcheck><path>/login</path><port>8080</port></healthcheck>
+  <web>
+    <document_root>public</document_root>
+    <deny><item>uploads/.paas-private</item><item>paas.xml</item><item>paas.toml</item></deny>
+    <https>true</https>
+    <static_paths><item>uploads</item></static_paths>
+  </web>
+  <services><database>
+    <type>mysql</type><version>8.4.10</version><storage>1Gi</storage>
+    <provider>dedicated</provider><tls>required</tls>
+    <ca_file>/data/mysql-ca.pem</ca_file>
+    <env>
+      <DATABASE_URL>{{services.database.url}}?charset=utf8mb4&amp;options%5B1009%5D={{services.database.ca_file}}&amp;options%5B1014%5D=1</DATABASE_URL>
+      <MYSQL_ATTR_SSL_CA>{{services.database.ca_file}}</MYSQL_ATTR_SSL_CA>
+    </env>
+  </database></services>
+  <storage>
+    <volumes><item>
+    <name>uploads</name><mount>/app/public/uploads</mount><size>2Gi</size>
+    <access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete>
+    <processes><item>web</item></processes>
+    </item><item>
+      <name>state</name><mount>/data</mount><size>1Gi</size>
+      <access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete>
+      <processes><item>web</item></processes>
+    </item></volumes>
+    <links>
+      <item><path>/app/storage</path><target>/data/storage</target></item>
+      <item><path>/app/bootstrap/cache</path><target>/data/bootstrap-cache</target></item>
+    </links>
+    <seeds>
+      <item><from>/app/storage</from><to>/data/storage</to><policy>absent-only</policy></item>
+      <item><from>/app/bootstrap/cache</from><to>/data/bootstrap-cache</to><policy>absent-only</policy></item>
+    </seeds>
+  </storage>
+  <lifecycle>
+    <lock>true</lock><interrupted>resume</interrupted>
+    <state_directory>/data/lifecycle</state_directory>
+    <prepare><argv><item>php</item><item>artisan</item><item>config:clear</item><item>--no-interaction</item></argv><timeout_seconds>60</timeout_seconds></prepare>
+    <install><argv><item>php</item><item>artisan</item><item>migrate</item><item>--force</item><item>--no-interaction</item></argv><timeout_seconds>600</timeout_seconds></install>
+    <upgrade><argv><item>php</item><item>artisan</item><item>migrate</item><item>--force</item><item>--no-interaction</item></argv><timeout_seconds>600</timeout_seconds></upgrade>
+    <init><item>php</item><item>artisan</item><item>config:cache</item><item>--no-interaction</item></init>
+    <checks>
+      <item><phase>before-install</phase><service>database</service><query>SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE()</query><equals>0</equals></item>
+      <item><phase>before-upgrade</phase><service>database</service><query>SELECT COUNT(*) FROM users u JOIN role_user ru ON ru.user_id=u.id JOIN roles r ON r.id=ru.role_id WHERE r.system_name='admin' AND u.email=?</query><parameters><item>{{account.email}}</item></parameters><equals>1</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM users u JOIN role_user ru ON ru.user_id=u.id JOIN roles r ON r.id=ru.role_id WHERE r.system_name='admin' AND u.email=?</query><parameters><item>{{account.email}}</item></parameters><equals>1</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM users WHERE email='admin@admin.com'</query><equals>0</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('users','roles','role_user','entities','entity_page_data','attachments','images','settings')</query><equals>8</equals></item>
+    </checks>
+  </lifecycle>
+  <account>
+    <username>administrator</username><email>administrator@example.invalid</email><title>BookStack PaaS XML</title>
+    <constraints><password_min>32</password_min><password_max>64</password_max></constraints>
+    <create><item>php</item><item>artisan</item><item>bookstack:create-admin</item><item>--initial</item><item>--email={{account.email}}</item><item>--name={{account.username}}</item></create>
+    <stdin_secret>PAAS_ACCOUNT_PASSWORD</stdin_secret>
+    <success_exit_codes><item>0</item><item>2</item></success_exit_codes>
+    <timeout_seconds>600</timeout_seconds>
+  </account>
+  <!-- Compte de test paasadmin : mot de passe scellé pour la plateforme, créé par la commande native. -->
+  <accounts><item>
+    <username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <create><item>php</item><item>artisan</item><item>bookstack:create-admin</item><item>--email={{user.email}}</item><item>--name={{user.username}}</item></create>
+    <stdin_template>{{user.password}}</stdin_template>
+    <timeout_seconds>600</timeout_seconds>
+  </item></accounts>
+  <secrets><APP_KEY>
+    <generate>base64</generate><bytes>32</bytes><prefix>base64:</prefix><rotate>never</rotate>
+  </APP_KEY>
+  <PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+  <env>
+    <APP_ENV>production</APP_ENV><APP_DEBUG>false</APP_DEBUG><APP_URL>{{app.public_url}}</APP_URL>
+    <DB_CONNECTION>mysql</DB_CONNECTION><STORAGE_TYPE>local</STORAGE_TYPE><MAIL_DRIVER>array</MAIL_DRIVER>
+    <CACHE_DRIVER>file</CACHE_DRIVER><SESSION_DRIVER>file</SESSION_DRIVER><SESSION_SECURE_COOKIE>true</SESSION_SECURE_COOKIE>
+    <QUEUE_CONNECTION>sync</QUEUE_CONNECTION><LOG_CHANNEL>single</LOG_CHANNEL><ALLOW_ROBOTS>false</ALLOW_ROBOTS>
+    <LARAVEL_STORAGE_PATH>/data/storage</LARAVEL_STORAGE_PATH>
+    <APP_CONFIG_CACHE>/data/bootstrap-cache/config.php</APP_CONFIG_CACHE>
+    <APP_SERVICES_CACHE>/data/bootstrap-cache/services.php</APP_SERVICES_CACHE>
+    <APP_PACKAGES_CACHE>/data/bootstrap-cache/packages.php</APP_PACKAGES_CACHE>
+    <APP_ROUTES_CACHE>/data/bootstrap-cache/routes.php</APP_ROUTES_CACHE>
+    <APP_EVENTS_CACHE>/data/bootstrap-cache/events.php</APP_EVENTS_CACHE>
+  </env>
+</paas>

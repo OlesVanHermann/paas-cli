@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : freshrss. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit 0abec1fce377, 2026-10-05), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <!-- Sources GitHub FreshRSS 1.30.0, commit 62eb3b405e94dd7bc9f1e9e9c788ee3f69d6ed74.
+       Le seul ajout au contenu amont est ce fichier XML. -->
+  <paas_spec_version>v2.9.0</paas_spec_version>
+  <app><name>freshrss</name><version>1.30.0</version></app>
+  <build>
+    <runtime>php</runtime><runtime_version>8.4.26</runtime_version>
+    <recipe>php-8.4.26-apache-alpine-sqlite-intl-v4</recipe><catalogue>2026.10.04.php.20</catalogue>
+    <php>
+      <extensions><item>ctype</item><item>gmp</item><item>intl</item><item>opcache</item><item>pcntl</item>
+        <item>pdo_mysql</item><item>pdo_sqlite</item><item>simplexml</item><item>tokenizer</item><item>xmlreader</item></extensions>
+      <dependency_mode>bundled-git-v1</dependency_mode>
+      <development_manifests><item>package.json</item></development_manifests>
+      <ini><memory_limit>256M</memory_limit><upload_max_filesize>16M</upload_max_filesize><post_max_size>18M</post_max_size></ini>
+    </php>
+    <test><command>php -l p/index.php &amp;&amp; php -l app/install.php</command></test>
+  </build>
+  <processes><item><name>web</name><type>web</type><replicas>1</replicas><argv><item>httpd</item><item>-DFOREGROUND</item></argv><port>8080</port></item></processes>
+  <resources><cpu>1</cpu><memory>512Mi</memory></resources>
+  <healthcheck><path>/i/</path><port>8080</port></healthcheck>
+  <web><document_root>p</document_root><https>true</https></web>
+  <storage>
+    <volumes><item><name>state</name><mount>/data</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item></volumes>
+    <links><item><path>/app/data</path><target>/data/data</target></item></links>
+    <seeds><item><from>/app/data</from><to>/data/data</to><policy>absent-only</policy></item></seeds>
+  </storage>
+  <lifecycle><lock>true</lock><interrupted>resume</interrupted><state_directory>/data/lifecycle</state_directory>
+    <!-- Installateur natif de FreshRSS : langue, base SQLite, compte administrateur, migrations. -->
+    <install_http><timeout_seconds>300</timeout_seconds><steps>
+      <item><method>POST</method><path>/i/index.php?step=0</path><form><language>en</language></form></item>
+      <item><method>POST</method><path>/i/index.php?step=2</path><form><type>sqlite</type></form></item>
+      <item><method>POST</method><path>/i/index.php?step=3</path>
+        <form><default_user>{{account.username}}</default_user><auth_type>form</auth_type><passwordPlain>{{account.password}}</passwordPlain></form>
+        <expect_body>The installation process was successful.</expect_body></item>
+      <item><method>GET</method><path>/i/index.php?step=5</path></item>
+    </steps></install_http>
+    <file_checks>
+      <item><phase>ready</phase><path>/data/data/config.php</path><contains>'default_user' => '{{account.username}}'</contains></item>
+      <item><phase>ready</phase><path>/data/data/users/administrator/config.php</path><contains>'is_admin' => true</contains></item>
+      <item><phase>ready</phase><path>/data/data/users/paasadmin/config.php</path><contains>'enabled' => true</contains></item>
+      <item><phase>before-upgrade</phase><path>/data/data/users/administrator/config.php</path><contains>'is_admin' => true</contains></item>
+    </file_checks>
+  </lifecycle>
+  <account><username>administrator</username><email>administrator@example.invalid</email><title>FreshRSS PaaS XML</title>
+    <constraints><password_min>32</password_min><password_max>64</password_max></constraints>
+  </account>
+  <!-- Compte de test paasadmin : mot de passe scellé pour la plateforme, créé par le formulaire d'inscription natif.
+       L'inscription anonyme est limitée au nombre de comptes déclarés (administrateur + paasadmin). -->
+  <accounts><item><username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <http><timeout_seconds>120</timeout_seconds><steps>
+      <item><method>POST</method><path>/i/?c=auth&amp;a=register</path>
+        <form><new_user_name>{{user.username}}</new_user_name><new_user_email>{{user.email}}</new_user_email>
+          <new_user_passwordPlain>{{user.password}}</new_user_passwordPlain><new_user_language>en</new_user_language></form>
+        <expect_body>User paasadmin has been created</expect_body></item>
+    </steps></http>
+  </item></accounts>
+  <secrets><PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+  <files><item><path>/data/data/config.custom.php</path><mode>0640</mode><render>start</render><template><![CDATA[<?php
+return [
+    'limits' => ['max_registrations' => 2],
+];
+]]></template></item></files>
+</paas>

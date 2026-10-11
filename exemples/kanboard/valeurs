@@ -1,0 +1,6 @@
+# Valeurs que le logiciel impose : push.sh les scelle telles quelles.
+#
+# KANBOARD_INITIAL_PASSWORD : mot de passe initial du compte « admin », écrit
+# par le schéma de Kanboard (app/Schema/Sqlite.php). L'installation s'en sert
+# une seule fois pour se connecter, puis le remplace par un mot de passe généré.
+KANBOARD_INITIAL_PASSWORD=admin

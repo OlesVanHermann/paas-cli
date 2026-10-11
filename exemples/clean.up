@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# Retire une app installée par ./push.sh, puis vide son dossier de travail.
+#
+#   ./clean.up mon-blog            supprime l'app « mon-blog » et range son dossier local
+#   ./clean.up --dry-run mon-blog  montre ce qui serait retiré, sans rien faire
+#
+# Seule une app installée par ./push.sh depuis ce poste est retirée : son dépôt
+# local ($PAAS_EXEMPLES_DIR/<app>, par défaut ~/paas-exemples/<app>) pousse vers
+# le dépôt Git de l'app. Toute autre app est refusée.
+# La suppression est réversible sur la plateforme : dépôt, volumes et historique
+# sont conservés, et « paas apps restore <uuid> » la rétablit. Le dossier local,
+# secrets compris, est rangé dans $PAAS_EXEMPLES_DIR/.corbeille/ avec l'UUID de
+# l'app : rien n'est effacé définitivement.
+
+set -euo pipefail
+
+WORKDIR=${PAAS_EXEMPLES_DIR:-$HOME/paas-exemples}
+DRY_RUN=0
+# L'app visée est toujours celle nommée ici, jamais celle de l'environnement.
+unset PAAS_APP
+export GIT_TERMINAL_PROMPT=0
+
+die() { printf 'erreur : %s\n' "$*" >&2; exit 1; }
+step() { printf '\n== %s\n' "$*"; }
+usage() { sed -n '2,13p' "${BASH_SOURCE[0]}" | sed -E 's/^# ?//'; exit "${1:-0}"; }
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -n|--dry-run) DRY_RUN=1; shift ;;
+        -h|--help) usage 0 ;;
+        -*) die "option inconnue : $1 (voir --help)" ;;
+        *) break ;;
+    esac
+done
+[ $# -eq 1 ] || usage 2
+APP=$1
+printf '%s' "$APP" | grep -qE '^[a-z][a-z0-9-]{1,38}[a-z0-9]$' \
+    || die "nom d'app invalide : $APP (3 à 40 caractères : minuscules, chiffres, tirets)"
+
+for tool in git jq paas; do
+    command -v "$tool" >/dev/null || die "$tool introuvable"
+done
+version=$(paas --version | awk '{print $2}')
+printf '%s' "$version" | awk -F. '{ exit !($1 > 2 || ($1 == 2 && $2 >= 30)) }' \
+    || die "paas $version : la version 2.30 ou plus récente est requise (curl -fsSL https://get.di2amp.com/install.sh | sh)"
+paas whoami >/dev/null 2>&1 || die "aucune session : lancez « paas login --web »"
+
+REPO="$WORKDIR/$APP"
+SECRETS="$WORKDIR/$APP.secrets"
+STORE="$WORKDIR/$APP.catalogue-store.json"
+if [ ! -d "$REPO/.git" ] && [ ! -d "$SECRETS" ] && [ ! -f "$STORE" ]; then
+    die "rien à retirer pour $APP dans $WORKDIR : une app que ./push.sh n'a pas installée se retire par « paas apps delete »"
+fi
+
+step "1. Application $APP"
+app_id=""
+if info=$(paas apps info "$APP" --json 2>/dev/null); then
+    # Une app n'est retirée que si ce dossier l'a installée : jamais une autre.
+    known=$(git -C "$REPO" remote get-url paas 2>/dev/null || true)
+    [ -n "$known" ] && [ "$known" = "$(printf '%s' "$info" | jq -r '.git_url // empty')" ] \
+        || die "l'app $APP n'a pas été installée par ./push.sh depuis $REPO : rien n'est retiré"
+    app_id=$(printf '%s' "$info" | jq -r '.id // empty')
+    if [ "$DRY_RUN" -eq 1 ]; then
+        echo "à supprimer : $APP ($app_id), $(printf '%s' "$info" | jq -r '.url // empty')"
+    else
+        cred=$(paas git credentials status "$APP" --json 2>/dev/null | jq -r '.status // empty' 2>/dev/null || true)
+        if [ "$cred" = active ]; then
+            paas git credentials revoke "$APP" >/dev/null
+            echo "accès Git révoqué"
+        fi
+        paas apps delete "$APP" --yes >/dev/null
+        echo "app supprimée : $APP ($app_id)"
+    fi
+else
+    echo "aucune app $APP sur la plateforme (déjà supprimée, ou seulement vérifiée par --plan)"
+fi
+
+step "2. Dossier local"
+TRASH="$WORKDIR/.corbeille/$(date -u +%Y%m%dT%H%M%SZ)-$APP"
+for path in "$REPO" "$SECRETS" "$STORE"; do
+    [ -e "$path" ] || continue
+    if [ "$DRY_RUN" -eq 1 ]; then
+        echo "à ranger : $path"
+    else
+        mkdir -p "$TRASH"
+        chmod 0700 "$WORKDIR/.corbeille" "$TRASH"
+        mv "$path" "$TRASH/"
+        echo "rangé : $path"
+    fi
+done
+
+if [ "$DRY_RUN" -eq 1 ]; then
+    printf '\n--dry-run : rien n'"'"'a été supprimé ni déplacé.\n'
+    exit 0
+fi
+if [ -n "$app_id" ]; then
+    printf '%s\n' "$app_id" > "$TRASH/app-id"
+    printf '\nRétablir l'"'"'app : paas apps restore %s\n' "$app_id"
+fi
+printf 'Dossier rangé dans : %s\n' "$TRASH"
+printf 'Pour l'"'"'effacer définitivement : rm -rf "%s"\n' "$TRASH"

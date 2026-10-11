@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : filebrowser. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit 29234de39e09, 2026-10-06), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <!-- Sources GitHub gtsteffaniak/filebrowser v1.5.8-stable (FileBrowser Quantum), commit 84024e2, arbre inchangé ;
+       seul ajout au contenu amont : ce fichier. Construction de l'amont (make build) : le frontend que npm construit
+       dans backend/http/embed est embarqué dans le binaire Go, compilé sans cgo comme le profil « slim » de l'amont
+       (aperçus PDF et vidéo indisponibles : ni MuPDF ni ffmpeg dans l'image). -->
+  <paas_spec_version>v2.17.0</paas_spec_version>
+  <app><name>filebrowser</name><version>1.5.8-stable</version></app>
+  <build>
+    <runtime>go</runtime><runtime_version>1.27.1</runtime_version>
+    <recipe>go-1.27.1-node24-npm-v5</recipe><catalogue>2026.10.06.go.5</catalogue>
+    <go><module_root>backend</module_root><cgo>false</cgo><frontend>true</frontend>
+      <binaries><item><package>.</package><output>filebrowser</output>
+        <ldflags><item>-s</item><item>-w</item>
+          <item>-X=github.com/gtsteffaniak/filebrowser/backend/common/version.Version=v1.5.8-stable</item>
+          <item>-X=github.com/gtsteffaniak/filebrowser/backend/common/version.CommitSHA=84024e258b4e71d32b8cce48c69ae5172a65fe08</item>
+        </ldflags></item></binaries></go>
+    <!-- Le projet npm du frontend est dans frontend/ ; son script de build écrit dans backend/http/embed. -->
+    <node><package_manager>npm</package_manager><package_manager_version>11.19.0</package_manager_version><version>24.20.0</version>
+      <root>frontend</root><entrypoint>frontend/src/main.ts</entrypoint>
+      <build_script>build</build_script><outputs><item>backend/http/embed</item></outputs></node>
+    <test><command>cd backend &amp;&amp; go test ./common/settings/ ./common/utils/ ./auth/</command></test>
+  </build>
+  <processes><item><name>web</name><type>web</type><replicas>1</replicas><argv><item>/app/filebrowser</item></argv><port>8080</port></item></processes>
+  <resources><cpu>1</cpu><memory>512Mi</memory></resources>
+  <healthcheck><path>/health</path><port>8080</port></healthcheck>
+  <!-- L'état (configuration, base, cache, cycle de vie) et les fichiers des utilisateurs sont deux volumes distincts. -->
+  <storage>
+    <volumes>
+      <item><name>state</name><mount>/data</mount><size>1Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item>
+      <item><name>files</name><mount>/files</mount><size>4Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item>
+    </volumes>
+  </storage>
+  <!-- Le mot de passe du compte initial est celui de la plateforme : FileBrowser le réapplique à chaque démarrage. -->
+  <env>
+    <FILEBROWSER_CONFIG>/data/config.yaml</FILEBROWSER_CONFIG><FILEBROWSER_DATABASE>/data/database.db</FILEBROWSER_DATABASE>
+    <FILEBROWSER_ADMIN_PASSWORD>{{account.password}}</FILEBROWSER_ADMIN_PASSWORD>
+  </env>
+  <!-- Cycle de vie exécuté par paas-entry : la configuration est rendue à chaque démarrage ; FileBrowser crée sa base
+       et son compte initial lui-même ; le compte de test est créé une fois par son API native. -->
+  <lifecycle><state_directory>/data/lifecycle</state_directory>
+    <start_files><item><path>/data/config.yaml</path><template><![CDATA[# FileBrowser Quantum — configuration rendue par la plateforme (paas.xml) à chaque démarrage.
+server:
+  port: 8080
+  listen: "0.0.0.0"
+  baseURL: "/"
+  externalUrl: "{{app.public_url}}"
+  database: "/data/database.db"
+  cacheDir: "/data/cache"
+  disableUpdateCheck: true
+  logging:
+    - levels: "info|warning|error"
+  sources:
+    - path: "/files"
+      name: "files"
+      config:
+        defaultEnabled: true
+        createUserDir: true
+auth:
+  adminUsername: "{{account.username}}"
+  methods:
+    password:
+      enabled: true
+      minLength: 12
+      signup: false
+    passkey:
+      enabled: false
+]]></template><policy>replace</policy></item></start_files>
+    <http_checks><item><path>/health</path><expect_status>200</expect_status></item></http_checks>
+  </lifecycle>
+  <!-- Politique CVE, mode A : une liste d'exceptions. Chaque exception ne couvre que la faille et le paquet nommés, jusqu'à sa date ;
+       toute autre faille HIGH ou CRITICAL bloque l'image. -->
+  <security>
+    <cve_exceptions>
+      <item><id>CVE-2026-78667</id><package>stdlib</package><expires>2027-04-09</expires>
+        <reason>Bibliothèque standard de Go 1.27.1, apportée par la recette go-1.27.1-node24-npm-v5 de la plateforme ; corrigée en Go 1.27.2, que le catalogue ne propose pas encore. À retirer dès qu'une recette Go 1.27.2 existe.</reason></item>
+      <item><id>CVE-2026-78669</id><package>stdlib</package><expires>2027-04-09</expires>
+        <reason>Bibliothèque standard de Go 1.27.1, apportée par la recette go-1.27.1-node24-npm-v5 de la plateforme ; corrigée en Go 1.27.2, que le catalogue ne propose pas encore. À retirer dès qu'une recette Go 1.27.2 existe.</reason></item>
+      <item><id>CVE-2026-97031</id><package>stdlib</package><expires>2027-04-09</expires>
+        <reason>Bibliothèque standard de Go 1.27.1, apportée par la recette go-1.27.1-node24-npm-v5 de la plateforme ; corrigée en Go 1.27.2, que le catalogue ne propose pas encore. À retirer dès qu'une recette Go 1.27.2 existe.</reason></item>
+      <item><id>CVE-2026-78669</id><package>golang.org/x/net</package><expires>2027-04-09</expires>
+        <reason>golang.org/x/net v0.59.0, épinglé par le go.mod de FileBrowser Quantum v1.5.8 (et encore par la v2.0.0) ; corrigée en v0.60.0, qu'aucune version publiée n'utilise. Le logiciel n'est pas modifié. À retirer dès qu'une version de FileBrowser monte golang.org/x/net.</reason></item>
+    </cve_exceptions>
+  </security>
+  <account><username>administrator</username><email>administrator@example.invalid</email><title>FileBrowser PaaS XML</title>
+    <constraints><password_min>32</password_min><password_max>64</password_max></constraints></account>
+  <!-- Compte de test paasadmin (ni administrateur ni API) : créé par l'API native après connexion du compte initial,
+       qui confirme son propre mot de passe ; il dépose, partage et supprime dans son répertoire. -->
+  <accounts><item><username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <http><timeout_seconds>120</timeout_seconds><steps>
+      <item><method>POST</method><path>/api/auth/login?username={{account.username}}</path>
+        <headers><X-Password>{{account.password}}</X-Password></headers><expect_status>200</expect_status></item>
+      <item><method>POST</method><path>/api/users</path>
+        <headers><X-Password>{{account.password}}</X-Password></headers>
+        <json>{"which":[],"data":{"username":"{{user.username}}","password":"{{user.password}}","loginMethod":"password","permissions":{"api":false,"admin":false,"modify":true,"share":true,"realtime":false,"delete":true,"create":true,"download":true}}}</json>
+        <expect_status>201</expect_status></item>
+    </steps></http>
+  </item></accounts>
+  <secrets><PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+</paas>

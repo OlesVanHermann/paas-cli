@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : listmonk. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit 81316d761d97, 2026-10-07), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <!-- Sources GitHub knadh/listmonk v6.2.0, commit ef0a758, arbre inchangé ; seul ajout au contenu amont : ce fichier.
+       Construction de l'amont (Makefile : build-email-builder, build-frontend, build) : l'éditeur d'e-mails puis le
+       frontend d'administration, chacun installé par Yarn depuis son yarn.lock, puis le binaire Go sans cgo. Les
+       ressources (frontend, statiques, i18n, requêtes SQL) sont lues sur le disque, mode prévu par l'amont quand le
+       binaire ne porte pas leur archive stuffbin. -->
+  <paas_spec_version>v2.18.0</paas_spec_version>
+  <app><name>listmonk</name><version>6.2.0</version></app>
+  <build>
+    <runtime>go</runtime><runtime_version>1.27.1</runtime_version>
+    <recipe>go-1.27.1-node24-yarn-v6</recipe><catalogue>2026.10.07.go.6</catalogue>
+    <!-- Le Dockerfile amont (image de publication goreleaser) reste dans Git ; la recette Go publiée est le contrat de build. -->
+    <source_dockerfile>ee39716659cae32e7e57cffbd7916812186d0a66d74806861467385952e81047</source_dockerfile>
+    <go><module_root>.</module_root><cgo>false</cgo><frontend>true</frontend>
+      <binaries><item><package>./cmd</package><output>listmonk</output>
+        <ldflags><item>-s</item><item>-w</item><item>-X=main.buildString=v6.2.0</item><item>-X=main.versionString=v6.2.0</item></ldflags></item></binaries>
+      <!-- Modules que v6.2.0 épingle sous leurs versions corrigées (21 HIGH au scan, correctifs publiés) :
+           montés sur la copie de build seulement, vérifiés par la base de sommes de Go. go.mod reste sans
+           borne haute ; la branche principale de l'amont monte déjà echo, crypto, image, net, mod et text. -->
+      <module_updates><item>golang.org/x/crypto@v0.55.0</item><item>golang.org/x/net@v0.57.0</item>
+        <item>golang.org/x/mod@v0.40.0</item><item>golang.org/x/text@v0.41.0</item><item>golang.org/x/image@v0.45.0</item>
+        <item>github.com/labstack/echo/v4@v4.15.3</item></module_updates></go>
+    <!-- Deux projets Yarn, chacun son yarn.lock : l'éditeur d'e-mails, que le frontend d'administration publie. -->
+    <node><package_manager>yarn</package_manager><package_manager_version>1.22.22</package_manager_version><version>24.20.0</version>
+      <projects><item>frontend/email-builder</item><item>frontend</item></projects>
+      <entrypoint>frontend/src/main.js</entrypoint>
+      <outputs><item>frontend/dist</item><item>static/public/static/altcha.umd.js</item></outputs></node>
+    <!-- Les règles du Makefile amont, dans son ordre : l'éditeur, sa copie dans public/, le script postinstall du
+         frontend (altcha), puis son build (prebuild eslint compris). -->
+    <steps>
+      <item><name>email-builder</name><cwd>frontend/email-builder</cwd><argv><item>yarn</item><item>run</item><item>build</item></argv></item>
+      <item><name>email-builder-directory</name><cwd>frontend</cwd><argv><item>mkdir</item><item>-p</item><item>public/static/email-builder</item></argv></item>
+      <item><name>email-builder-copy</name><cwd>frontend</cwd><argv><item>cp</item><item>-R</item><item>email-builder/dist/.</item><item>public/static/email-builder/</item></argv></item>
+      <item><name>altcha</name><cwd>frontend</cwd><argv><item>yarn</item><item>run</item><item>postinstall</item></argv></item>
+      <item><name>admin</name><cwd>frontend</cwd><argv><item>yarn</item><item>run</item><item>build</item></argv></item>
+    </steps>
+    <outputs><item>config.toml.sample</item><item>queries</item><item>schema.sql</item><item>permissions.json</item>
+      <item>static</item><item>i18n</item><item>frontend/dist</item></outputs>
+    <test><command>go test ./...</command></test>
+  </build>
+  <processes><item><name>web</name><type>web</type><replicas>1</replicas>
+    <argv><item>/app/listmonk</item><item>--config</item><item>/data/listmonk.toml</item></argv><port>9000</port></item></processes>
+  <resources><cpu>1</cpu><memory>512Mi</memory></resources>
+  <healthcheck><path>/health</path><port>9000</port></healthcheck>
+  <!-- L'état (configuration, cycle de vie, autorité de la base) et les médias, dans le répertoire « uploads »
+       que Listmonk résout depuis son répertoire de travail, sont deux volumes distincts. -->
+  <storage>
+    <volumes>
+      <item><name>state</name><mount>/data</mount><size>1Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item>
+      <item><name>uploads</name><mount>/app/uploads</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item>
+    </volumes>
+  </storage>
+  <services><database>
+    <type>postgresql</type><version>16</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls>
+    <ca_file>/data/postgresql-ca.pem</ca_file>
+    <env><LISTMONK_db__password>{{services.database.password}}</LISTMONK_db__password></env>
+  </database></services>
+  <!-- Le compte initial (super administrateur) est créé par l'installateur natif depuis ces variables. -->
+  <env>
+    <LISTMONK_ADMIN_USER>{{account.username}}</LISTMONK_ADMIN_USER><LISTMONK_ADMIN_PASSWORD>{{account.password}}</LISTMONK_ADMIN_PASSWORD>
+  </env>
+  <!-- Cycle de vie exécuté par paas-entry : la configuration est rendue à chaque démarrage ; l'installateur natif crée
+       le schéma et le compte initial, la mise à niveau native applique les migrations de chaque nouvelle image ;
+       l'URL publique est posée une fois par l'API native des réglages, Listmonk n'écoutant alors que sur la boucle
+       locale (ses variables LISTMONK_* priment sur le fichier de configuration). -->
+  <lifecycle><state_directory>/data/lifecycle</state_directory>
+    <start_files><item><path>/data/listmonk.toml</path><template><![CDATA[# Listmonk — configuration rendue par la plateforme (paas.xml) à chaque démarrage.
+[app]
+address = "0.0.0.0:9000"
+
+[db]
+host = "{{services.database.host}}"
+port = {{services.database.port}}
+user = "{{services.database.user}}"
+database = "{{services.database.database}}"
+ssl_mode = "verify-full"
+params = "sslrootcert={{services.database.ca_file}}"
+max_open = 25
+max_idle = 25
+max_lifetime = "300s"
+]]></template><policy>replace</policy></item></start_files>
+    <install><argv><item>/app/listmonk</item><item>--config</item><item>/data/listmonk.toml</item><item>--install</item><item>--idempotent</item><item>--yes</item></argv>
+      <timeout_seconds>600</timeout_seconds></install>
+    <upgrade><argv><item>/app/listmonk</item><item>--config</item><item>/data/listmonk.toml</item><item>--upgrade</item><item>--yes</item></argv>
+      <timeout_seconds>900</timeout_seconds></upgrade>
+    <install_http><timeout_seconds>300</timeout_seconds><restart>true</restart>
+      <env><LISTMONK_app__address>127.0.0.1:9000</LISTMONK_app__address></env><steps>
+      <item><method>POST</method><path>/admin/login</path>
+        <form><username>{{account.username}}</username><password>{{account.password}}</password></form><expect_status>200</expect_status></item>
+      <item><method>PUT</method><path>/api/settings/app.root_url</path><json>"{{app.public_url}}"</json><expect_status>200</expect_status></item>
+    </steps></install_http>
+    <http_checks><item><path>/health</path><expect_status>200</expect_status></item></http_checks>
+  </lifecycle>
+  <!-- Politique CVE, mode B : aucun blocage. Le scan tourne toujours et son rapport reste lisible (paas builds cve), mais aucune faille,
+       CRITICAL comprises, ne bloque l'image. Le scan garde quatre failles HIGH (Go 1.27.1 de la recette, golang.org/x/net retenu par
+       les dépendances de listmonk) : à retirer dès qu'elles sont corrigées. -->
+  <security><block_on>none</block_on></security>
+  <account><username>administrator</username><email>administrator@example.invalid</email><title>Listmonk PaaS XML</title>
+    <constraints><password_min>32</password_min><password_max>64</password_max></constraints></account>
+  <!-- Compte de test paasadmin : rôle natif limité aux listes et aux abonnés, puis utilisateur Listmonk créé par l'API
+       native après connexion du compte initial ; mot de passe scellé pour la plateforme. -->
+  <accounts><item><username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <http><timeout_seconds>120</timeout_seconds><steps>
+      <item><method>POST</method><path>/admin/login</path>
+        <form><username>{{account.username}}</username><password>{{account.password}}</password></form><expect_status>200</expect_status></item>
+      <item><method>POST</method><path>/api/roles/users</path>
+        <json>{"name":"paasadmin-role","permissions":["lists:get_all","lists:manage_all","subscribers:get_all","subscribers:manage"]}</json>
+        <expect_status>200</expect_status><capture><role>/data/id</role></capture></item>
+      <item><method>POST</method><path>/api/users</path>
+        <json>{"username":"{{user.username}}","email":"{{user.email}}","name":"{{user.title}}","password":"{{user.password}}","password_login":true,"type":"user","status":"enabled","user_role_id":{{capture.role}}}</json>
+        <expect_status>200</expect_status></item>
+    </steps></http>
+  </item></accounts>
+  <secrets><PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+</paas>

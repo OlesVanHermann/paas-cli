@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : wordpress. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit 82444f3790a8, 2026-10-05), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <!-- Sources GitHub WordPress 7.1.2, commit 160387b. Le seul ajout au contenu amont est ce fichier XML. -->
+  <paas_spec_version>v2.9.2</paas_spec_version>
+  <app><name>wordpress</name><version>7.1.2</version></app>
+  <build>
+    <runtime>php</runtime><runtime_version>8.4.26</runtime_version>
+    <recipe>php-8.4.26-apache-alpine-iconv-v7</recipe><catalogue>2026.10.04.php.20</catalogue>
+    <php>
+      <extensions><item>apcu</item><item>ctype</item><item>gmp</item><item>iconv</item><item>intl</item><item>opcache</item><item>pcntl</item>
+        <item>pdo_mysql</item><item>pdo_sqlite</item><item>posix</item><item>simplexml</item><item>sodium</item><item>tokenizer</item><item>xmlreader</item><item>xmlwriter</item></extensions>
+      <!-- La base de l'application exige TLS : l'autorité de la base sert à la vérification du serveur MySQL. -->
+      <ini><memory_limit>256M</memory_limit><upload_max_filesize>32M</upload_max_filesize><post_max_size>34M</post_max_size>
+        <entry key="openssl.cafile">/data/mysql-ca.pem</entry></ini>
+    </php>
+    <test><command>php -l wp-login.php &amp;&amp; php -l wp-settings.php</command></test>
+  </build>
+  <processes><item><name>web</name><type>web</type><replicas>1</replicas><argv><item>httpd</item><item>-DFOREGROUND</item></argv><port>8080</port></item></processes>
+  <resources><cpu>1</cpu><memory>512Mi</memory></resources>
+  <healthcheck><path>/wp-login.php</path><port>8080</port></healthcheck>
+  <!-- Les liens permanents et /wp-json passent par le contrôleur frontal natif. -->
+  <web><https>true</https><front_controller>index.php</front_controller><deny><item>wp-config.php</item><item>wp-config-sample.php</item><item>readme.html</item><item>license.txt</item></deny>
+    <static_paths><item>wp-content/uploads</item></static_paths></web>
+  <services><database>
+    <type>mysql</type><version>8.4.10</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls>
+    <ca_file>/data/mysql-ca.pem</ca_file>
+    <env><WORDPRESS_DB_HOST>{{services.database.host}}</WORDPRESS_DB_HOST><WORDPRESS_DB_PORT>{{services.database.port}}</WORDPRESS_DB_PORT>
+      <WORDPRESS_DB_USER>{{services.database.user}}</WORDPRESS_DB_USER><WORDPRESS_DB_PASSWORD>{{services.database.password}}</WORDPRESS_DB_PASSWORD>
+      <WORDPRESS_DB_NAME>{{services.database.database}}</WORDPRESS_DB_NAME></env>
+  </database></services>
+  <storage>
+    <volumes><item><name>state</name><mount>/data</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item></volumes>
+    <links><item><path>/app/wp-content/uploads</path><target>/data/uploads</target></item></links>
+  </storage>
+  <env><WORDPRESS_PUBLIC_URL>{{app.public_url}}</WORDPRESS_PUBLIC_URL></env>
+  <lifecycle><lock>true</lock><interrupted>resume</interrupted><state_directory>/data/lifecycle</state_directory>
+    <!-- Installateur natif de WordPress (wp-admin/install.php). -->
+    <install_http><timeout_seconds>300</timeout_seconds><steps>
+      <item><method>POST</method><path>/wp-admin/install.php?step=1</path>
+        <form><weblog_title>{{account.title}}</weblog_title><user_name>{{account.username}}</user_name>
+          <admin_password>{{account.password}}</admin_password><admin_password2>{{account.password}}</admin_password2>
+          <admin_email>{{account.email}}</admin_email><blog_public>0</blog_public></form>
+        <expect_body>WordPress has been installed.</expect_body></item>
+    </steps></install_http>
+    <checks>
+      <item><phase>before-install</phase><service>database</service><query>SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()</query><equals>0</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM wp_users WHERE user_login = ? AND user_email = ?</query><parameters><item>{{account.username}}</item><item>{{account.email}}</item></parameters><equals>1</equals></item>
+      <item><phase>before-upgrade</phase><service>database</service><query>SELECT COUNT(*) FROM wp_users WHERE user_login = ? AND user_email = ?</query><parameters><item>{{account.username}}</item><item>{{account.email}}</item></parameters><equals>1</equals></item>
+    </checks>
+  </lifecycle>
+  <account><username>administrator</username><email>administrator@example.invalid</email><title>WordPress PaaS XML</title>
+    <constraints><password_min>32</password_min><password_max>64</password_max></constraints></account>
+  <!-- Compte de test paasadmin : mot de passe scellé pour la plateforme, créé par le formulaire natif d'administration. -->
+  <accounts><item><username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <http><timeout_seconds>120</timeout_seconds><steps>
+      <item><method>POST</method><path>/wp-login.php</path>
+        <form><log>{{account.username}}</log><pwd>{{account.password}}</pwd><testcookie>1</testcookie></form></item>
+      <item><method>POST</method><path>/wp-admin/user-new.php</path>
+        <form><user_login>{{user.username}}</user_login><email>{{user.email}}</email><first_name>{{user.title}}</first_name>
+          <pass1>{{user.password}}</pass1><pass2>{{user.password}}</pass2><role>administrator</role><createuser>Add New User</createuser></form>
+        <expect_body>New user created</expect_body></item>
+    </steps></http>
+  </item></accounts>
+  <secrets>
+    <WP_AUTH_KEY><generate>hex</generate><bytes>32</bytes><rotate>never</rotate></WP_AUTH_KEY>
+    <WP_SECURE_AUTH_KEY><generate>hex</generate><bytes>32</bytes><rotate>never</rotate></WP_SECURE_AUTH_KEY>
+    <WP_LOGGED_IN_KEY><generate>hex</generate><bytes>32</bytes><rotate>never</rotate></WP_LOGGED_IN_KEY>
+    <WP_NONCE_KEY><generate>hex</generate><bytes>32</bytes><rotate>never</rotate></WP_NONCE_KEY>
+    <WP_AUTH_SALT><generate>hex</generate><bytes>32</bytes><rotate>never</rotate></WP_AUTH_SALT>
+    <WP_SECURE_AUTH_SALT><generate>hex</generate><bytes>32</bytes><rotate>never</rotate></WP_SECURE_AUTH_SALT>
+    <WP_LOGGED_IN_SALT><generate>hex</generate><bytes>32</bytes><rotate>never</rotate></WP_LOGGED_IN_SALT>
+    <WP_NONCE_SALT><generate>hex</generate><bytes>32</bytes><rotate>never</rotate></WP_NONCE_SALT>
+    <PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD>
+  </secrets>
+  <files>
+    <item><path>wp-config.php</path><mode>0440</mode><render>build</render><template><![CDATA[<?php
+// Behind the platform gateway the site is served over HTTPS.
+if (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') { $_SERVER['HTTPS'] = 'on'; }
+define('DB_NAME', getenv('WORDPRESS_DB_NAME'));
+define('DB_USER', getenv('WORDPRESS_DB_USER'));
+define('DB_PASSWORD', getenv('WORDPRESS_DB_PASSWORD'));
+define('DB_HOST', getenv('WORDPRESS_DB_HOST') . ':' . getenv('WORDPRESS_DB_PORT'));
+define('DB_CHARSET', 'utf8mb4');
+define('DB_COLLATE', '');
+define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
+define('WP_HOME', getenv('WORDPRESS_PUBLIC_URL'));
+define('WP_SITEURL', getenv('WORDPRESS_PUBLIC_URL'));
+define('AUTH_KEY', getenv('WP_AUTH_KEY'));
+define('SECURE_AUTH_KEY', getenv('WP_SECURE_AUTH_KEY'));
+define('LOGGED_IN_KEY', getenv('WP_LOGGED_IN_KEY'));
+define('NONCE_KEY', getenv('WP_NONCE_KEY'));
+define('AUTH_SALT', getenv('WP_AUTH_SALT'));
+define('SECURE_AUTH_SALT', getenv('WP_SECURE_AUTH_SALT'));
+define('LOGGED_IN_SALT', getenv('WP_LOGGED_IN_SALT'));
+define('NONCE_SALT', getenv('WP_NONCE_SALT'));
+define('DISALLOW_FILE_EDIT', true);
+define('AUTOMATIC_UPDATER_DISABLED', true);
+define('WP_DEBUG', false);
+$table_prefix = 'wp_';
+if (!defined('ABSPATH')) { define('ABSPATH', __DIR__ . '/'); }
+require_once ABSPATH . 'wp-settings.php';
+]]></template></item>
+    <item><path>/data/uploads/index.php</path><mode>0640</mode><render>start</render><template><![CDATA[<?php
+// Silence is golden.
+]]></template></item>
+  </files>
+</paas>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : opencart. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit 9531208d504d, 2026-10-05), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <!-- Sources GitHub OpenCart 4.1.0.4, commit 3b0597ec91. Le seul ajout au contenu amont est ce fichier XML. -->
+  <paas_spec_version>v2.12.0</paas_spec_version>
+  <app><name>opencart</name><version>4.1.0.4</version></app>
+  <build>
+    <runtime>php</runtime><runtime_version>8.4.26</runtime_version>
+    <recipe>php-8.4.26-apache-alpine-iconv-v7</recipe><catalogue>2026.10.04.php.20</catalogue>
+    <!-- Le Dockerfile amont reste dans Git ; la recette PHP publiée est le contrat de build. -->
+    <source_dockerfile>b75e17b91155ef90cf003c48b140db788dc4f0f31c1fd1a9daae9cab101d193b</source_dockerfile>
+    <php>
+      <extensions><item>apcu</item><item>ctype</item><item>gmp</item><item>iconv</item><item>intl</item><item>opcache</item><item>pcntl</item>
+        <item>pdo_mysql</item><item>pdo_sqlite</item><item>posix</item><item>simplexml</item><item>sodium</item><item>tokenizer</item><item>xmlreader</item><item>xmlwriter</item></extensions>
+      <!-- Le vendor commité (twig 3.24.0, 6 CVE CRITICAL) est reconstruit depuis composer.lock,
+           avec le correctif publié twig 3.30.0 compris dans la contrainte amont ^3.24.0. -->
+      <dependency_mode>composer-install-lock-v1</dependency_mode><composer_version>2.10.3</composer_version>
+      <composer_rebuild_committed_vendor>true</composer_rebuild_committed_vendor>
+      <composer_lock_patch_sha256>481e8a533ada020c02ead230e75314d7faa4d50329e74357e556959da3c384aa</composer_lock_patch_sha256>
+      <ini><memory_limit>256M</memory_limit><upload_max_filesize>32M</upload_max_filesize><post_max_size>34M</post_max_size></ini>
+    </php>
+    <test><command>php -l upload/index.php &amp;&amp; php -l upload/install/index.php</command></test>
+  </build>
+  <processes><item><name>web</name><type>web</type><replicas>1</replicas><argv><item>httpd</item><item>-DFOREGROUND</item></argv><port>8080</port></item></processes>
+  <resources><cpu>1</cpu><memory>768Mi</memory></resources>
+  <healthcheck><path>/index.php?route=common/home</path><port>8080</port></healthcheck>
+  <web><document_root>upload</document_root><https>true</https>
+    <deny><item>install</item><item>system</item><item>config.php</item><item>admin/config.php</item><item>php.ini</item></deny>
+    <static_paths><item>image</item></static_paths></web>
+  <services><database>
+    <type>mysql</type><version>8.4.10</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls>
+    <ca_file>/data/mysql-ca.pem</ca_file>
+    <!-- OpenCart 4.1.0.4 ne passe jamais TLS à MySQL hors installateur (system/config/catalog.php:13-15) :
+         relais en boucle locale, TLS vérifié vers le service ; le logiciel est inchangé. -->
+    <local_endpoint><port>13306</port></local_endpoint>
+  </database></services>
+  <storage>
+    <volumes><item><name>state</name><mount>/data</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item></volumes>
+    <links>
+      <item><path>/app/upload/config.php</path><target>/data/config/config.php</target></item>
+      <item><path>/app/upload/admin/config.php</path><target>/data/config/admin-config.php</target></item>
+      <item><path>/app/upload/image</path><target>/data/image</target></item>
+      <item><path>/app/upload/system/storage/cache</path><target>/data/storage/cache</target></item>
+      <item><path>/app/upload/system/storage/download</path><target>/data/storage/download</target></item>
+      <item><path>/app/upload/system/storage/logs</path><target>/data/storage/logs</target></item>
+      <item><path>/app/upload/system/storage/session</path><target>/data/storage/session</target></item>
+      <item><path>/app/upload/system/storage/upload</path><target>/data/storage/upload</target></item>
+      <item><path>/app/upload/system/storage/backup</path><target>/data/storage/backup</target></item>
+      <item><path>/app/upload/system/storage/marketplace</path><target>/data/storage/marketplace</target></item>
+    </links>
+    <seeds>
+      <!-- Procédure d'installation OpenCart : config-dist.php (vide) devient config.php, que l'installateur remplit. -->
+      <item><from>/app/upload/config-dist.php</from><to>/data/config/config.php</to><policy>absent-only</policy></item>
+      <item><from>/app/upload/admin/config-dist.php</from><to>/data/config/admin-config.php</to><policy>absent-only</policy></item>
+      <item><from>/app/upload/image</from><to>/data/image</to><policy>absent-only</policy></item>
+      <item><from>/app/upload/system/storage/cache</from><to>/data/storage/cache</to><policy>absent-only</policy></item>
+      <item><from>/app/upload/system/storage/download</from><to>/data/storage/download</to><policy>absent-only</policy></item>
+      <item><from>/app/upload/system/storage/logs</from><to>/data/storage/logs</to><policy>absent-only</policy></item>
+      <item><from>/app/upload/system/storage/session</from><to>/data/storage/session</to><policy>absent-only</policy></item>
+      <item><from>/app/upload/system/storage/upload</from><to>/data/storage/upload</to><policy>absent-only</policy></item>
+      <item><from>/app/upload/system/storage/backup</from><to>/data/storage/backup</to><policy>absent-only</policy></item>
+      <item><from>/app/upload/system/storage/marketplace</from><to>/data/storage/marketplace</to><policy>absent-only</policy></item>
+    </seeds>
+  </storage>
+  <lifecycle><lock>true</lock><interrupted>resume</interrupted><state_directory>/data/lifecycle</state_directory>
+    <!-- Installateur natif d'OpenCart (étape 3 : base, schéma, compte administrateur, fichiers de configuration).
+         Il passe, comme la boutique ensuite, par le relais local (127.0.0.1), TLS vérifié côté service. -->
+    <install_http><timeout_seconds>600</timeout_seconds><steps>
+      <item><method>POST</method><path>/install/index.php?route=install/step_3.save</path>
+        <form><db_driver>mysqli</db_driver><db_hostname>127.0.0.1</db_hostname>
+          <db_username>{{services.database.user}}</db_username><db_password>{{services.database.password}}</db_password>
+          <db_database>{{services.database.database}}</db_database><db_port>{{services.database.local_port}}</db_port><db_prefix>oc_</db_prefix>
+          <db_ssl_key></db_ssl_key><db_ssl_cert></db_ssl_cert><db_ssl_ca></db_ssl_ca>
+          <username>{{account.username}}</username><email>{{account.email}}</email><password>{{account.password}}</password></form>
+        <expect_body>install\/step_4</expect_body></item>
+    </steps></install_http>
+    <checks>
+      <item><phase>before-install</phase><service>database</service><query>SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()</query><equals>0</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM oc_user u JOIN oc_setting s ON s.`key` = 'config_email' WHERE u.username = ? AND u.status = 1 AND s.value = ?</query><parameters><item>{{account.username}}</item><item>{{account.email}}</item></parameters><equals>1</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM oc_customer WHERE email = 'paasadmin@example.com' AND status = 1</query><equals>1</equals></item>
+      <item><phase>before-upgrade</phase><service>database</service><query>SELECT COUNT(*) FROM oc_user WHERE username = ? AND status = 1</query><parameters><item>{{account.username}}</item></parameters><equals>1</equals></item>
+    </checks>
+  </lifecycle>
+  <account><username>administrator</username><email>administrator@example.invalid</email><title>OpenCart PaaS XML</title>
+    <constraints><password_min>32</password_min><password_max>40</password_max></constraints></account>
+  <!-- Compte de test paasadmin : client de la boutique (connexion par e-mail), mot de passe scellé pour la plateforme,
+       créé par le formulaire d'inscription natif de la boutique. -->
+  <accounts><item><username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <http><timeout_seconds>120</timeout_seconds><steps>
+      <item><method>POST</method><path>/index.php?route=account/register&amp;language=en-gb</path>
+        <form><firstname>{{user.username}}</firstname><lastname>{{user.title}}</lastname><email>{{user.email}}</email>
+          <password>{{user.password}}</password><agree>1</agree></form>
+        <expect_body>account\/success</expect_body></item>
+    </steps></http>
+  </item></accounts>
+  <secrets><PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+</paas>
