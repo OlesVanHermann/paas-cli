@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-428 opérations, vérifiées contre l'API 2.30.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+428 opérations, vérifiées contre l'API 2.31.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -7324,6 +7324,7 @@ Seuls `id` et `name` sont garantis. `http_endpoints`, `http_endpoints_status` et
 | `http_endpoints_status` | string | non |
 | `serving_deploy_id` | string | non |
 | `last_error` | [`PaasError`](#type-paaserror) | non |
+| `last_failure` | [`AppFailure`](#type-appfailure) | non |
 
 ### Type `AppAddon`
 
@@ -7399,6 +7400,20 @@ Seuls `id` et `name` sont garantis. `http_endpoints`, `http_endpoints_status` et
 | `tenant_id` | string | oui |
 | `ip` | string | non |
 | `status` | string | oui |
+
+### Type `AppFailure`
+
+L'échec du dernier déploiement d'une application, dans la liste (`last_failure`, API 2.31.0) : son code et qui doit agir.
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `code` | string | oui |
+| `stage` | string | non |
+| `owner` | string | oui |
+| `label` | string | oui |
+| `basis` | string | non |
+| `capability` | string | non |
+| `reason_code` | string | non |
 
 ### Type `AppHealthcheckStatus`
 
@@ -10011,7 +10026,7 @@ Fin du journal de l'étape en échec, sans valeur de secret
 
 ### Type `PaasError`
 
-Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un démarrage (schéma `paas.error.v1`, API 2.28.0 et suivantes). Tout y est pour corriger sans autre requête : l'étape, la cause, les détails propres au code, la marche à suivre et la fin du journal. Les textes sont à afficher tels quels ; aucune valeur de secret n'y figure. Codes et contenu de `details` : - `security_scan_blocked` (étape `scan`) : `policy` (`block_on`, nombre d'exceptions, origine), `counts`, `blocking` (chaque faille bloquante : `id`, `severity`, `package`, `installed`, `fixed`, `target`, `title`), `blocking_total`, `blocking_distinct`, `accepted` ; - `plan_refused` (étape `plan`) : `file`, `diagnostics` (code, chemin de la clé, message), `diagnostics_total` ; - `build_step_failed`, `build_timed_out` (étape `build`) : `failed_tasks`, `platform_message`, `refusal` (`code`, `path`, `rule`) quand un contrôle documenté a échoué ; - `tests_failed` (étape `test`) : `tests` (commande, code de sortie), `failed_tasks`, `platform_message` ; - `admission_refused` (étape `admission`) : `platform_code`, `reason`, `platform_message` ; - `rollout_failed` (étape `rollout`) : `reason` (`oom_killed`, `probe_failed`, `process_exited`, `container_config`, `not_ready`, `unschedulable`, `volume_mount`, `image_pull`, `apply_refused`, `apply_timed_out`), `process`, `verdict`, `container_state`, `containers`, `events`, `probes`, `resources`, `port` ; - `database_not_ready` (étape `rollout`) : `service`, `platform_code`, `readiness_window_seconds`, `container_state`, `containers`, `events` ; - `deploy_failed` : objet de repli d'un échec antérieur à l'API 2.28.0 (voir `App.last_error`). Un code inconnu du client se lit comme les autres : `summary`, `message`, `remediation` et `details` restent valables.
+Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un démarrage (schéma `paas.error.v1`, API 2.28.0 et suivantes). Tout y est pour corriger sans autre requête : l'étape, la cause, les détails propres au code, la marche à suivre et la fin du journal. Les textes sont à afficher tels quels ; aucune valeur de secret n'y figure. Codes et contenu de `details` : - `security_scan_blocked` (étape `scan`) : `policy` (`block_on`, nombre d'exceptions, origine), `counts`, `blocking` (chaque faille bloquante : `id`, `severity`, `package`, `installed`, `fixed`, `target`, `title`), `blocking_total`, `blocking_distinct`, `accepted` ; - `plan_refused` (étape `plan`) : `file`, `diagnostics` (code, chemin de la clé, message ; depuis l'API 2.31.0, aussi `owner`, `capability`, `basis`, et `refusal` quand un refus générique nomme le contrôle en cause), `diagnostics_total` ; - `build_step_failed`, `build_timed_out` (étape `build`) : `failed_tasks`, `platform_message`, `refusal` (`code`, `path`, `rule`) quand un contrôle documenté a échoué ; - `tests_failed` (étape `test`) : `tests` (commande, code de sortie), `failed_tasks`, `platform_message` ; - `admission_refused` (étape `admission`) : `platform_code`, `reason`, `platform_message` ; - `rollout_failed` (étape `rollout`) : `reason` (`oom_killed`, `probe_failed`, `process_exited`, `container_config`, `not_ready`, `unschedulable`, `volume_mount`, `image_pull`, `apply_refused`, `apply_timed_out`), `process`, `verdict`, `container_state`, `containers`, `events`, `probes`, `resources`, `port` ; - `database_not_ready` (étape `rollout`) : `service`, `platform_code`, `readiness_window_seconds`, `container_state`, `containers`, `events` ; - `deploy_failed` : objet de repli d'un échec antérieur à l'API 2.28.0 (voir `App.last_error`). Un code inconnu du client se lit comme les autres : `summary`, `message`, `remediation` et `details` restent valables.
 
 | Champ | Type | Obligatoire |
 |---|---|---|
@@ -10030,6 +10045,7 @@ Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un déma
 | `remediation` | tableau de [`Remediation`](#type-remediation) | non |
 | `log_excerpt` | [`LogExcerpt`](#type-logexcerpt) | non |
 | `links` | objet (valeurs : string) | non |
+| `responsibility` | [`Responsibility`](#type-responsibility) | non |
 
 ### Type `PatchAddonRequest`
 
@@ -10689,6 +10705,19 @@ Une étape de la marche à suivre
 | `cpu_limit` | string | oui |
 | `memory_request` | string | oui |
 | `memory_limit` | string | oui |
+
+### Type `Responsibility`
+
+Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de l'application se corrige. `Paas` : la plateforme ne sait pas encore installer l'application ; `capability` nomme ce qui lui manque, et ses opérateurs sont prévenus.
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `owner` | string | oui |
+| `label` | string | oui |
+| `basis` | string | oui |
+| `code` | string | oui |
+| `capability` | string | non |
+| `summary` | string | oui |
 
 ### Type `RestartAppResponse`
 

@@ -2,8 +2,8 @@
 
 `paas-apps` est la nouvelle CLI du PaaS di2amp.
 
-Elle s'installe à côté de `paas` 2.25, sans le remplacer. La version 0.3.3,
-vérifiée contre l'API 2.30.0, offre deux niveaux :
+Elle s'installe à côté de `paas` 2.25, sans le remplacer. La version 0.3.4,
+vérifiée contre l'API 2.31.0, offre deux niveaux :
 - `paas-apps api`, qui donne accès aux **428 opérations** de l'API ;
 - des commandes métier, pour la session, la lecture des applications, des
   builds et des releases, et le diagnostic complet d'un échec (voir
@@ -51,7 +51,7 @@ Variables d'environnement supplémentaires :
 | `whoami` | Identité de la session : e-mail, rôle, tenant, utilisateur, méthode |
 | `health` | Version de l'API et état de ses dépendances (sans session) |
 | `regions` | Régions d'hébergement (sans session) |
-| `apps list [--region R]` | Applications actives du tenant, triées par nom |
+| `apps list [--region R]` | Applications actives du tenant, triées par nom ; colonne `FAILURE` : qui doit agir sur l'échec du dernier déploiement (`Cust` ou `Paas`), son code et la capacité qui manque à la plateforme (API 2.31.0) |
 | `apps info [NOM]` | Détail d'une application (`NOM`, sinon `--app`) et, quand son dernier déploiement a échoué, son erreur complète |
 | `builds list [--limit N]` | Derniers builds de `--app` (10 par défaut, 100 au plus), avec le code d'échec de chacun (colonne `FAILURE`) |
 | `builds info BUILD` | Un build, ses étapes et, quand il a échoué, son erreur complète |
@@ -99,12 +99,31 @@ Next steps:
 …
 ```
 
-Dans l'ordre : la cause en une phrase, le code et l'étape, l'explication,
-les détails propres au code (failles bloquantes et acceptées, diagnostics du
-`paas.xml`, tâches en échec, commande de test, état du conteneur, événements),
-la fin du journal de l'étape, puis les étapes de la marche à suivre avec leur
-commande, leur extrait de `paas.xml` et leur documentation. Les commandes
-proposées par l'API sont celles de la CLI `paas`.
+Dans l'ordre : la cause en une phrase, le code et l'étape, qui doit agir,
+l'explication, les détails propres au code (failles bloquantes et acceptées,
+diagnostics du `paas.xml`, tâches en échec, commande de test, état du
+conteneur, événements), la fin du journal de l'étape, puis les étapes de la
+marche à suivre avec leur commande, leur extrait de `paas.xml` et leur
+documentation. Les commandes proposées par l'API sont celles de la CLI `paas`.
+
+Depuis l'API 2.31.0, la ligne `owner` dit qui doit agir, suivie de la phrase
+de la plateforme :
+
+```
+  owner   Paas (platform, missing capability admission.recipe_files; decided by admission_recipe_unreadable)
+  owner   Cust (customer; decided by ENV_PHP_INDEX_REQUIRED)
+```
+
+- `Cust` : le `paas.xml` ou le dépôt de l'application se corrige ; la marche
+  à suivre dit quoi changer.
+- `Paas` : la plateforme ne sait pas encore installer l'application ; elle
+  nomme la capacité qui lui manque, et ses opérateurs sont prévenus.
+- `presumed: cause not established` : la cause n'est pas établie, elle est
+  présumée côté plateforme ; `inferred from the code family` : le code n'est
+  pas encore documenté, il est classé par sa famille.
+
+Dans une table (`releases list`, `builds list`), une erreur sur une ligne
+commence par `[Cust]` ou `[Paas]`.
 
 Un échec enregistré avant l'API 2.28.0 n'a que son code et son message : la
 CLI les affiche, avec la vraie cause des anciens codes connus (par exemple une

@@ -3,7 +3,7 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.30.0.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.31.0.
 
     Il couvre les 428 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.30.0
+  x-paas-api-version-tested: 2.31.0
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -13262,6 +13262,15 @@ components:
             l'API 2.28.0, objet de repli : `code` (l'ancien `failure_code`,
             sinon `deploy_failed`), `stage`, `summary` et `message` (l'ancien
             `error_message`), `build_id`, sans `occurred_at` ni `details`.
+        last_failure:
+          allOf:
+          - $ref: '#/components/schemas/AppFailure'
+          nullable: true
+          description: |
+            Renvoyé par `list_apps` (API 2.31.0) : l'échec du dernier
+            déploiement de l'application, avec qui doit agir (`Cust` ou
+            `Paas`), `null` s'il n'a pas échoué. L'erreur complète est
+            `last_error` de `get_app`.
     AppAddon:
       type: object
       properties:
@@ -13419,6 +13428,48 @@ components:
       - app_id
       - tenant_id
       - status
+    AppFailure:
+      type: object
+      description: |
+        L'échec du dernier déploiement d'une application, dans la liste
+        (`last_failure`, API 2.31.0) : son code et qui doit agir.
+      required:
+      - code
+      - owner
+      - label
+      properties:
+        code:
+          type: string
+          description: Code de l'erreur (`plan_refused`, `build_step_failed`…)
+        stage:
+          type: string
+          nullable: true
+        owner:
+          type: string
+          x-paas-observed-values:
+          - customer
+          - platform
+        label:
+          type: string
+          x-paas-observed-values:
+          - Cust
+          - Paas
+        basis:
+          type: string
+          nullable: true
+          x-paas-observed-values:
+          - documented
+          - rule
+          - family
+          - presumption
+        capability:
+          type: string
+          nullable: true
+          description: Pour la plateforme, la capacité qui lui manque
+        reason_code:
+          type: string
+          nullable: true
+          description: Le code qui décide qui agit (`ENV_…`, `TECHNICAL_…`…)
     AppHealthcheckStatus:
       type: object
       properties:
@@ -16926,7 +16977,9 @@ components:
           `id`, `severity`, `package`, `installed`, `fixed`, `target`, `title`),
           `blocking_total`, `blocking_distinct`, `accepted` ;
         - `plan_refused` (étape `plan`) : `file`, `diagnostics` (code, chemin
-          de la clé, message), `diagnostics_total` ;
+          de la clé, message ; depuis l'API 2.31.0, aussi `owner`,
+          `capability`, `basis`, et `refusal` quand un refus générique nomme
+          le contrôle en cause), `diagnostics_total` ;
         - `build_step_failed`, `build_timed_out` (étape `build`) :
           `failed_tasks`, `platform_message`, `refusal` (`code`, `path`, `rule`)
           quand un contrôle documenté a échoué ;
@@ -17030,6 +17083,14 @@ components:
           additionalProperties:
             type: string
           description: Chemins d'API liés (`build`, `cve`, `tests`…)
+        responsibility:
+          allOf:
+          - $ref: '#/components/schemas/Responsibility'
+          nullable: true
+          description: |
+            Qui doit agir (API 2.31.0) : le client (`Cust`) ou la plateforme
+            (`Paas`). Calculé à chaque lecture, y compris pour les erreurs
+            enregistrées avant l'API 2.31.0 ; absent d'un serveur plus ancien.
     PatchAddonRequest:
       type: object
       properties:
@@ -17982,6 +18043,57 @@ components:
       - cpu_limit
       - memory_request
       - memory_limit
+    Responsibility:
+      type: object
+      description: |
+        Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le
+        dépôt de l'application se corrige. `Paas` : la plateforme ne sait pas
+        encore installer l'application ; `capability` nomme ce qui lui manque,
+        et ses opérateurs sont prévenus.
+      required:
+      - owner
+      - label
+      - basis
+      - code
+      - summary
+      properties:
+        owner:
+          type: string
+          description: Qui agit
+          x-paas-observed-values:
+          - customer
+          - platform
+        label:
+          type: string
+          description: Badge à afficher
+          x-paas-observed-values:
+          - Cust
+          - Paas
+        basis:
+          type: string
+          description: |
+            Comment c'est établi : `documented` (index des codes de refus),
+            `rule` (nature de l'échec), `family` (code pas encore documenté,
+            classé par sa famille) ou `presumption` (cause non établie,
+            présumée côté plateforme)
+          x-paas-observed-values:
+          - documented
+          - rule
+          - family
+          - presumption
+        code:
+          type: string
+          description: |
+            Le code qui décide : code de refus (`ENV_…`, `V2_…`), code
+            d'exécution (`TECHNICAL_…`), raison du rollout, ou le code de
+            l'erreur
+        capability:
+          type: string
+          nullable: true
+          description: Pour la plateforme, la capacité qui lui manque (`composer.archive_size`, `pipeline.scan_gate`…)
+        summary:
+          type: string
+          description: La phrase à montrer telle quelle
     RestorePitrRequest:
       type: object
       properties:

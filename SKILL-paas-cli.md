@@ -5,7 +5,7 @@ description: Utilise la CLI `paas-apps` du PaaS di2amp pour agir sur le PaaS dep
 
 # CLI `paas-apps` du PaaS di2amp
 
-`paas-apps` (0.3.3, API 2.30.0) pilote l'API tenant du PaaS di2amp. Elle
+`paas-apps` (0.3.4, API 2.31.0) pilote l'API tenant du PaaS di2amp. Elle
 offre deux niveaux :
 - des **commandes métier** lisibles : session, applications, builds,
   releases, diagnostic des échecs, santé, régions ;
@@ -73,7 +73,7 @@ export PAAS_CREDENTIALS_FILE=/dev/shm/paas-session-$$/credentials.json
 | Identité | `paas-apps whoami` |
 | Santé et version de l'API | `paas-apps health` |
 | Régions | `paas-apps regions` |
-| Applications | `paas-apps apps list [--region gra11]` |
+| Applications, et qui doit agir sur chaque échec (`Cust` ou `Paas`, colonne `FAILURE`) | `paas-apps apps list [--region gra11]` |
 | Une application, et pourquoi son dernier déploiement a échoué | `paas-apps apps info NOM` (ou `--app NOM`, ou `PAAS_APP=NOM`) |
 | Derniers builds, avec leur code d'échec | `paas-apps --app NOM builds list --limit 5` |
 | Un build, ses étapes et son échec complet | `paas-apps --app NOM builds info BUILD_ID` |
@@ -95,7 +95,18 @@ une phrase, code et étape, détails, fin du journal et marche à suivre.
    (ou `builds info BUILD_ID`). En script : `--json`, puis
    `jq '.error'` (release), `jq '.failure'` (build) ou `jq '.last_error'`
    (application).
-3. Selon le code :
+3. Lisez d'abord **qui doit agir** : la ligne `owner` (en JSON,
+   `responsibility`) :
+   - `Cust` : le `paas.xml` ou le dépôt de l'application se corrige ; suivez
+     la marche à suivre ;
+   - `Paas` : la plateforme ne sait pas encore installer l'application ;
+     `capability` nomme ce qui lui manque, et ses opérateurs sont prévenus.
+     Ne modifiez pas le logiciel de l'application pour contourner : dites-le
+     à la personne, avec le code et la capacité ;
+   - `presumed` : la cause n'est pas établie, elle est présumée côté
+     plateforme ; `inferred from the code family` : le code n'est pas encore
+     documenté, il est classé par sa famille.
+4. Selon le code :
    - `security_scan_blocked` : `builds cve BUILD_ID` liste chaque faille avec
      ce qui bloque et ce qui est accepté. Les étapes proposent l'extrait de
      `paas.xml` à coller (`security.cve_exceptions`, une par une, ou
@@ -110,10 +121,10 @@ une phrase, code et étape, détails, fin du journal et marche à suivre.
      processus arrêté…), l'état du conteneur, les événements, et la
      correction du `paas.xml` (par exemple la mémoire doublée) ;
    - code inconnu : `summary`, `message` et la marche à suivre restent valables.
-4. Corrigez (`paas.xml`, code de l'application), commitez, poussez. Pour
+5. Corrigez (`paas.xml`, code de l'application), commitez, poussez. Pour
    reconstruire le même commit sans nouveau commit, utilisez la commande
    proposée par la marche à suivre (CLI `paas`).
-5. Vérifiez : `releases list`, puis `apps info` (plus de bloc d'échec).
+6. Vérifiez : `releases list`, puis `apps info` (plus de bloc d'échec).
 
 ## 3 ter. Installer une app connue : `exemples/`
 

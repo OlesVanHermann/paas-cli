@@ -4,7 +4,7 @@ Ce guide explique les règles communes à toute l'API. Le détail des **428
 opérations**, domaine par domaine, est dans la
 **[référence générée](API-REFERENCE.md)**. Le contrat machine, qui fait foi, est
 [`openapi.yaml`](openapi.yaml) (OpenAPI 3.0.3), vérifié contre
-l'API **2.30.0**.
+l'API **2.31.0**.
 
 | Élément | Valeur |
 |---|---|
@@ -122,6 +122,7 @@ suivantes). Tout y est pour corriger sans autre requête.
 | Release liée à un déploiement | `release.error` | `get_deploy` |
 | Build | `failure` (le champ `error` garde l'ancienne chaîne de preuve) | `list_builds`, `get_build` |
 | Application | `last_error` : l'erreur du dernier déploiement quand il a échoué, sinon `null` | `get_app` |
+| Liste des applications | `last_failure` : le code de l'échec du dernier déploiement et qui doit agir, sinon `null` | `list_apps` |
 | Rapport CVE refusé | `error` | `get_cve_for_build` |
 
 | Champ | Contenu |
@@ -136,6 +137,28 @@ suivantes). Tout y est pour corriger sans autre requête.
 | `remediation` | Marche à suivre, dans l'ordre : `title`, et selon l'étape `command` (CLI `paas`), `paas_xml` (extrait à ajouter ou corriger), `docs` |
 | `log_excerpt` | Fin du journal de l'étape : `step`, `exit_code`, `lines`, `truncated` |
 | `links` | Chemins d'API liés (`build`, `cve`, `tests`…) |
+| `responsibility` | Qui doit agir (API 2.31.0), voir ci-dessous |
+
+### Qui doit agir : `Cust` ou `Paas`
+
+Depuis l'API 2.31.0, chaque erreur porte `responsibility`. Les erreurs
+enregistrées avant cette version la portent aussi.
+
+| Champ | Contenu |
+|---|---|
+| `owner` | `customer` : le `paas.xml` ou le dépôt de l'application se corrige ; `platform` : la plateforme ne sait pas encore installer l'application |
+| `label` | `Cust` ou `Paas` : le badge à afficher |
+| `basis` | `documented` (index des codes de refus), `rule` (nature de l'échec), `family` (code pas encore documenté, classé par sa famille), `presumption` (cause non établie, présumée côté plateforme) |
+| `code` | Le code qui décide : code de refus (`ENV_…`, `V2_…`), code d'exécution (`TECHNICAL_…`), raison du rollout, ou le code de l'erreur |
+| `capability` | Pour la plateforme : la capacité qui lui manque (`composer.archive_size`, `pipeline.scan_gate`…) |
+| `summary` | La phrase à montrer telle quelle |
+
+Pour `Paas`, les opérateurs de la plateforme sont prévenus : un correctif de
+l'application ne lèvera pas le refus. Chaque diagnostic d'un `plan_refused`
+porte aussi `owner`, `capability` et `basis`, et `refusal` (`code`, `path`,
+`rule`) quand un refus générique nomme le contrôle en cause. `last_failure`,
+dans `list_apps`, donne pour chaque application `code`, `stage`, `owner`,
+`label`, `basis`, `capability` et `reason_code` (le code qui décide).
 
 | `code` | Étape | `details` |
 |---|---|---|

@@ -133,7 +133,9 @@ Un échec n'est pas une erreur HTTP : la lecture répond 200 et l'objet porte
 son **erreur complète** (`PaasError`, `"schema": "paas.error.v1"`).
 
 ```bash
+paas GET /v1/apps | jq -r '.data[] | select(.last_failure) | "\(.name)\t\(.last_failure.label)\t\(.last_failure.code)\t\(.last_failure.capability // .last_failure.reason_code)"'   # qui doit agir, app par app
 paas GET /v1/apps/mon-app | jq '.data.last_error'                    # pourquoi l'app ne sert rien de neuf (null : rien)
+paas GET /v1/apps/mon-app | jq '.data.last_error.responsibility'     # Cust ou Paas, et pourquoi
 paas GET '/v1/apps/mon-app/deploys?limit=5' | jq '.data[] | {id, status, failure_code, summary: .error.summary}'
 paas GET /v1/apps/mon-app/deploys/ID | jq '.data.error'              # l'erreur complète d'un déploiement
 paas GET /v1/apps/mon-app/builds/BUILD | jq '.data.failure'          # celle d'un build (`error` y reste l'ancienne chaîne)
@@ -148,8 +150,12 @@ paas GET /v1/apps/mon-app/builds/BUILD/test | jq '.data | {status, command, exit
 | `details` | Propre au code : failles bloquantes et acceptées, diagnostics du `paas.xml` (clé et règle), commande de test, état du conteneur, événements… |
 | `remediation[]` | Marche à suivre, dans l'ordre : `title`, `command` (CLI `paas`), `paas_xml` (extrait prêt à coller), `docs` |
 | `log_excerpt` | Fin du journal de l'étape : `lines`, `exit_code`, `truncated` |
+| `responsibility` | Qui doit agir (API 2.31.0) : `label` `Cust` (le `paas.xml` ou le dépôt se corrige) ou `Paas` (la plateforme ne sait pas encore le faire ; `capability` nomme ce qui lui manque) ; `basis` : `documented`, `rule`, `family` (déduit de la famille du code), `presumption` (cause présumée) ; `summary` à montrer tel quel |
 
 Règles :
+- lisez d'abord `responsibility` : pour `Paas`, ne modifiez pas le logiciel
+  de l'application pour contourner la plateforme ; dites-le à la personne,
+  avec le code et la capacité (les opérateurs de la plateforme sont prévenus) ;
 - suivez `remediation` dans l'ordre ; accepter une faille CVE
   (`security.cve_exceptions`, `security.block_on`) est une **décision de la
   personne**, jamais celle de l'agent ;

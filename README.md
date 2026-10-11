@@ -19,13 +19,16 @@ les agents IA (Claude Code…).
 | [`CHANGELOG.md`](CHANGELOG.md) | Contenu de la version publiée |
 | [`LICENSE`](LICENSE) | Licence MIT |
 
-**État** : CLI **0.3.3**, vérifiée contre l'API **2.30.0**.
+**État** : CLI **0.3.4**, vérifiée contre l'API **2.31.0**.
 - `paas-apps api` donne accès à **toutes les opérations** de l'API, sauf les
   flux continus (journaux et terminal en direct).
 - Les commandes métier couvrent la session, la lecture des applications, des
   builds et des releases, et le **diagnostic complet d'un échec** : étape,
-  cause, détails (failles CVE bloquantes, diagnostics du `paas.xml`, commande
-  de test, état du conteneur…), marche à suivre et fin du journal.
+  cause, **qui doit agir** (`Cust` : le `paas.xml` ou le dépôt se corrige ;
+  `Paas` : la plateforme ne sait pas encore le faire, et nomme ce qui lui
+  manque), détails (failles CVE bloquantes, diagnostics du `paas.xml`,
+  commande de test, état du conteneur…), marche à suivre et fin du journal.
+  `apps list` montre `Cust` ou `Paas` pour chaque application en échec.
 - La CLI s'appelle `paas-apps` et s'installe à côté de la CLI `paas`, sans la
   remplacer.
 
