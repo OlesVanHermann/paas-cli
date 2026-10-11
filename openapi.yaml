@@ -3,7 +3,7 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.31.0.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.32.0.
 
     Il couvre les 428 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.31.0
+  x-paas-api-version-tested: 2.32.0
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -17073,7 +17073,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Remediation'
-          description: Marche à suivre, dans l'ordre
+          description: |
+            Marche à suivre, dans l'ordre. Depuis l'API 2.31.1, elle suit qui doit agir : pour `Paas`, la première étape dit ce que la plateforme doit lever et aucune ne demande de corriger le paas.xml ou le dépôt ; pour une cause présumée, les étapes de diagnostic restent.
         log_excerpt:
           allOf:
           - $ref: '#/components/schemas/LogExcerpt'

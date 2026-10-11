@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-428 opérations, vérifiées contre l'API 2.31.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+428 opérations, vérifiées contre l'API 2.32.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|

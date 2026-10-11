@@ -5,7 +5,7 @@ description: Utilise la CLI `paas-apps` du PaaS di2amp pour agir sur le PaaS dep
 
 # CLI `paas-apps` du PaaS di2amp
 
-`paas-apps` (0.3.4, API 2.31.0) pilote l'API tenant du PaaS di2amp. Elle
+`paas-apps` (0.3.5, API 2.32.0) pilote l'API tenant du PaaS di2amp. Elle
 offre deux niveaux :
 - des **commandes métier** lisibles : session, applications, builds,
   releases, diagnostic des échecs, santé, régions ;

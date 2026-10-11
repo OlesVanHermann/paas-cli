@@ -2,8 +2,8 @@
 
 `paas-apps` est la nouvelle CLI du PaaS di2amp.
 
-Elle s'installe à côté de `paas` 2.25, sans le remplacer. La version 0.3.4,
-vérifiée contre l'API 2.31.0, offre deux niveaux :
+Elle s'installe à côté de `paas` 2.25, sans le remplacer. La version 0.3.5,
+vérifiée contre l'API 2.32.0, offre deux niveaux :
 - `paas-apps api`, qui donne accès aux **428 opérations** de l'API ;
 - des commandes métier, pour la session, la lecture des applications, des
   builds et des releases, et le diagnostic complet d'un échec (voir
@@ -121,6 +121,16 @@ de la plateforme :
 - `presumed: cause not established` : la cause n'est pas établie, elle est
   présumée côté plateforme ; `inferred from the code family` : le code n'est
   pas encore documenté, il est classé par sa famille.
+
+Depuis l'API 2.31.1, la marche à suivre suit qui doit agir. Pour `Paas`, sa
+première étape dit ce que la plateforme doit lever, et aucune étape ne demande
+de corriger le `paas.xml` ou le dépôt ; « Reconstruire ce commit quand la
+plateforme sera corrigée » relance le même commit. Pour une cause présumée,
+les étapes de diagnostic restent. Un build arrêté par le scan du pipeline
+renvoie à son rapport (`paas builds cve <build> --app <app>`).
+
+Les diagnostics d'un plan refusé (`plan_refused`) forment une table dont la
+première colonne, `WHO`, dit qui doit agir sur chacun : `Cust` ou `Paas`.
 
 Dans une table (`releases list`, `builds list`), une erreur sur une ligne
 commence par `[Cust]` ou `[Paas]`.
