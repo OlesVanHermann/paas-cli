@@ -1,10 +1,10 @@
 # API tenant du PaaS di2amp : guide
 
-Ce guide explique les règles communes à toute l'API. Le détail des **428
-opérations**, domaine par domaine, est dans la
+Ce guide explique les règles communes à toute l'API. Le détail des **433
+opérations** de l'API client, domaine par domaine, est dans la
 **[référence générée](API-REFERENCE.md)**. Le contrat machine, qui fait foi, est
 [`openapi.yaml`](openapi.yaml) (OpenAPI 3.0.3), vérifié contre
-l'API **2.31.0**.
+l'API **2.48.0**.
 
 | Élément | Valeur |
 |---|---|
@@ -152,13 +152,21 @@ enregistrées avant cette version la portent aussi.
 | `code` | Le code qui décide : code de refus (`ENV_…`, `V2_…`), code d'exécution (`TECHNICAL_…`), raison du rollout, ou le code de l'erreur |
 | `capability` | Pour la plateforme : la capacité qui lui manque (`composer.archive_size`, `pipeline.scan_gate`…) |
 | `summary` | La phrase à montrer telle quelle |
+| `rules`, `decided_at` | API 2.48.0 : la version des règles qui ont décidé et la date du verdict ; l'imputation est enregistrée avec lui et servie telle quelle à chaque lecture |
+| `transient` | API 2.47.0 : `true` pour un incident passager de la plateforme (la base du scanner injoignable un moment : `security_scan_unavailable`, `capability` `pipeline.scan_database`) ; rien ne manque, reconstruire le même commit suffit. Absent sinon |
 
 Pour `Paas`, les opérateurs de la plateforme sont prévenus : un correctif de
 l'application ne lèvera pas le refus. Chaque diagnostic d'un `plan_refused`
 porte aussi `owner`, `capability` et `basis`, et `refusal` (`code`, `path`,
 `rule`) quand un refus générique nomme le contrôle en cause. `last_failure`,
 dans `list_apps`, donne pour chaque application `code`, `stage`, `owner`,
-`label`, `basis`, `capability` et `reason_code` (le code qui décide).
+`label`, `basis`, `capability` et `reason_code` (le code qui décide) ;
+`get_app` donne le même objet depuis l'API 2.48.0. Quand les règles du jour
+décident autrement que le verdict, l'erreur porte `reclassification` (leur
+lecture, avec `rules`, et `at` une fois datée par un passage de la
+plateforme) à côté de `responsibility`, jamais à sa place ; la marche à
+suivre suit la lecture la plus récente. `last_failure` porte alors
+`reclassification` datée.
 
 | `code` | Étape | `details` |
 |---|---|---|

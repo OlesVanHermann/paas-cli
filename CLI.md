@@ -2,9 +2,9 @@
 
 `paas-apps` est la nouvelle CLI du PaaS di2amp.
 
-Elle s'installe à côté de `paas` 2.25, sans le remplacer. La version 0.3.5,
-vérifiée contre l'API 2.32.0, offre deux niveaux :
-- `paas-apps api`, qui donne accès aux **428 opérations** de l'API ;
+Elle s'installe à côté de `paas`, sans le remplacer. Sa version suit celle de la
+plateforme : la 2.48.0, vérifiée contre l'API 2.48.0, offre deux niveaux :
+- `paas-apps api`, qui donne accès aux **433 opérations** de l'API client ;
 - des commandes métier, pour la session, la lecture des applications, des
   builds et des releases, et le diagnostic complet d'un échec (voir
   [Diagnostiquer un échec](#diagnostiquer-un-échec)). Les autres viendront au
@@ -30,7 +30,7 @@ Pour télécharger un seul exécutable sans cloner le dépôt, suivez le
 | Option | Variable d'environnement | Rôle |
 |---|---|---|
 | `--api-url URL` | `PAAS_API_URL` | Origine de l'API. Par défaut, celle de la session, sinon `https://console.di2amp.com`. Les formes `…/api` sont acceptées |
-| `--app APP` | `PAAS_APP` | Application (nom ou UUID) pour les commandes `apps info`, `builds` et `releases` |
+| `--app APP` | `PAAS_APP` | Application (nom ou UUID) pour les commandes `apps info`, `apps security-updates`, `builds`, `releases`, `ps` et `secrets` |
 | `--json` | | JSON au lieu des tableaux |
 | `--timeout N` | | Délai maximal par requête, en secondes (30 par défaut) |
 
@@ -52,13 +52,18 @@ Variables d'environnement supplémentaires :
 | `health` | Version de l'API et état de ses dépendances (sans session) |
 | `regions` | Régions d'hébergement (sans session) |
 | `apps list [--region R]` | Applications actives du tenant, triées par nom ; colonne `FAILURE` : qui doit agir sur l'échec du dernier déploiement (`Cust` ou `Paas`), son code et la capacité qui manque à la plateforme (API 2.31.0) |
-| `apps info [NOM]` | Détail d'une application (`NOM`, sinon `--app`) et, quand son dernier déploiement a échoué, son erreur complète |
+| `apps info [NOM]` | Détail d'une application (`NOM`, sinon `--app`) et, quand son dernier déploiement a échoué, son erreur complète ; ligne `failure` (API 2.48.0) : la même imputation que `apps list` |
+| `apps security-updates [NOM] [--mode manual\|automatic]` | Mises à jour de sécurité d'une application (API 2.47.0), quand la plateforme publie une révision corrigée de la base de son image : `manual` (par défaut) : une alerte nomme les CVE et la révision corrigée, vous reconstruisez ou poussez ; `automatic` : la plateforme commite la configuration corrigée dans le dépôt de l'app, la construit et la déploie. `--mode` règle le choix, puis le mode et les mises à jour s'affichent |
 | `builds list [--limit N]` | Derniers builds de `--app` (10 par défaut, 100 au plus), avec le code d'échec de chacun (colonne `FAILURE`) |
 | `builds info BUILD` | Un build, ses étapes et, quand il a échoué, son erreur complète |
 | `builds cve BUILD [--limit N] [--offset N]` | Rapport CVE d'un build : verdict, politique appliquée, chaque faille avec ce qui bloque et ce qui est accepté (et jusqu'à quand), puis la marche à suivre |
 | `builds test BUILD` | Tests du locataire d'un build : commande, statut, code de sortie, durée, image et journal |
-| `releases list [--limit N]` | Dernières releases de `--app`, avec leur état courant et le code d'échec de chacune (10 par défaut, 100 au plus) |
-| `releases info ID` | Une release : état enregistré, prise en charge et, quand elle a échoué, son erreur complète (et celle de sa release liée) |
+| `builds bases` | Bases qu'un Dockerfile peut prendre en `FROM` (API 2.34.0) et, depuis l'API 2.47.0, le dernier rescan quotidien de chaque image publiée (colonne `RESCAN`) : `clean`, `revision_due DATE` (une révision corrigée est due à cette date), `overdue DATE`, `unavailable` (le scan n'a pas pu tourner), `-` (jamais rescannée). Sans `--app` |
+| `releases list [--limit N]` | Dernières releases de `--app`, avec leur état courant et le code d'échec de chacune (10 par défaut, 100 au plus) ; dit comment servir une release appliquée à 0 réplique (`scaled-zero`) et où fournir les valeurs qu'attend une release `awaiting_secrets` (API 2.48.0) |
+| `releases info ID` | Une release : état enregistré, prise en charge et, quand elle a échoué, son erreur complète (et celle de sa release liée) ; ce qu'attend une release `scaled-zero` ou `awaiting_secrets` |
+| `ps` | Processus de `--app` (API 2.48.0) : répliques voulues et prêtes, redémarrages des pods de la release courante, état (`scaled-zero`, `running`, `degraded`, `not-ready`) et pods ; un pod d'une release remplacée encore vivant est marqué `(superseded)` |
+| `secrets provided` | Valeurs que vous fournissez à `--app` (API 2.48.0) : chaque nom que son `paas.xml` déclare `secrets.<NOM>.provide`, son état (`provided`, `missing`, `placeholder`) et la release qui attend les valeurs manquantes ; aucune valeur n'est jamais affichée |
+| `secrets provide NOM [--value-file FICHIER]` | Fournit la valeur de `NOM` : lue dans le fichier (sans son saut de ligne final), sinon sur l'entrée standard (saisie sans écho au clavier), **jamais en argument**, envoyée dans le corps de la requête. Dit ce qui reste à fournir ; quand rien ne manque, la release qui attendait repart sans nouveau push |
 
 Le mot de passe se lit **uniquement** sur l'entrée standard
 (`--password-stdin`), ou se saisit au clavier. Il n'existe pas d'option
@@ -121,6 +126,23 @@ de la plateforme :
 - `presumed: cause not established` : la cause n'est pas établie, elle est
   présumée côté plateforme ; `inferred from the code family` : le code n'est
   pas encore documenté, il est classé par sa famille.
+- `now` (API 2.48.0) : l'imputation affichée sur la ligne `owner` est celle
+  du verdict, enregistrée avec lui ; quand les règles du jour décident
+  autrement, la ligne `now` donne leur lecture, avec leur version et celle
+  du verdict (`before 2.48.0` pour un verdict plus ancien). La phrase et la
+  marche à suivre affichées suivent cette lecture :
+  `now     Cust (customer; decided by V2_SECRET_NOT_PROVIDED) (rules 2.48.0, the verdict's: before 2.48.0)`.
+- `passing incident in …` (API 2.47.0) : un incident passager de la
+  plateforme (la base du scanner injoignable un moment, par exemple, code
+  `security_scan_unavailable`) ; rien ne manque, reconstruire le même commit
+  suffit.
+
+Depuis l'API 2.47.0, quand toutes les failles qui bloquent une image sont
+dans sa base et que la plateforme a publié une révision corrigée de cette
+base, les détails du scan la nomment
+(`Corrected revision published: recipe … , catalogue … (fixes CVE-…)`, ou
+`base …` pour le `FROM` d'un Dockerfile), et la première étape de la marche à
+suivre donne la ligne à écrire.
 
 Depuis l'API 2.31.1, la marche à suivre suit qui doit agir. Pour `Paas`, sa
 première étape dit ce que la plateforme doit lever, et aucune étape ne demande

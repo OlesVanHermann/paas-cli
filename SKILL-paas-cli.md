@@ -5,11 +5,13 @@ description: Utilise la CLI `paas-apps` du PaaS di2amp pour agir sur le PaaS dep
 
 # CLI `paas-apps` du PaaS di2amp
 
-`paas-apps` (0.3.5, API 2.32.0) pilote l'API tenant du PaaS di2amp. Elle
-offre deux niveaux :
+`paas-apps` (2.48.0, API 2.48.0) pilote l'API tenant du PaaS di2amp ; sa
+version suit celle de la plateforme. Elle offre deux niveaux :
 - des **commandes métier** lisibles : session, applications, builds,
-  releases, diagnostic des échecs, santé, régions ;
-- **`paas-apps api`**, qui donne accès aux **428 opérations** de l'API,
+  releases, processus (`ps`), valeurs à fournir (`secrets`), diagnostic des
+  échecs, mises à jour de sécurité, bases admises d'un Dockerfile, santé,
+  régions ;
+- **`paas-apps api`**, qui donne accès aux **433 opérations** de l'API client,
   chacune par son identifiant (`operationId`).
 
 ## 1. Vérifier l'outil et la session
@@ -79,8 +81,14 @@ export PAAS_CREDENTIALS_FILE=/dev/shm/paas-session-$$/credentials.json
 | Un build, ses étapes et son échec complet | `paas-apps --app NOM builds info BUILD_ID` |
 | Rapport CVE d'un build : ce qui bloque, ce qui est accepté | `paas-apps --app NOM builds cve BUILD_ID` |
 | Tests d'un build : commande, code de sortie, journal | `paas-apps --app NOM builds test BUILD_ID` |
+| Bases admises pour le `FROM` d'un Dockerfile, et dernier rescan de chaque image publiée (`RESCAN`) | `paas-apps builds bases` |
+| Mises à jour de sécurité d'une application : mode et historique | `paas-apps apps security-updates NOM` |
+| Choisir le mode des mises à jour de sécurité | `paas-apps apps security-updates NOM --mode manual` (ou `automatic`) |
 | Releases avec leur état courant et leur code d'échec | `paas-apps --app NOM releases list --limit 5` |
 | Une release et son échec complet | `paas-apps --app NOM releases info RELEASE_ID` |
+| Processus et pods de la release courante (`(superseded)` : release remplacée) | `paas-apps --app NOM ps` |
+| Valeurs à fournir (`secrets.<NOM>.provide`) et leur état | `paas-apps --app NOM secrets provided` |
+| Fournir une valeur : fichier privé ou entrée standard, jamais en argument | `paas-apps --app NOM secrets provide NOM_VALEUR --value-file FICHIER` |
 
 `NOM` est le nom ou l'UUID de l'application.
 
@@ -105,13 +113,21 @@ une phrase, code et étape, détails, fin du journal et marche à suivre.
      à la personne, avec le code et la capacité ;
    - `presumed` : la cause n'est pas établie, elle est présumée côté
      plateforme ; `inferred from the code family` : le code n'est pas encore
-     documenté, il est classé par sa famille.
+     documenté, il est classé par sa famille ;
+   - `passing incident in …` (en JSON, `responsibility.transient`) : un
+     incident passager de la plateforme ; rien ne manque, reconstruisez le
+     même commit plus tard.
 4. Selon le code :
    - `security_scan_blocked` : `builds cve BUILD_ID` liste chaque faille avec
      ce qui bloque et ce qui est accepté. Les étapes proposent l'extrait de
      `paas.xml` à coller (`security.cve_exceptions`, une par une, ou
      `security.block_on`). C'est une **décision de la personne** : ne
-     l'acceptez jamais à sa place ;
+     l'acceptez jamais à sa place. Quand les failles sont dans la base de
+     l'image et que la plateforme a publié sa révision corrigée, la ligne
+     `Corrected revision published: …` la nomme : adopter cette révision
+     corrige sans accepter de risque ;
+   - `security_scan_unavailable` : la base du scanner était injoignable ;
+     incident passager, reconstruisez le même commit ;
    - `plan_refused` : chaque diagnostic nomme la clé du `paas.xml` et la règle ;
    - `tests_failed` : `builds test BUILD_ID` donne la commande, son code de
      sortie et son journal ;
@@ -211,6 +227,14 @@ BUILD=$(paas-apps --app NOM --json builds list --limit 1 | jq -r '.[0].build_id'
 - **Release** : `releases list` donne l'état courant (`running` avec les
   réplicas prêts sur le total voulu). `releases info` donne l'état enregistré
   du déploiement. Pour savoir ce qui est servi, utilisez `releases list`.
+  `scaled-zero` : release appliquée à 0 réplique, celle de l'application ;
+  `paas scale web 1` la sert. `awaiting_secrets` : la release attend des
+  valeurs que la personne fournit (`secrets provided`) ; demandez-les-lui,
+  ne les inventez pas, et transmettez-les par fichier privé ou entrée
+  standard (`secrets provide`).
+- **Qui doit agir** : la ligne `owner` est l'imputation du verdict ; une
+  ligne `now` donne la lecture des règles du jour quand elle diffère : la
+  marche à suivre affichée suit `now`.
 - Les listes paginées ne renvoient que la **première page**, 100 éléments au
   plus.
 

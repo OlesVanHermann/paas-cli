@@ -1,6 +1,6 @@
 ---
 name: paas-api
-description: Appelle directement l'API HTTP tenant du PaaS di2amp (https://console.di2amp.com/api/v1) avec curl et jq, sans exposer les secrets. Couvre les 428 opérations — applications, addons, builds, déploiements, configuration et secrets, domaines, volumes, observabilité, équipe, tenant, facturation, IA, fonctions — avec la référence complète dans API-REFERENCE.md, et la lecture de l'erreur complète d'un build ou d'un déploiement en échec (paas.error.v1 : cause, failles CVE, diagnostics du paas.xml, tests, démarrage, marche à suivre). À utiliser pour interroger, diagnostiquer ou piloter le PaaS di2amp sans la CLI, ou pour connaître le format exact d'une requête ou d'une réponse.
+description: Appelle directement l'API HTTP tenant du PaaS di2amp (https://console.di2amp.com/api/v1) avec curl et jq, sans exposer les secrets. Couvre les 433 opérations de l'API client — applications, addons, builds, déploiements, configuration et secrets, domaines, volumes, observabilité, équipe, tenant, facturation, IA, fonctions — avec la référence complète dans API-REFERENCE.md, et la lecture de l'erreur complète d'un build ou d'un déploiement en échec (paas.error.v1 : cause, failles CVE, diagnostics du paas.xml, tests, démarrage, marche à suivre). À utiliser pour interroger, diagnostiquer ou piloter le PaaS di2amp sans la CLI, ou pour connaître le format exact d'une requête ou d'une réponse.
 ---
 
 # API tenant du PaaS di2amp
@@ -150,7 +150,7 @@ paas GET /v1/apps/mon-app/builds/BUILD/test | jq '.data | {status, command, exit
 | `details` | Propre au code : failles bloquantes et acceptées, diagnostics du `paas.xml` (clé et règle), commande de test, état du conteneur, événements… |
 | `remediation[]` | Marche à suivre, dans l'ordre : `title`, `command` (CLI `paas`), `paas_xml` (extrait prêt à coller), `docs` |
 | `log_excerpt` | Fin du journal de l'étape : `lines`, `exit_code`, `truncated` |
-| `responsibility` | Qui doit agir (API 2.31.0) : `label` `Cust` (le `paas.xml` ou le dépôt se corrige) ou `Paas` (la plateforme ne sait pas encore le faire ; `capability` nomme ce qui lui manque) ; `basis` : `documented`, `rule`, `family` (déduit de la famille du code), `presumption` (cause présumée) ; `summary` à montrer tel quel |
+| `responsibility` | Qui doit agir (API 2.31.0) : `label` `Cust` (le `paas.xml` ou le dépôt se corrige) ou `Paas` (la plateforme ne sait pas encore le faire ; `capability` nomme ce qui lui manque) ; `basis` : `documented`, `rule`, `family` (déduit de la famille du code), `presumption` (cause présumée) ; `summary` à montrer tel quel ; `transient` (API 2.47.0) : `true` pour un incident passager de la plateforme, que la reconstruction du même commit suffit à passer |
 
 Règles :
 - lisez d'abord `responsibility` : pour `Paas`, ne modifiez pas le logiciel

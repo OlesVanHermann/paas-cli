@@ -2,17 +2,17 @@
 
 # Référence de l'API tenant
 
-428 opérations, vérifiées contre l'API 2.32.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+433 opérations, vérifiées contre l'API 2.48.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
 | [`addons`](#domaine-addons) | Services managés attachés aux applications (bases de données, caches, files…) et leurs sauvegardes | 42 |
 | [`ai`](#domaine-ai) | Agents IA, points de terminaison IA, GPU, fine-tuning et bases vectorielles | 45 |
-| [`apps`](#domaine-apps) | Applications du tenant, cycle de vie, restauration, environnements de prévisualisation | 63 |
+| [`apps`](#domaine-apps) | Applications du tenant, cycle de vie, restauration, environnements de prévisualisation | 65 |
 | [`auth`](#domaine-auth) | Sessions, connexion (mot de passe, OAuth, MFA), jetons, clés API et clés SSH | 40 |
 | [`billing`](#domaine-billing) | Offres, consommation, factures, moyens de paiement et alertes de dépense | 36 |
-| [`builds`](#domaine-builds) | Constructions d'images, preuves (scan, SBOM, signature), cache et pipelines | 22 |
-| [`config`](#domaine-config) | Variables de configuration, secrets et coffres externes | 34 |
+| [`builds`](#domaine-builds) | Constructions d'images, preuves (scan, SBOM, signature), cache et pipelines | 23 |
+| [`config`](#domaine-config) | Variables de configuration, secrets et coffres externes | 36 |
 | [`deploys`](#domaine-deploys) | Déploiements (releases), promotion et retour arrière | 14 |
 | [`domains`](#domaine-domains) | Domaines personnalisés et certificats | 6 |
 | [`environments`](#domaine-environments) | Environnements d'exécution standard (catalogue, plans) | 9 |
@@ -1531,6 +1531,8 @@ Applications du tenant, cycle de vie, restauration, environnements de prévisual
 | [`get_scale_status`](#get_scale_status) | `GET /v1/apps/{app_id}/scale` | Instances de chaque processus d'une application |
 | [`scale_process`](#scale_process) | `POST /v1/apps/{app_id}/scale` | Change le nombre d'instances d'un processus |
 | [`get_scale_to_zero_status`](#get_scale_to_zero_status) | `GET /v1/apps/{app_id}/scale-to-zero/status` | Mise en veille automatique d'une application |
+| [`get_security_updates`](#get_security_updates) | `GET /v1/apps/{app_id}/security-updates` | Mode des mises à jour de sécurité d'une application et ses alertes (base corrigée publiée) |
+| [`set_security_updates_mode`](#set_security_updates_mode) | `PUT /v1/apps/{app_id}/security-updates` | Choisit les mises à jour de sécurité d'une application : manual (alertes) ou automatic |
 | [`get_shell_status`](#get_shell_status) | `GET /v1/apps/{app_id}/shell` | Disponibilité du terminal distant d'une application |
 | [`regenerate_subdomain`](#regenerate_subdomain) | `POST /v1/apps/{app_id}/subdomain/regenerate` | Attribue un nouveau sous-domaine à une application |
 | [`transfer_app`](#transfer_app) | `POST /v1/apps/{app_id}/transfer` | Transfère une application vers un autre tenant |
@@ -2477,6 +2479,39 @@ Réponse : [`ScaleToZeroStatus`](#type-scaletozerostatus)
 
 ```bash
 paas-apps api call get_scale_to_zero_status <app_id>
+```
+
+### `get_security_updates`
+
+Mode des mises à jour de sécurité d'une application et ses alertes (base corrigée publiée)
+
+`GET /v1/apps/{app_id}/security-updates` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+
+Réponse : JSON libre
+
+```bash
+paas-apps api call get_security_updates <app_id>
+```
+
+### `set_security_updates_mode`
+
+Choisit les mises à jour de sécurité d'une application : manual (alertes) ou automatic
+
+`PUT /v1/apps/{app_id}/security-updates` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+
+Corps : [`ModeBody`](#type-modebody)  
+Réponse : JSON libre
+
+```bash
+paas-apps api call set_security_updates_mode <app_id> -d '<json>' --yes
 ```
 
 ### `get_shell_status`
@@ -3737,6 +3772,7 @@ Constructions d'images, preuves (scan, SBOM, signature), cache et pipelines
 | [`get_nixpacks`](#get_nixpacks) | `GET /v1/apps/{app_id}/nixpacks` | Configuration de build (nixpacks) d'une application |
 | [`trigger_rescan`](#trigger_rescan) | `POST /v1/apps/{app_id}/security/scans` | Relance le scan de sécurité d'une application |
 | [`get_latest_scan`](#get_latest_scan) | `GET /v1/apps/{app_id}/security/scans/latest` | Dernier scan de sécurité d'une application |
+| [`list_build_bases`](#list_build_bases) | `GET /v1/build/bases` | Bases admises pour un Dockerfile, avec le dernier rescan de chaque image publiée et la révision corrigée qu'elle doit |
 | [`get_build_by_id`](#get_build_by_id) | `GET /v1/builds/{build_id}` | Build par son identifiant |
 | [`get_build_scan`](#get_build_scan) | `GET /v1/builds/{build_id}/scan` | Résultat du scan de sécurité d'un build |
 | [`get_cosign_pub`](#get_cosign_pub) | `GET /v1/cosign.pub` | Clé publique de vérification des signatures (cosign) |
@@ -3893,7 +3929,7 @@ SBOM (inventaire logiciel) d'un build
 | `app_id` | chemin | nom ou UUID d'application | oui |
 | `build_id` | chemin | string | oui |
 
-Réponse : [`GetSbomResponse`](#type-getsbomresponse)
+Réponse : JSON libre
 
 ```bash
 paas-apps api call get_sbom <app_id> <build_id>
@@ -3979,6 +4015,18 @@ Réponse : [`ScanSummary`](#type-scansummary)
 
 ```bash
 paas-apps api call get_latest_scan <app_id>
+```
+
+### `list_build_bases`
+
+Bases admises pour un Dockerfile, avec le dernier rescan de chaque image publiée et la révision corrigée qu'elle doit
+
+`GET /v1/build/bases` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+Réponse : JSON libre
+
+```bash
+paas-apps api call list_build_bases
 ```
 
 ### `get_build_by_id`
@@ -4121,6 +4169,8 @@ Variables de configuration, secrets et coffres externes
 | [`list_env_secrets`](#list_env_secrets) | `GET /v1/apps/{app_id}/secrets/env` | Secrets exposés en variables d'environnement |
 | [`put_env_secrets`](#put_env_secrets) | `PUT /v1/apps/{app_id}/secrets/env` | Définit des secrets exposés en variables d'environnement |
 | [`delete_env_secret`](#delete_env_secret) | `DELETE /v1/apps/{app_id}/secrets/env/{key}` | Retire un secret exposé en variable d'environnement |
+| [`list_provided_secrets`](#list_provided_secrets) | `GET /v1/apps/{app_id}/secrets/provided` | Valeurs que le locataire fournit (secrets.<NOM>.provide) : état de chaque nom déclaré et release qui les attend, sans aucune valeur |
+| [`provide_secret`](#provide_secret) | `PUT /v1/apps/{app_id}/secrets/provided/{name}` | Fournit la valeur d'un nom déclaré provide, dans le corps de la requête ; la release qui attend les valeurs reprend sans nouveau push |
 | [`post_rotate_secret`](#post_rotate_secret) | `POST /v1/apps/{app_id}/secrets/{key}/rotate` | Renouvelle la valeur d'un secret |
 | [`get_secret`](#get_secret) | `GET /v1/apps/{app_id}/secrets/{name}` | Métadonnées d'un secret |
 | [`update_secret`](#update_secret) | `PUT /v1/apps/{app_id}/secrets/{name}` | Modifie un secret |
@@ -4472,6 +4522,40 @@ Réponse : aucun contenu
 
 ```bash
 paas-apps api call delete_env_secret <app_id> <key> --yes
+```
+
+### `list_provided_secrets`
+
+Valeurs que le locataire fournit (secrets.<NOM>.provide) : état de chaque nom déclaré et release qui les attend, sans aucune valeur
+
+`GET /v1/apps/{app_id}/secrets/provided` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+
+Réponse : [`ListProvidedSecretsResponse`](#type-listprovidedsecretsresponse)
+
+```bash
+paas-apps api call list_provided_secrets <app_id>
+```
+
+### `provide_secret`
+
+Fournit la valeur d'un nom déclaré provide, dans le corps de la requête ; la release qui attend les valeurs reprend sans nouveau push
+
+`PUT /v1/apps/{app_id}/secrets/provided/{name}` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+| `name` | chemin | string | oui |
+
+Corps : [`ProvideSecretRequest`](#type-providesecretrequest)  
+Réponse : [`ProvideSecretResponse`](#type-providesecretresponse)
+
+```bash
+paas-apps api call provide_secret <app_id> <name> -d '<json>' --yes
 ```
 
 ### `post_rotate_secret`
@@ -7296,6 +7380,7 @@ Seuls `id` et `name` sont garantis. `http_endpoints`, `http_endpoints_status` et
 | `name` | string | oui |
 | `tenant_id` | string | non |
 | `status` | string | non |
+| `error_message` | string | non |
 | `region` | string | non |
 | `subdomain` | string | non |
 | `url` | string | non |
@@ -7323,6 +7408,7 @@ Seuls `id` et `name` sont garantis. `http_endpoints`, `http_endpoints_status` et
 | `http_endpoints` | tableau de JSON libre | non |
 | `http_endpoints_status` | string | non |
 | `serving_deploy_id` | string | non |
+| `current_release` | [`CurrentRelease`](#type-currentrelease) | non |
 | `last_error` | [`PaasError`](#type-paaserror) | non |
 | `last_failure` | [`AppFailure`](#type-appfailure) | non |
 
@@ -7336,6 +7422,7 @@ Seuls `id` et `name` sont garantis. `http_endpoints`, `http_endpoints_status` et
 | `type` | string | oui |
 | `plan` | string | oui |
 | `version` | string | non |
+| `last_error` | string | non |
 | `status` | string | oui |
 | `var_name` | string | oui |
 | `aliases` | tableau de string | non |
@@ -7414,6 +7501,8 @@ L'échec du dernier déploiement d'une application, dans la liste (`last_failure
 | `basis` | string | non |
 | `capability` | string | non |
 | `reason_code` | string | non |
+| `rules` | string | non |
+| `reclassification` | JSON libre | non |
 
 ### Type `AppHealthcheckStatus`
 
@@ -8267,6 +8356,20 @@ Provenance d'un build : sources, étapes, scan, SBOM, signature, promotion
 | `key_name` | string | oui |
 | `created_at` | string | oui |
 
+### Type `CurrentRelease`
+
+API 2.48.0 : la release qu'une application sert, dans `get_app` : son identifiant, son build, son commit, son état (projeté comme dans `list_deploys` : `running`, `scaled-zero`, `maintenance`…), ses répliques et son image.
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `id` | string | oui |
+| `build_id` | string | non |
+| `commit` | string | non |
+| `status` | string | oui |
+| `replicas` | [`ReplicaStatus`](#type-replicastatus) | non |
+| `image` | string | non |
+| `created_at` | string | non |
+
 ### Type `CurrentUser`
 
 | Champ | Type | Obligatoire |
@@ -8317,6 +8420,7 @@ Provenance d'un build : sources, étapes, scan, SBOM, signature, promotion
 | `policy` | JSON libre | non |
 | `verdict` | string | oui |
 | `blocking` | tableau de [`Blocking`](#type-blocking) | oui |
+| `secrets` | tableau de [`SecretFinding`](#type-secretfinding) | oui |
 | `error` | [`PaasError`](#type-paaserror) | non |
 
 ### Type `CveSummary`
@@ -9131,6 +9235,8 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `deploy_id` | JSON libre | non |
 | `lines` | JSON libre | non |
 | `text` | JSON libre | non |
+| `source` | JSON libre | non |
+| `pod` | JSON libre | non |
 
 ### Type `GetResidencyHistoryResponse`
 
@@ -9177,12 +9283,6 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `started_at` | JSON libre | non |
 | `finished_at` | JSON libre | non |
 
-### Type `GetSbomResponse`
-
-| Champ | Type | Obligatoire |
-|---|---|---|
-| `raw` | JSON libre | non |
-
 ### Type `GetServiceMapResponse`
 
 | Champ | Type | Obligatoire |
@@ -9194,7 +9294,12 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 
 | Champ | Type | Obligatoire |
 |---|---|---|
-| `raw` | JSON libre | non |
+| `build_id` | JSON libre | non |
+| `image_ref` | JSON libre | non |
+| `signed_digest` | JSON libre | non |
+| `signature_status` | JSON libre | non |
+| `attestation_status` | JSON libre | non |
+| `public_key` | JSON libre | non |
 
 ### Type `GetSlowQueriesResponse`
 
@@ -9325,6 +9430,7 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `expires_at` | string | oui |
 | `created_at` | string | oui |
 | `revoked_at` | string | non |
+| `held_by_caller` | boolean | oui |
 
 ### Type `GitLinkResponse`
 
@@ -9719,6 +9825,16 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 |---|---|---|
 | `plans` | JSON libre | non |
 
+### Type `ListProvidedSecretsResponse`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `build_id` | JSON libre | non |
+| `secrets` | JSON libre | non |
+| `awaiting_deploy_id` | JSON libre | non |
+| `name` | JSON libre | non |
+| `state` | JSON libre | non |
+
 ### Type `ListRequiredDocumentsResponse`
 
 | Champ | Type | Obligatoire |
@@ -9899,6 +10015,12 @@ Fin du journal de l'étape en échec, sans valeur de secret
 | `scope` | JSON libre | oui |
 | `expires_at` | string | oui |
 
+### Type `ModeBody`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `mode` | string | oui |
+
 ### Type `ModelServingProvisionRequest`
 
 | Champ | Type | Obligatoire |
@@ -10026,7 +10148,7 @@ Fin du journal de l'étape en échec, sans valeur de secret
 
 ### Type `PaasError`
 
-Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un démarrage (schéma `paas.error.v1`, API 2.28.0 et suivantes). Tout y est pour corriger sans autre requête : l'étape, la cause, les détails propres au code, la marche à suivre et la fin du journal. Les textes sont à afficher tels quels ; aucune valeur de secret n'y figure. Codes et contenu de `details` : - `security_scan_blocked` (étape `scan`) : `policy` (`block_on`, nombre d'exceptions, origine), `counts`, `blocking` (chaque faille bloquante : `id`, `severity`, `package`, `installed`, `fixed`, `target`, `title`), `blocking_total`, `blocking_distinct`, `accepted` ; - `plan_refused` (étape `plan`) : `file`, `diagnostics` (code, chemin de la clé, message ; depuis l'API 2.31.0, aussi `owner`, `capability`, `basis`, et `refusal` quand un refus générique nomme le contrôle en cause), `diagnostics_total` ; - `build_step_failed`, `build_timed_out` (étape `build`) : `failed_tasks`, `platform_message`, `refusal` (`code`, `path`, `rule`) quand un contrôle documenté a échoué ; - `tests_failed` (étape `test`) : `tests` (commande, code de sortie), `failed_tasks`, `platform_message` ; - `admission_refused` (étape `admission`) : `platform_code`, `reason`, `platform_message` ; - `rollout_failed` (étape `rollout`) : `reason` (`oom_killed`, `probe_failed`, `process_exited`, `container_config`, `not_ready`, `unschedulable`, `volume_mount`, `image_pull`, `apply_refused`, `apply_timed_out`), `process`, `verdict`, `container_state`, `containers`, `events`, `probes`, `resources`, `port` ; - `database_not_ready` (étape `rollout`) : `service`, `platform_code`, `readiness_window_seconds`, `container_state`, `containers`, `events` ; - `deploy_failed` : objet de repli d'un échec antérieur à l'API 2.28.0 (voir `App.last_error`). Un code inconnu du client se lit comme les autres : `summary`, `message`, `remediation` et `details` restent valables.
+Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un démarrage (schéma `paas.error.v1`, API 2.28.0 et suivantes). Tout y est pour corriger sans autre requête : l'étape, la cause, les détails propres au code, la marche à suivre et la fin du journal. Les textes sont à afficher tels quels ; aucune valeur de secret n'y figure. Codes et contenu de `details` : - `security_scan_blocked` (étape `scan`) : `policy` (`block_on`, nombre d'exceptions, origine), `counts`, `blocking` (chaque faille bloquante : `id`, `severity`, `package`, `installed`, `fixed`, `target`, `title`), `blocking_total`, `blocking_distinct`, `accepted` ; - `plan_refused` (étape `plan`) : `file`, `diagnostics` (code, chemin de la clé, message ; depuis l'API 2.31.0, aussi `owner`, `capability`, `basis`, et `refusal` quand un refus générique nomme le contrôle en cause), `diagnostics_total` ; - `build_step_failed`, `build_timed_out` (étape `build`) : `failed_tasks`, `platform_message`, `refusal` (`code`, `path`, `rule`) quand un contrôle documenté a échoué ; - `tests_failed` (étape `test`) : `tests` (commande, code de sortie), `failed_tasks`, `platform_message` ; - `admission_refused` (étape `admission`) : `platform_code`, `reason`, `platform_message` ; - `secrets_not_provided` (étape `admission`, API 2.48.0) : `missing` (chaque `secrets.<NOM>` déclaré `provide` sans valeur) ; la release attend (`awaiting_secrets`), une étape de `remediation` par valeur ; - `rollout_failed` (étape `rollout`) : `reason` (`oom_killed`, `probe_failed`, `process_exited`, `container_config`, `not_ready`, `unschedulable`, `request_larger_than_nodes`, `volume_mount`, `image_pull`, `not_created`, `not_started`, `apply_refused`, `apply_timed_out`), `process`, `verdict`, `container_state`, `containers`, `events`, `probes`, `resources`, `port` ; depuis l'API 2.48.0, `not_created` (aucun pod créé) et `not_started` (aucun conteneur démarré) disent pourquoi, et `runtime_gap` la cause que le journal établit (`owner`, `capability` ou `key`, `extension`, `recipe`, `evidence`) ; - `database_not_ready` (étape `rollout`) : `service`, `platform_code`, `readiness_window_seconds`, `container_state`, `containers`, `events` ; - `deploy_failed` : objet de repli d'un échec antérieur à l'API 2.28.0 (voir `App.last_error`). Un code inconnu du client se lit comme les autres : `summary`, `message`, `remediation` et `details` restent valables.
 
 | Champ | Type | Obligatoire |
 |---|---|---|
@@ -10046,6 +10168,8 @@ Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un déma
 | `log_excerpt` | [`LogExcerpt`](#type-logexcerpt) | non |
 | `links` | objet (valeurs : string) | non |
 | `responsibility` | [`Responsibility`](#type-responsibility) | non |
+| `reclassification` | [`Responsibility`](#type-responsibility) | non |
+| `reviewed_rules` | string | non |
 
 ### Type `PatchAddonRequest`
 
@@ -10189,6 +10313,8 @@ Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un déma
 | `restarts` | integer | non |
 | `last_restart_at` | string | non |
 | `restart_reason` | string | non |
+| `release_id` | string | non |
+| `current` | boolean | non |
 
 ### Type `PostMaintenanceWindowResponse`
 
@@ -10381,6 +10507,23 @@ Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un déma
 | `deploy_id` | JSON libre | non |
 | `image_ref` | JSON libre | non |
 | `status` | JSON libre | non |
+
+### Type `ProvideSecretRequest`
+
+API 2.48.0 : la valeur d'un nom que le paas.xml déclare fournie par le locataire (`secrets.<NOM>.provide`), dans le corps de la requête, jamais dans son adresse ; scellée au repos avec les autres valeurs de l'application.
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `value` | string (secret) | oui |
+
+### Type `ProvideSecretResponse`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `name` | JSON libre | non |
+| `resumed_deploy_id` | JSON libre | non |
+| `state` | JSON libre | non |
+| `missing` | JSON libre | non |
 
 ### Type `ProvisionRequest`
 
@@ -10718,6 +10861,10 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 | `code` | string | oui |
 | `capability` | string | non |
 | `summary` | string | oui |
+| `transient` | boolean | non |
+| `rules` | string | non |
+| `decided_at` | string | non |
+| `at` | string | non |
 
 ### Type `RestartAppResponse`
 
@@ -10913,9 +11060,9 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 
 | Champ | Type | Obligatoire |
 |---|---|---|
-| `app_id` | JSON libre | non |
 | `process_type` | JSON libre | non |
 | `replicas` | JSON libre | non |
+| `app_id` | JSON libre | non |
 
 ### Type `ScaleRequest`
 
@@ -10979,6 +11126,19 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 | `access_token` | string (secret) | oui |
 | `expires_in` | integer | oui |
 | `audience` | string | oui |
+
+### Type `SecretFinding`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `rule` | string | oui |
+| `path` | string | oui |
+| `line` | integer | oui |
+| `severity` | string | oui |
+| `title` | string | oui |
+| `accepted_by` | string | non |
+| `expires_at` | string | non |
+| `reason` | string | non |
 
 ### Type `SecretMetadata`
 

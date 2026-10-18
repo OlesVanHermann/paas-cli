@@ -11,7 +11,7 @@ les agents IA (Claude Code…).
 | [`SHA256SUMS`](SHA256SUMS) | Sommes de contrôle des exécutables |
 | [`CLI.md`](CLI.md) | Guide de la CLI : commandes, options, variables d'environnement, codes de sortie |
 | [`API.md`](API.md) | Guide de l'API : authentification, enveloppes, erreurs, pagination |
-| [`API-REFERENCE.md`](API-REFERENCE.md) | **Référence de l'API** : les 428 opérations, par domaine, avec leurs paramètres, leurs types et leur appel CLI |
+| [`API-REFERENCE.md`](API-REFERENCE.md) | **Référence de l'API** : les 433 opérations de l'API client, par domaine, avec leurs paramètres, leurs types et leur appel CLI |
 | [`openapi.yaml`](openapi.yaml) | **Contrat de l'API** (OpenAPI 3.0.3), qui fait foi. Il permet aussi de générer un client dans votre langage |
 | [`SKILL-paas-cli.md`](SKILL-paas-cli.md) | Skill pour agents IA : utiliser la CLI |
 | [`SKILL-paas-api.md`](SKILL-paas-api.md) | Skill pour agents IA : appeler l'API en HTTP (curl) |
@@ -19,16 +19,28 @@ les agents IA (Claude Code…).
 | [`CHANGELOG.md`](CHANGELOG.md) | Contenu de la version publiée |
 | [`LICENSE`](LICENSE) | Licence MIT |
 
-**État** : CLI **0.3.5**, vérifiée contre l'API **2.32.0**.
+**État** : CLI **2.48.0**, vérifiée contre l'API **2.48.0** : les 433 opérations
+du contrat répondent sur le serveur en service. La version de la CLI est celle
+de la plateforme qu'elle sert.
 - `paas-apps api` donne accès à **toutes les opérations** de l'API, sauf les
   flux continus (journaux et terminal en direct).
 - Les commandes métier couvrent la session, la lecture des applications, des
-  builds et des releases, et le **diagnostic complet d'un échec** : étape,
-  cause, **qui doit agir** (`Cust` : le `paas.xml` ou le dépôt se corrige ;
-  `Paas` : la plateforme ne sait pas encore le faire, et nomme ce qui lui
-  manque), détails (failles CVE bloquantes, diagnostics du `paas.xml`,
+  builds et des releases, les mises à jour de sécurité d'une application
+  (`apps security-updates` : une alerte, ou une mise à jour faite par la
+  plateforme, quand elle publie une révision corrigée de la base de son
+  image), les bases admises d'un Dockerfile avec le dernier rescan de chaque
+  image publiée (`builds bases`), et le **diagnostic complet d'un échec** :
+  étape, cause, **qui doit agir** (`Cust` : le `paas.xml` ou le dépôt se
+  corrige ; `Paas` : la plateforme ne sait pas encore le faire, et nomme ce
+  qui lui manque, ou un incident passager, que la reconstruction du même
+  commit suffit à passer), détails (failles CVE bloquantes et révision
+  corrigée de la base quand elle est publiée, diagnostics du `paas.xml`,
   commande de test, état du conteneur…), marche à suivre et fin du journal.
   `apps list` montre `Cust` ou `Paas` pour chaque application en échec.
+- Depuis la 2.48.0 : les processus et les pods de la release courante
+  (`ps`), les valeurs que vous fournissez à une application et que sa
+  release attend (`secrets provided`, `secrets provide`, jamais en
+  argument), l'imputation du verdict et sa reclassification (`now`).
 - La CLI s'appelle `paas-apps` et s'installe à côté de la CLI `paas`, sans la
   remplacer.
 
@@ -144,10 +156,34 @@ cd exemples && ./push.sh wordpress mon-blog
 ./clean.up mon-blog      # la retire (réversible)
 ```
 
-L'application se construit à partir d'un `Dockerfile` à la racine. À défaut,
-la plateforme détecte le langage (`package.json`, `requirements.txt`,
-`go.mod`, `Cargo.toml`, `Gemfile`, `composer.json`, `pom.xml`…). Elle doit
-écouter sur `0.0.0.0:$PORT`.
+**Ce que la plateforme construit.** Elle ne devine pas le langage d'un dépôt :
+- le cas général est un `paas.xml` à la racine du dépôt. Il nomme le runtime, la
+  recette technique du catalogue (`paas environments:catalogue-store`), les
+  processus et la commande de test. `paas config plan` le vérifie en local,
+  avant le push ;
+- sans `paas.xml` ni `paas.toml`, seuls les logiciels que la plateforme
+  reconnaît dans son catalogue s'installent ;
+- un `Dockerfile` à la racine est construit tel quel quand le fichier de
+  configuration le déclare : `<runtime>dockerfile</runtime>` dans un
+  `paas.xml` (plateforme 2.34 ou plus récente), avec la commande de test et
+  l'image, épinglée par empreinte, où elle tourne
+  (`<test><command>…</command><image>IMAGE@sha256:…</image></test>`), le
+  processus `web` et son port. Un `paas.toml` qui déclare `test_command` et
+  `test_image` dans `[build]` reste accepté. Le build vérifie trois
+  conditions :
+  - chaque `FROM` est une image épinglée par empreinte (`@sha256:…`) que la
+    plateforme admet : son outillage et les images des recettes publiées du
+    catalogue. `paas-apps builds bases` les liste, avec leur rôle (`build`,
+    `test`, `run`), leur recette et le dernier rescan de chaque image
+    publiée ;
+  - le build ne télécharge que ce que le dépôt fixe : les dépendances sont
+    dans le dépôt ou, pour Python, installées par
+    `pip install --require-hashes --only-binary=:all: -r <verrou>`, chaque
+    ligne du verrou en `==` avec l'empreinte de ses fichiers ;
+  - l'image produite ne porte aucune faille CRITICAL ni HIGH, hors exceptions
+    déclarées.
+
+L'application écoute sur `0.0.0.0:$PORT`.
 
 ## Installer les skills (Claude Code)
 

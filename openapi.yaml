@@ -3,9 +3,9 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.32.0.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.48.0.
 
-    Il couvre les 428 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
+    Il couvre les 433 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
     Enveloppes des réponses (`x-paas-envelope`) :
     - `data` : `{ "data": T }`
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.32.0
+  x-paas-api-version-tested: 2.48.0
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -2653,11 +2653,7 @@ paths:
           description: Succès
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  raw: {}
-                additionalProperties: true
+              schema: {}
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -2685,7 +2681,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  raw: {}
+                  build_id: {}
+                  image_ref: {}
+                  signed_digest: {}
+                  signature_status: {}
+                  attestation_status: {}
+                  public_key: {}
                 additionalProperties: true
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -3551,6 +3552,8 @@ paths:
                       deploy_id: {}
                       lines: {}
                       text: {}
+                      source: {}
+                      pod: {}
                     additionalProperties: true
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -6271,9 +6274,9 @@ paths:
                   data:
                     type: object
                     properties:
-                      app_id: {}
                       process_type: {}
                       replicas: {}
+                      app_id: {}
                     additionalProperties: true
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -6459,6 +6462,84 @@ paths:
           $ref: '#/components/responses/NotFound'
       x-paas-aliases:
       - DELETE /v1/apps/{app_id}/config/secrets/{key}
+  /v1/apps/{app_id}/secrets/provided:
+    get:
+      operationId: list_provided_secrets
+      tags:
+      - config
+      summary: 'Valeurs que le locataire fournit (secrets.<NOM>.provide) : état de chaque nom déclaré et release qui les attend, sans aucune valeur'
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      build_id: {}
+                      secrets: {}
+                      awaiting_deploy_id: {}
+                      name: {}
+                      state: {}
+                    additionalProperties: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/apps/{app_id}/secrets/provided/{name}:
+    put:
+      operationId: provide_secret
+      tags:
+      - config
+      summary: Fournit la valeur d'un nom déclaré provide, dans le corps de la requête ; la release qui attend les valeurs reprend sans nouveau push
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProvideSecretRequest'
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      name: {}
+                      resumed_deploy_id: {}
+                      state: {}
+                      missing: {}
+                    additionalProperties: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableBody'
   /v1/apps/{app_id}/secrets/{key}/rotate:
     post:
       operationId: post_rotate_secret
@@ -6586,6 +6667,63 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /v1/apps/{app_id}/security-updates:
+    get:
+      operationId: get_security_updates
+      tags:
+      - apps
+      summary: Mode des mises à jour de sécurité d'une application et ses alertes (base corrigée publiée)
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data: {}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: set_security_updates_mode
+      tags:
+      - apps
+      summary: 'Choisit les mises à jour de sécurité d''une application : manual (alertes) ou automatic'
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModeBody'
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data: {}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableBody'
   /v1/apps/{app_id}/security/scans:
     post:
       operationId: trigger_rescan
@@ -8842,6 +8980,26 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/UsageDashboard'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/build/bases:
+    get:
+      operationId: list_build_bases
+      tags:
+      - builds
+      summary: Bases admises pour un Dockerfile, avec le dernier rescan de chaque image publiée et la révision corrigée qu'elle doit
+      x-paas-envelope: data
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data: {}
         '401':
           $ref: '#/components/responses/Unauthorized'
   /v1/builds/{build_id}:
@@ -13152,6 +13310,13 @@ components:
           nullable: true
           x-paas-observed-values:
           - running
+        error_message:
+          type: string
+          nullable: true
+          description: |
+            Pourquoi l'application est en état `error`, tel que la plateforme
+            le relève sur son exécution (par exemple `pod CrashLoopBackOff:
+            restarts=8`) ; absent sinon.
         region:
           type: string
           nullable: true
@@ -13251,6 +13416,14 @@ components:
         serving_deploy_id:
           type: string
           nullable: true
+        current_release:
+          allOf:
+          - $ref: '#/components/schemas/CurrentRelease'
+          nullable: true
+          description: |
+            Renvoyé par `get_app` (API 2.48.0) : la release que l'application
+            sert, telle que `list_deploys` la projette ; `null` sans release
+            servie.
         last_error:
           allOf:
           - $ref: '#/components/schemas/PaasError'
@@ -13267,10 +13440,10 @@ components:
           - $ref: '#/components/schemas/AppFailure'
           nullable: true
           description: |
-            Renvoyé par `list_apps` (API 2.31.0) : l'échec du dernier
-            déploiement de l'application, avec qui doit agir (`Cust` ou
-            `Paas`), `null` s'il n'a pas échoué. L'erreur complète est
-            `last_error` de `get_app`.
+            Renvoyé par `list_apps` (API 2.31.0) et par `get_app` (API
+            2.48.0, le même objet) : l'échec du dernier déploiement de
+            l'application, avec qui doit agir (`Cust` ou `Paas`), `null` s'il
+            n'a pas échoué. L'erreur complète est `last_error` de `get_app`.
     AppAddon:
       type: object
       properties:
@@ -13285,6 +13458,9 @@ components:
         plan:
           type: string
         version:
+          type: string
+          nullable: true
+        last_error:
           type: string
           nullable: true
         status:
@@ -13470,6 +13646,18 @@ components:
           type: string
           nullable: true
           description: Le code qui décide qui agit (`ENV_…`, `TECHNICAL_…`…)
+        rules:
+          type: string
+          nullable: true
+          description: 'API 2.48.0 : la version des règles du verdict, quand il l''a enregistrée'
+        reclassification:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: |
+            API 2.48.0 : la lecture des règles du jour quand elle décide
+            autrement et qu'un passage l'a datée : `owner`, `label`, `basis`,
+            `capability`, `reason_code`, `rules`, `at`.
     AppHealthcheckStatus:
       type: object
       properties:
@@ -15123,6 +15311,36 @@ components:
       - service_name
       - key_name
       - created_at
+    CurrentRelease:
+      type: object
+      description: |
+        API 2.48.0 : la release qu'une application sert, dans `get_app` : son
+        identifiant, son build, son commit, son état (projeté comme dans
+        `list_deploys` : `running`, `scaled-zero`, `maintenance`…), ses
+        répliques et son image.
+      required:
+      - id
+      - status
+      properties:
+        id:
+          type: string
+        build_id:
+          type: string
+          nullable: true
+        commit:
+          type: string
+          nullable: true
+        status:
+          type: string
+        replicas:
+          $ref: '#/components/schemas/ReplicaStatus'
+        image:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
     CurrentUser:
       type: object
       required:
@@ -15217,6 +15435,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Blocking'
+        secrets:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecretFinding'
         error:
           allOf:
           - $ref: '#/components/schemas/PaasError'
@@ -15233,6 +15455,7 @@ components:
       - excepted_critical
       - verdict
       - blocking
+      - secrets
     CveSummary:
       type: object
       properties:
@@ -15379,6 +15602,21 @@ components:
           - superseded
           - failed
           - crashloop
+          - awaiting_secrets
+          - scaled-zero
+          - maintenance
+          - unavailable
+          - unknown
+          description: |
+            État enregistré ; dans `list_deploys`, la release que l'application
+            sert porte l'état de son workload : `running`, `scaled-zero`
+            (appliquée à 0 réplique, depuis l'API 2.48.0 aussi après la route de
+            mise à l'échelle : `paas scale web 1` la sert), `maintenance`,
+            `unavailable` ou `unknown`. `awaiting_secrets` (API 2.48.0) :
+            build, tests, scan et signature faits, la release attend les valeurs
+            que le locataire fournit (`list_provided_secrets`) ; elle repart
+            seule quand la dernière est fournie (`provide_secret`), sans
+            nouveau push.
         image_ref:
           type: string
           nullable: true
@@ -15412,6 +15650,10 @@ components:
         rollout_status:
           type: string
           nullable: true
+          description: |
+            `scaled-zero` (API 2.48.0) : release appliquée à 0 réplique
+            (`status` `ready`), jamais jugée sur une fenêtre ; elle est la
+            release de l'application et `paas scale web 1` la sert.
         image_digest:
           type: string
           nullable: true
@@ -15992,6 +16234,8 @@ components:
           type: string
           format: date-time
           nullable: true
+        held_by_caller:
+          type: boolean
       required:
       - app_id
       - repository
@@ -16000,6 +16244,7 @@ components:
       - status
       - expires_at
       - created_at
+      - held_by_caller
     GitLinkResponse:
       type: object
       properties:
@@ -16774,6 +17019,13 @@ components:
       - remote
       - scope
       - expires_at
+    ModeBody:
+      type: object
+      properties:
+        mode:
+          type: string
+      required:
+      - mode
     ModelServingProvisionRequest:
       type: object
       properties:
@@ -16987,11 +17239,19 @@ components:
           `failed_tasks`, `platform_message` ;
         - `admission_refused` (étape `admission`) : `platform_code`, `reason`,
           `platform_message` ;
+        - `secrets_not_provided` (étape `admission`, API 2.48.0) : `missing`
+          (chaque `secrets.<NOM>` déclaré `provide` sans valeur) ; la release
+          attend (`awaiting_secrets`), une étape de `remediation` par valeur ;
         - `rollout_failed` (étape `rollout`) : `reason` (`oom_killed`,
           `probe_failed`, `process_exited`, `container_config`, `not_ready`,
-          `unschedulable`, `volume_mount`, `image_pull`, `apply_refused`,
+          `unschedulable`, `request_larger_than_nodes`, `volume_mount`,
+          `image_pull`, `not_created`, `not_started`, `apply_refused`,
           `apply_timed_out`), `process`, `verdict`, `container_state`,
-          `containers`, `events`, `probes`, `resources`, `port` ;
+          `containers`, `events`, `probes`, `resources`, `port` ; depuis l'API
+          2.48.0, `not_created` (aucun pod créé) et `not_started` (aucun
+          conteneur démarré) disent pourquoi, et `runtime_gap` la cause que le
+          journal établit (`owner`, `capability` ou `key`, `extension`,
+          `recipe`, `evidence`) ;
         - `database_not_ready` (étape `rollout`) : `service`, `platform_code`,
           `readiness_window_seconds`, `container_state`, `containers`, `events` ;
         - `deploy_failed` : objet de repli d'un échec antérieur à l'API 2.28.0
@@ -17019,6 +17279,7 @@ components:
           - build_timed_out
           - tests_failed
           - admission_refused
+          - secrets_not_provided
           - rollout_failed
           - database_not_ready
           - deploy_failed
@@ -17090,8 +17351,26 @@ components:
           nullable: true
           description: |
             Qui doit agir (API 2.31.0) : le client (`Cust`) ou la plateforme
-            (`Paas`). Calculé à chaque lecture, y compris pour les erreurs
-            enregistrées avant l'API 2.31.0 ; absent d'un serveur plus ancien.
+            (`Paas`). Depuis l'API 2.48.0, l'imputation est celle du verdict,
+            enregistrée avec lui (`rules`, `decided_at`) et servie telle quelle
+            à chaque lecture ; calculée seulement pour une erreur enregistrée
+            sans imputation. Absent d'un serveur antérieur à l'API 2.31.0.
+        reclassification:
+          allOf:
+          - $ref: '#/components/schemas/Responsibility'
+          nullable: true
+          description: |
+            API 2.48.0 : la lecture des règles du jour quand elle décide
+            autrement que le verdict, à côté de lui, jamais à sa place ; `at`
+            la date quand un passage des règles du jour l'a datée. La marche à
+            suivre suit la lecture la plus récente.
+        reviewed_rules:
+          type: string
+          nullable: true
+          description: |
+            API 2.48.0 : la version des règles du dernier passage qui a relu
+            cette imputation au démarrage de la plateforme ;
+            `reclassification` en est le résultat quand il décide autrement.
     PatchAddonRequest:
       type: object
       properties:
@@ -17354,6 +17633,11 @@ components:
         restart_reason:
           type: string
           nullable: true
+        release_id:
+          type: string
+          nullable: true
+        current:
+          type: boolean
       required:
       - pod_id
       - name
@@ -17550,6 +17834,19 @@ components:
       required:
       - from
       - to
+    ProvideSecretRequest:
+      type: object
+      description: |
+        API 2.48.0 : la valeur d'un nom que le paas.xml déclare fournie par le
+        locataire (`secrets.<NOM>.provide`), dans le corps de la requête,
+        jamais dans son adresse ; scellée au repos avec les autres valeurs de
+        l'application.
+      required:
+      - value
+      properties:
+        value:
+          type: string
+          writeOnly: true
     ProvisionRequest:
       type: object
       properties:
@@ -18095,6 +18392,29 @@ components:
         summary:
           type: string
           description: La phrase à montrer telle quelle
+        transient:
+          type: boolean
+          description: |
+            API 2.47.0 : incident passager de la plateforme (une origine
+            injoignable un moment, la base du scanner par exemple) ; rien ne
+            manque, reconstruire le même commit suffit (`capability` nomme
+            l'étape touchée). Absent quand il vaut `false`.
+        rules:
+          type: string
+          nullable: true
+          description: |
+            API 2.48.0 : la version des règles qui ont décidé (celle de la
+            plateforme) ; absent d'une imputation enregistrée avant.
+        decided_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: 'API 2.48.0 : quand le verdict a été décidé'
+        at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Dans `reclassification` seulement, quand un passage des règles du jour l'a datée
     RestorePitrRequest:
       type: object
       properties:
@@ -18397,6 +18717,36 @@ components:
       - access_token
       - expires_in
       - audience
+    SecretFinding:
+      type: object
+      properties:
+        rule:
+          type: string
+        path:
+          type: string
+        line:
+          type: integer
+          format: int64
+        severity:
+          type: string
+        title:
+          type: string
+        accepted_by:
+          type: string
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+      required:
+      - rule
+      - path
+      - line
+      - severity
+      - title
     SecretMetadata:
       type: object
       properties:

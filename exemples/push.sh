@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Installe un exemple sur le PaaS di2amp par le chemin normal d'un client :
-# l'arbre amont exact du logiciel, le paas.xml de l'exemple, puis git push.
+# Installe un exemple sur le PaaS di2amp par le chemin normal d'un client : l'arbre
+# amont exact (ou le code de l'exemple), le paas.xml de l'exemple, puis git push.
 #
 #   ./push.sh wordpress             installe l'exemple wordpress dans l'app « wordpress »
 #   ./push.sh wordpress mon-blog    même exemple, app « mon-blog »
@@ -44,35 +44,68 @@ fi
 printf '%s' "$APP" | grep -qE '^[a-z][a-z0-9-]{1,38}[a-z0-9]$' \
     || die "nom d'app invalide : $APP (3 à 40 caractères : minuscules, chiffres, tirets)"
 
-# Source amont : adresse, étiquette et commit attendu.
+# Source : l'arbre amont (adresse, étiquette, commit attendu) ou, pour un exemple
+# qui apporte son propre code, le dossier de l'exemple et son arbre Git attendu.
 field() { sed -n "s/^$1=//p" "$SRC/source" | head -1; }
-URL=$(field url)
-REF=$(field ref)
-COMMIT=$(field commit)
-[ -n "$URL" ] && [ -n "$REF" ] && printf '%s' "$COMMIT" | grep -qE '^[0-9a-f]{40}$' \
-    || die "$SRC/source incomplet : url, ref et commit (40 caractères) sont requis"
+LOCAL=$(field local)
+if [ -n "$LOCAL" ]; then
+    TREE=$(field tree)
+    [ -d "$SRC/$LOCAL" ] && printf '%s' "$TREE" | grep -qE '^[0-9a-f]{40}$' \
+        || die "$SRC/source incomplet : local (un dossier de l'exemple) et tree (40 caractères) sont requis"
+else
+    URL=$(field url)
+    REF=$(field ref)
+    COMMIT=$(field commit)
+    [ -n "$URL" ] && [ -n "$REF" ] && printf '%s' "$COMMIT" | grep -qE '^[0-9a-f]{40}$' \
+        || die "$SRC/source incomplet : url, ref et commit (40 caractères) sont requis"
+fi
+# Version minimale de la CLI : 2.30, ou celle que fixe le fichier source de l'exemple.
+MIN_PAAS=$(field paas)
+MIN_PAAS=${MIN_PAAS:-2.30.0}
 
 for tool in git jq paas; do
     command -v "$tool" >/dev/null || die "$tool introuvable"
 done
 version=$(paas --version | awk '{print $2}')
-printf '%s' "$version" | awk -F. '{ exit !($1 > 2 || ($1 == 2 && $2 >= 30)) }' \
-    || die "paas $version : la version 2.30 ou plus récente est requise (curl -fsSL https://get.di2amp.com/install.sh | sh)"
+printf '%s %s' "$version" "$MIN_PAAS" | awk '{
+    split($1, v, "."); split($2, m, ".")
+    for (i = 1; i <= 3; i++) if (v[i] + 0 != m[i] + 0) exit !(v[i] + 0 > m[i] + 0)
+    exit 0 }' \
+    || die "paas $version : la version $MIN_PAAS ou plus récente est requise (curl -fsSL https://get.di2amp.com/install.sh | sh)"
 paas whoami >/dev/null 2>&1 || die "aucune session : lancez « paas login --web »"
 
 REPO="$WORKDIR/$APP"
 SECRETS="$WORKDIR/$APP.secrets"
 mkdir -p "$WORKDIR"
 
-step "1. Source amont : $URL, $REF"
-if [ -d "$REPO/.git" ]; then
-    echo "déjà cloné : $REPO"
+if [ -n "$LOCAL" ]; then
+    step "1. Code de l'exemple : $EXAMPLE/$LOCAL"
+    if [ -d "$REPO/.git" ]; then
+        echo "déjà copié : $REPO"
+    else
+        mkdir -p "$REPO"
+        cp -R "$SRC/$LOCAL/." "$REPO/"
+        git -C "$REPO" init --quiet -b main
+        git -C "$REPO" add -A
+        git -C "$REPO" -c user.name=paas-exemples -c user.email=paas-exemples@example.invalid \
+            commit --quiet -m "$EXAMPLE : code de l'exemple"
+    fi
+    # Le premier commit du dépôt porte le code de l'exemple, octet pour octet.
+    root=$(git -C "$REPO" rev-list --max-parents=0 HEAD | head -1)
+    [ "$(git -C "$REPO" rev-parse "$root^{tree}")" = "$TREE" ] \
+        || die "$REPO ne part pas de l'arbre attendu $TREE (le dossier $EXAMPLE/$LOCAL a-t-il changé ?)"
+    echo "arbre de l'exemple vérifié : $TREE"
 else
-    git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$REF" "$URL" "$REPO"
+    step "1. Source amont : $URL, $REF"
+    if [ -d "$REPO/.git" ]; then
+        echo "déjà cloné : $REPO"
+    else
+        git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$REF" "$URL" "$REPO"
+    fi
+    git -C "$REPO" merge-base --is-ancestor "$COMMIT" HEAD 2>/dev/null \
+        || die "$REPO ne part pas du commit attendu $COMMIT (l'étiquette $REF a-t-elle bougé ?)"
+    echo "commit amont vérifié : $COMMIT"
 fi
-git -C "$REPO" merge-base --is-ancestor "$COMMIT" HEAD 2>/dev/null \
-    || die "$REPO ne part pas du commit attendu $COMMIT (l'étiquette $REF a-t-elle bougé ?)"
-echo "commit amont vérifié : $COMMIT"
 
 step "2. paas.xml et secrets scellés"
 [ -f "$REPO/paas.xml" ] || cp "$SRC/paas.xml" "$REPO/paas.xml"
@@ -160,7 +193,11 @@ else
     die "un accès Git est déjà actif pour $APP, mais pas dans ce dossier : attendez son expiration (paas git credentials status $APP) ou révoquez-le (paas git credentials revoke $APP)"
 fi
 tree=$(git -C "$REPO" rev-parse "HEAD^{tree}")
-message="$EXAMPLE : arbre amont $REF ($COMMIT) et paas.xml"
+if [ -n "$LOCAL" ]; then
+    message="$EXAMPLE : code de l'exemple (arbre $TREE) et paas.xml"
+else
+    message="$EXAMPLE : arbre amont $REF ($COMMIT) et paas.xml"
+fi
 # Le dépôt de l'app a sa propre histoire (souvent un premier commit) : le
 # commit poussé porte l'arbre complet, avec la tête distante pour parent.
 rc=0
