@@ -1,27 +1,48 @@
 # Exemples : une app en une commande
 
-Dix logiciels connus, prêts à installer sur le PaaS di2amp : `push.sh` en
-installe un en une commande, `clean.up` le retire. Chaque dossier contient :
+Treize logiciels connus, en cinq langages (PHP, Go, Node, Ruby, Python), prêts à
+installer sur le PaaS di2amp : `push.sh` en installe un en une commande, `clean.up`
+le retire. Chaque dossier contient :
 - `paas.xml`, la seule chose ajoutée au logiciel, qui reste inchangé ;
 - `source`, l'adresse, l'étiquette et le commit exacts de son code amont ;
 - `README.md`, ce que l'exemple installe et comment il a été vérifié ;
 - `valeurs` (Kanboard seulement), un secret dont le logiciel impose la valeur.
 
-| Exemple | Logiciel | Données | Politique CVE |
-|---|---|---|---|
-| [wordpress](wordpress/) | WordPress 7.1.2 | MySQL 8.4, volume de médias | par défaut |
-| [drupal](drupal/) | Drupal 11.4.7 | MySQL 8.4, volume de fichiers | par défaut |
-| [dokuwiki](dokuwiki/) | DokuWiki 2026-07-14c | fichiers sur volume, sans base | par défaut |
-| [bookstack](bookstack/) | BookStack 26.09.1 | MySQL 8.4, volume d'envois | par défaut |
-| [kanboard](kanboard/) | Kanboard 1.2.54 | SQLite sur volume | par défaut |
-| [freshrss](freshrss/) | FreshRSS 1.30.0 | SQLite sur volume | par défaut |
-| [piwigo](piwigo/) | Piwigo 16.4.0 | MySQL 8.4, volume | par défaut |
-| [opencart](opencart/) | OpenCart 4.1.0.4 | MySQL 8.4, volume | par défaut |
-| [filebrowser](filebrowser/) | FileBrowser Quantum 1.5.8 | fichiers sur volume | **liste d'exceptions** |
-| [listmonk](listmonk/) | listmonk 6.2.0 | PostgreSQL 16, volume d'envois | **contrôle désactivé** |
+| Exemple | Langage | Logiciel | Données | Politique CVE |
+|---|---|---|---|---|
+| [wordpress](wordpress/) | PHP | WordPress 7.1.2 | MySQL 8.4, volume de médias | par défaut |
+| [drupal](drupal/) | PHP | Drupal 11.4.7 | MySQL 8.4, volume de fichiers | par défaut |
+| [dokuwiki](dokuwiki/) | PHP | DokuWiki 2026-07-14c | fichiers sur volume, sans base | par défaut |
+| [bookstack](bookstack/) | PHP | BookStack 26.09.1 | MySQL 8.4, volume d'envois | par défaut |
+| [kanboard](kanboard/) | PHP | Kanboard 1.2.54 | SQLite sur volume | par défaut |
+| [freshrss](freshrss/) | PHP | FreshRSS 1.30.0 | SQLite sur volume | par défaut |
+| [piwigo](piwigo/) | PHP | Piwigo 16.4.0 | MySQL 8.4, volume | par défaut |
+| [opencart](opencart/) | PHP | OpenCart 4.1.0.4 | MySQL 8.4, volume | par défaut |
+| [filebrowser](filebrowser/) | Go | FileBrowser Quantum 1.5.8 | fichiers sur volume | **liste d'exceptions** |
+| [listmonk](listmonk/) | Go | listmonk 6.2.0 | PostgreSQL 16, volume d'envois | **contrôle désactivé** |
+| [etherpad](etherpad/) | Node | Etherpad 3.3.7 | PostgreSQL 16, deux volumes | **contrôle désactivé** |
+| [discourse](discourse/) | Ruby | Discourse 2026.8.0 | PostgreSQL 16, Redis 7.4, SMTP, trois volumes | **contrôle désactivé** |
+| [erpnext](erpnext/) | Python | ERPNext 16.37.0 | MariaDB 11.8, Redis 7.4, volume | **liste d'exceptions** |
 
-Les dix fonctionnent : chacun a été installé de bout en bout le
-11 octobre 2026 (voir « Vérification »).
+Les treize fonctionnent : les dix premiers ont été installés de bout en bout le
+11 octobre 2026, etherpad, discourse et erpnext le 19 octobre (voir
+« Vérification »).
+
+## Ce que montre un exemple : N1, N0, N2
+
+Le `paas.xml` déclare les trois niveaux de la plateforme :
+- **N1, la recette** : le langage et son outillage, que la plateforme construit
+  hors ligne (PHP 8.4, Go 1.27, Node 24 avec npm ou pnpm, Ruby 3.4, Python 3.14
+  avec Node) ;
+- **N0, les processus, le stockage et le cycle de vie** : processus web et
+  workers, volumes, installation et mises à jour du logiciel ;
+- **N2, les services** : bases PostgreSQL, MySQL ou MariaDB dédiées, Redis,
+  relais SMTP, réservés pour l'app.
+
+Les README d'etherpad, de discourse et d'erpnext les détaillent (section
+« Ce que l'exemple montre »). En Python, seule la recette fermée de la
+plateforme (Python avec Node) prend aujourd'hui des services : c'est celle
+d'ERPNext.
 
 ## Politique CVE : trois exemples
 
@@ -29,7 +50,7 @@ Chaque image construite est scannée ; la porte de sécurité la refuse si une
 faille n'est pas acceptée. Les exemples montrent les trois réglages :
 - **par défaut** (huit exemples, aucune section `<security>`) : toute faille
   HIGH ou CRITICAL bloque l'image. Ces huit-là n'en ont aucune ;
-- **liste d'exceptions** ([filebrowser](filebrowser/), mode A) : chaque
+- **liste d'exceptions** ([filebrowser](filebrowser/), [erpnext](erpnext/), mode A) : chaque
   faille acceptée est nommée, avec son paquet, sa raison et sa date limite ;
   toute autre faille HIGH ou CRITICAL bloque toujours :
 
@@ -42,7 +63,8 @@ faille n'est pas acceptée. Les exemples montrent les trois réglages :
   </security>
   ```
 
-- **contrôle désactivé** ([listmonk](listmonk/), mode B) : le scan tourne et
+- **contrôle désactivé** ([listmonk](listmonk/), [etherpad](etherpad/),
+  [discourse](discourse/), mode B) : le scan tourne et
   son rapport reste lisible, mais rien ne bloque, CRITICAL comprises. À
   réserver aux essais ; `<block_on>critical</block_on>` n'accepte que les
   HIGH :
@@ -56,6 +78,11 @@ HIGH, trois dans la bibliothèque standard de Go 1.27.1 (la version des
 recettes Go de la plateforme, corrigée en 1.27.2) et une dans
 `golang.org/x/net` (corrigée en v0.60.0, qu'aucune de leurs versions
 publiées n'utilise encore).
+Etherpad et Discourse aussi : aucune de leurs versions publiées n'est exempte
+de paquets npm ou de gems vulnérables (Discourse 2026.9.0 corrige les siens,
+mais la plateforme n'en publie pas encore la fermeture de dépendances). ERPNext
+nomme deux failles : pdfkit 1.0.0, sans version corrigée, et weasyprint 68.0,
+corrigée en 70.0, que sa fermeture n'a pas encore.
 `paas-apps --app <app> builds cve <build>` montre chaque faille, si elle
 bloque ou par quoi elle est acceptée.
 
@@ -108,8 +135,10 @@ paas-apps --app mon-blog releases list   # avec la CLI de ce dépôt
 Chaque exemple crée un compte de démonstration `paasadmin` (adresse
 `paasadmin@example.com`). Son mot de passe est dans
 `~/paas-exemples/<app>.secrets/PAASADMIN_PASSWORD`. Son rôle dépend du
-logiciel : administrateur dans WordPress, client de la boutique dans
-OpenCart ; la section `<accounts>` du `paas.xml` dit comment il est créé.
+logiciel : administrateur dans WordPress, Discourse et ERPNext (System
+Manager), client de la boutique dans OpenCart, simple utilisateur dans Etherpad
+(son administrateur y est le compte `administrator`) ; la section `<accounts>`
+ou `<account>` du `paas.xml` dit comment il est créé.
 `KANBOARD_INITIAL_PASSWORD` vaut le mot de passe initial que Kanboard écrit
 pour son compte `admin` (`admin`, fichier `kanboard/valeurs`) : l'installation
 s'en sert une fois pour se connecter, puis le remplace par un mot de passe
@@ -168,10 +197,11 @@ valeur invalide, avec un diagnostic `CODE@chemin`.
 `clean.up` retire une app installée par `./push.sh` depuis ce poste, et
 refuse toute autre app. Il :
 1. révoque l'accès Git encore actif ;
-2. supprime l'app. La suppression est réversible : le dépôt, les volumes et
-   l'historique sont conservés, et `paas apps restore <uuid>` la rétablit
-   tant que son build reste restaurable (le script affiche l'UUID ;
-   `paas apps inspect-deleted <uuid>` dit ce qui bloquerait) ;
+2. supprime l'app. Elle reste restaurable pendant le délai de corbeille que
+   la suppression annonce (`paas apps restore <uuid>` ; le script affiche
+   l'UUID ; `paas apps inspect-deleted <uuid>` dit ce qui bloquerait) ; ce
+   délai passé, la plateforme efface tout ce qu'elle laisse (dépôt, volumes,
+   images, fiche) et n'en garde que les traces (audit, journal) ;
 3. range le dossier local, secrets compris, dans
    `~/paas-exemples/.corbeille/<date>-<app>/`, avec l'UUID de l'app.
 
@@ -196,6 +226,13 @@ app supprimée se réutilise.
   acceptées, l'une par les exceptions, l'autre par la politique.
 - Les dix sont replanifiés sans erreur avec leurs fichiers finaux
   (`./push.sh --plan`, 26 s pour les dix).
+- Le 19 octobre 2026, `./push.sh` a installé etherpad, discourse et erpnext de
+  bout en bout (`paas` 2.49.5 et 2.49.7), et la connexion du compte `paasadmin`
+  a été vérifiée dans le logiciel : page d'Etherpad (et 401 sans identifiant),
+  API de Discourse (un sujet créé, relu et trouvé par la recherche), API
+  d'ERPNext (System Manager, un document créé puis relu). Discourse a ensuite
+  été retiré par `./clean.up` puis effacé par la plateforme : plus aucune
+  ressource, à aucun niveau.
 - `./clean.up` a retiré chaque app de test : accès Git révoqué, app
   supprimée, dossier local rangé avec son UUID. Une relance de `./push.sh` sur
   une app déjà poussée reprend sans nouveau build ; le nom d'une app supprimée

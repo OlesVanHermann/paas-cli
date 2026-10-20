@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : discourse. Dérivé du fichier installé par push.sh et vérifié en service sur la plateforme di2amp le 2026-10-18 (plateforme 2.48.0, app discourse-test, build build-20eec576), retiré ensuite.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <paas_spec_version>v2.9.0</paas_spec_version>
+  <app><name>discourse</name><version>2026.8.0</version></app>
+  <build><runtime>ruby</runtime><runtime_version>3.4.10</runtime_version>
+    <recipe>ruby34-pnpm-offline-v1</recipe><catalogue>2026.09.30.ruby.3</catalogue>
+    <toolchains><node>24.20.0</node><pnpm>10.34.6</pnpm></toolchains>
+    <ruby><bundler_version>4.0.11</bundler_version>
+      <bundle_without><item>development</item><item>test</item><item>migrations</item></bundle_without>
+      <development_directories><item>spec</item></development_directories>
+      <development_packages><item>lefthook</item><item>lefthook-linux-x64</item></development_packages>
+      <runtime_node>
+        <packages>
+          <item>node_modules/@discourse/moment-timezone-names-translations</item>
+          <item>node_modules/@fortawesome/fontawesome-free</item>
+          <item>frontend/discourse/node_modules/moment</item>
+          <item>frontend/discourse/node_modules/moment-timezone</item>
+          <item>frontend/discourse/node_modules/@highlightjs/cdn-assets</item>
+          <item>frontend/discourse/node_modules/loader.js</item>
+        </packages>
+        <files><item>node_modules/.pnpm/lock.yaml</item></files>
+      </runtime_node>
+    </ruby>
+    <resources><node_heap_mb>4096</node_heap_mb><parallelism>2</parallelism></resources>
+    <env><RAILS_ENV>production</RAILS_ENV><EMBER_ENV>production</EMBER_ENV><SKIP_DB_AND_REDIS>1</SKIP_DB_AND_REDIS><SKIP_EMBER_CLI_COMPILE>1</SKIP_EMBER_CLI_COMPILE><DISCOURSE_DOWNLOAD_PRE_BUILT_ASSETS>0</DISCOURSE_DOWNLOAD_PRE_BUILT_ASSETS><DISCOURSE_HOSTNAME>localhost</DISCOURSE_HOSTNAME></env>
+    <steps>
+      <item><argv><item>pnpm</item><item>install</item><item>--offline</item><item>--frozen-lockfile</item><item>--ignore-scripts</item><item>--store-dir</item><item>/cache/pnpm</item></argv></item>
+      <item><argv><item>bundle</item><item>check</item></argv></item>
+      <item><argv><item>pnpm</item><item>--dir</item><item>frontend/discourse</item><item>build</item></argv></item>
+      <item><argv><item>bundle</item><item>exec</item><item>rake</item><item>assets:precompile:build_plugins</item></argv></item>
+      <item><argv><item>bundle</item><item>exec</item><item>rake</item><item>assets:precompile</item></argv></item>
+    </steps>
+    <test><command>ruby -c config/application.rb &amp;&amp; ruby -c config/pitchfork.conf.rb &amp;&amp; ruby -c app/controllers/session_controller.rb &amp;&amp; ruby -c app/models/topic.rb &amp;&amp; ruby -c app/models/post.rb</command></test>
+  </build>
+  <dependencies>
+    <closure><manifest_sha256>27cb6b87544272c84efac156f08ca0334fa074b983e532ec3ec1487da7150820</manifest_sha256></closure>
+    <patches><item><source_sha256>20b3aeb1d6a545acc0047639534fb585e9023e1ba1aa58c4905a28b5ca1404fa</source_sha256></item></patches>
+  </dependencies>
+  <processes>
+    <item><name>web</name><type>web</type><replicas>1</replicas><argv><item>nginx</item><item>-c</item><item>/app/paas-nginx.conf</item><item>-g</item><item>daemon off;</item></argv><port>8080</port></item>
+    <item><name>server</name><type>worker</type><mode>in-process</mode><replicas>1</replicas><argv><item>bundle</item><item>exec</item><item>pitchfork</item><item>-c</item><item>config/pitchfork.conf.rb</item></argv></item>
+  </processes>
+  <resources><cpu>2</cpu><memory>4Gi</memory></resources>
+  <healthcheck><path>/srv/status</path><port>8080</port></healthcheck>
+  <services>
+    <database><type>postgresql</type><version>16</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls>
+      <extensions><item>hstore</item><item>pg_trgm</item><item>unaccent</item><item>vector</item></extensions><ca_file>/data/postgres-ca.pem</ca_file>
+      <env><DISCOURSE_DB_HOST>{{services.database.host}}</DISCOURSE_DB_HOST><DISCOURSE_DB_PORT>{{services.database.port}}</DISCOURSE_DB_PORT><DISCOURSE_DB_NAME>{{services.database.database}}</DISCOURSE_DB_NAME><DISCOURSE_DB_USERNAME>{{services.database.user}}</DISCOURSE_DB_USERNAME><DISCOURSE_DB_PASSWORD>{{services.database.password}}</DISCOURSE_DB_PASSWORD><PGSSLROOTCERT>{{services.database.ca_file}}</PGSSLROOTCERT><PGSSLMODE>verify-full</PGSSLMODE></env>
+    </database>
+    <redis><type>redis</type><version>7.4.11</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls><persistence>aof</persistence><eviction>noeviction</eviction><ca_file>/data/redis-ca.pem</ca_file>
+      <env><DISCOURSE_REDIS_HOST>{{services.redis.host}}</DISCOURSE_REDIS_HOST><DISCOURSE_REDIS_PORT>{{services.redis.port}}</DISCOURSE_REDIS_PORT><DISCOURSE_REDIS_USERNAME>{{services.redis.user}}</DISCOURSE_REDIS_USERNAME><DISCOURSE_REDIS_PASSWORD>{{services.redis.password}}</DISCOURSE_REDIS_PASSWORD><DISCOURSE_REDIS_DB>{{services.redis.database}}</DISCOURSE_REDIS_DB><DISCOURSE_REDIS_USE_SSL>true</DISCOURSE_REDIS_USE_SSL><SSL_CERT_FILE>{{services.redis.ca_file}}</SSL_CERT_FILE></env>
+    </redis>
+    <mail><type>smtp</type><provider>shared</provider><mode>capture</mode>
+      <env><DISCOURSE_SMTP_ADDRESS>{{services.mail.host}}</DISCOURSE_SMTP_ADDRESS><DISCOURSE_SMTP_PORT>{{services.mail.port}}</DISCOURSE_SMTP_PORT><DISCOURSE_SMTP_ENABLE_START_TLS>false</DISCOURSE_SMTP_ENABLE_START_TLS></env>
+    </mail>
+  </services>
+  <storage><volumes>
+    <item><name>uploads</name><mount>/app/public/uploads</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item><item>server</item></processes></item>
+    <item><name>state</name><mount>/data</mount><size>1Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item><item>server</item></processes></item>
+    <item><name>stylesheets</name><mount>/app/public/stylesheets</mount><size>1Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item><item>server</item></processes></item>
+  </volumes></storage>
+  <env><RAILS_ENV>production</RAILS_ENV><DISCOURSE_HOSTNAME>{{app.host}}</DISCOURSE_HOSTNAME><DISCOURSE_FORCE_HTTPS>true</DISCOURSE_FORCE_HTTPS>
+    <DISCOURSE_SECRET_KEY_BASE>{{secrets.SECRET_KEY_BASE}}</DISCOURSE_SECRET_KEY_BASE><DISCOURSE_DB_POOL>8</DISCOURSE_DB_POOL>
+    <DISCOURSE_SMTP_DOMAIN>{{app.host}}</DISCOURSE_SMTP_DOMAIN><DISCOURSE_SMTP_AUTHENTICATION></DISCOURSE_SMTP_AUTHENTICATION>
+    <DISCOURSE_SERVE_STATIC_ASSETS>false</DISCOURSE_SERVE_STATIC_ASSETS><DISCOURSE_LOGS_STDOUT>true</DISCOURSE_LOGS_STDOUT><DISCOURSE_DOWNLOAD_PRE_BUILT_ASSETS>0</DISCOURSE_DOWNLOAD_PRE_BUILT_ASSETS>
+    <UNICORN_WORKERS>2</UNICORN_WORKERS><UNICORN_SIDEKIQS>1</UNICORN_SIDEKIQS><UNICORN_PORT>3000</UNICORN_PORT>
+  </env>
+  <secrets><SECRET_KEY_BASE><generate>hex</generate><bytes>64</bytes><rotate>never</rotate></SECRET_KEY_BASE>
+    <PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+  <lifecycle><state_directory>/data/lifecycle</state_directory><lock>true</lock><interrupted>resume</interrupted>
+    <install><argv><item>bundle</item><item>exec</item><item>rake</item><item>db:migrate</item><item>site_settings:import</item><item>assets:precompile:css</item></argv><stdin_template><![CDATA[title: Discourse PaaS XML
+force_https: "true"
+login_required: "true"
+enable_signup_cta: "false"
+invite_only: "true"
+allow_new_registrations: "true"
+use_email_for_username_and_name_suggestions: "true"
+wizard_enabled: "false"
+discourse_ai_enabled: "false"
+notification_email: forum@example.test
+backup_location: local
+authorized_extensions: "jpg|jpeg|png|gif|heic|heif|webp|avif|svg|jxl|pdf"
+max_attachment_size_kb: "20480"
+]]></stdin_template><timeout_seconds>1800</timeout_seconds></install>
+    <upgrade><argv><item>bundle</item><item>exec</item><item>rake</item><item>db:migrate</item><item>site_settings:import</item><item>assets:precompile:css</item></argv><stdin_template><![CDATA[authorized_extensions: "jpg|jpeg|png|gif|heic|heif|webp|avif|svg|jxl|pdf"
+max_attachment_size_kb: "20480"
+]]></stdin_template><timeout_seconds>1800</timeout_seconds></upgrade>
+    <checks>
+      <item><phase>before-install</phase><service>database</service><query>SELECT COUNT(*) FROM pg_tables WHERE schemaname='public'</query><equals>0</equals></item>
+      <item><phase>before-upgrade</phase><service>database</service><query>SELECT COUNT(*) FROM users u JOIN user_emails e ON e.user_id=u.id WHERE e.email=$1 AND u.username=$2 AND u.admin=true AND u.active=true</query><parameters><item>{{account.email}}</item><item>{{account.username}}</item></parameters><equals>1</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM users u JOIN user_emails e ON e.user_id=u.id WHERE e.email=$1 AND u.username=$2 AND u.admin=true AND u.active=true</query><parameters><item>{{account.email}}</item><item>{{account.username}}</item></parameters><equals>1</equals></item>
+    </checks>
+  </lifecycle>
+  <account><username>paasowner</username><email>paasowner@example.invalid</email><title>Discourse PaaS XML</title>
+    <create><item>bundle</item><item>exec</item><item>rake</item><item>admin:create</item></create>
+    <stdin_template><![CDATA[{{account.email}}
+{{account.password}}
+{{account.password}}
+y
+]]></stdin_template><timeout_seconds>600</timeout_seconds><success_exit_codes><item>0</item></success_exit_codes>
+    <constraints><password_min>32</password_min><password_max>64</password_max></constraints>
+  </account>
+  <!-- Compte de test paasadmin : mot de passe scellé pour la plateforme, créé par la commande native. -->
+  <accounts><item><username>paasadmin</username><email>paasadmin@example.com</email><title>paasadmin</title>
+    <password_secret>PAASADMIN_PASSWORD</password_secret>
+    <create><item>bundle</item><item>exec</item><item>rake</item><item>admin:create</item></create>
+    <stdin_template><![CDATA[{{user.email}}
+{{user.password}}
+{{user.password}}
+y
+]]></stdin_template><timeout_seconds>600</timeout_seconds><success_exit_codes><item>0</item></success_exit_codes>
+  </item></accounts>
+  <files><item><path>/app/paas-nginx.conf</path><render>build</render><mode>0444</mode><template><![CDATA[pid /tmp/paas-nginx.pid;
+error_log /dev/stderr warn;
+worker_processes 1;
+events { worker_connections 512; }
+http {
+ include /etc/nginx/mime.types;
+ default_type application/octet-stream;
+ access_log /dev/stdout;
+ server_tokens off;
+ client_body_temp_path /tmp/nginx-client;
+ proxy_temp_path /tmp/nginx-proxy;
+ fastcgi_temp_path /tmp/nginx-fastcgi;
+ uwsgi_temp_path /tmp/nginx-uwsgi;
+ scgi_temp_path /tmp/nginx-scgi;
+ server {
+  listen 8080;
+  root /app/public;
+  client_max_body_size 24m;
+  location ~ (^|/)\. { return 404; }
+  location / { try_files $uri @application; }
+  location @application {
+   proxy_pass http://127.0.0.1:3000;
+   proxy_http_version 1.1;
+   proxy_set_header Host $host;
+   proxy_set_header X-Forwarded-Host $host;
+   proxy_set_header X-Forwarded-Proto https;
+   proxy_set_header X-Forwarded-Port 443;
+   proxy_set_header X-Real-IP $remote_addr;
+   proxy_set_header X-Forwarded-For $remote_addr;
+   proxy_read_timeout 60s;
+   proxy_redirect off;
+  }
+ }
+}
+]]></template></item>
+    <item><path>config/git-utils-overrides.json</path><render>build</render><mode>0444</mode><template><![CDATA[{
+  "git_version": "badad7b0456a628e578bc48b9f8c1259422b5d58",
+  "git_branch": "main",
+  "full_version": "{{app.version}}"
+}
+]]></template></item>
+  </files>
+  <!-- Mode B (docs/SECURITE.md §2) : aucune faille ne bloque l'image ; le scan tourne et reste enregistré.
+       Ajouté le 2026-10-10 (règle : dernière version sans CVE, sinon sans contrôle CVE) : Discourse 2026.8.0 embarque
+       les gems jwt, oauth, oauth2, oj et rubyzip vulnérables (5 HIGH, scan local Trivy du 2026-10-10). 2026.9.0 les
+       corrige, mais sa fermeture de dépendances n'est pas encore publiée par la plateforme (plan :
+       ENV_DEPENDENCY_PATCH_PREIMAGE) : passer en 2026.9.0 et retirer ce bloc dès qu'elle le sera. -->
+  <security><block_on>none</block_on></security>
+</paas>

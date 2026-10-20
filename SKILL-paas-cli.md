@@ -11,7 +11,7 @@ version suit celle de la plateforme. Elle offre deux niveaux :
   releases, processus (`ps`), valeurs à fournir (`secrets`), diagnostic des
   échecs, mises à jour de sécurité, bases admises d'un Dockerfile, santé,
   régions ;
-- **`paas-apps api`**, qui donne accès aux **433 opérations** de l'API client,
+- **`paas-apps api`**, qui donne accès aux **437 opérations** de l'API client,
   chacune par son identifiant (`operationId`).
 
 ## 1. Vérifier l'outil et la session
@@ -89,6 +89,11 @@ export PAAS_CREDENTIALS_FILE=/dev/shm/paas-session-$$/credentials.json
 | Processus et pods de la release courante (`(superseded)` : release remplacée) | `paas-apps --app NOM ps` |
 | Valeurs à fournir (`secrets.<NOM>.provide`) et leur état | `paas-apps --app NOM secrets provided` |
 | Fournir une valeur : fichier privé ou entrée standard, jamais en argument | `paas-apps --app NOM secrets provide NOM_VALEUR --value-file FICHIER` |
+| Listes de dépendances que la plateforme produit (mode, productions) | `paas-apps --app NOM dependencies list` |
+| Une production : liste, provenance, commit | `paas-apps --app NOM dependencies show ID` |
+| Redemander la liste (seule façon de la changer) | `paas-apps --app NOM dependencies produce` |
+| Mode `manual` : accepter une liste proposée | `paas-apps --app NOM dependencies accept ID` |
+| Choisir comment la liste rejoint la branche | `paas-apps --app NOM dependencies mode automatic` (ou `manual`) |
 
 `NOM` est le nom ou l'UUID de l'application.
 

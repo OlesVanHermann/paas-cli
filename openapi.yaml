@@ -3,9 +3,9 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.48.0.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.51.1.
 
-    Il couvre les 433 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
+    Il couvre les 437 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
     Enveloppes des réponses (`x-paas-envelope`) :
     - `data` : `{ "data": T }`
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.48.0
+  x-paas-api-version-tested: 2.51.1
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -3226,6 +3226,120 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/AppDedicatedIpStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/apps/{app_id}/dependency-lists:
+    get:
+      operationId: list_dependency_lists
+      tags:
+      - apps
+      summary: 'Listes de dépendances que la plateforme produit pour une application : mode, options offertes, productions'
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data: {}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: produce_dependency_list
+      tags:
+      - apps
+      summary: Demande une nouvelle production de la liste de dépendances depuis la tête de la branche de l'application
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      responses:
+        '202':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data: {}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: set_dependency_lists_mode
+      tags:
+      - apps
+      summary: 'Choisit comment une liste produite rejoint la branche de l''application : automatic (avance rapide) ou manual (proposée)'
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DependencyListsModeBody'
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data: {}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableBody'
+  /v1/apps/{app_id}/dependency-lists/{list_id}/accept:
+    post:
+      operationId: accept_dependency_list
+      tags:
+      - apps
+      summary: Intègre une liste proposée à la branche de l'application, par avance rapide (mode manual)
+      x-paas-envelope: data
+      parameters:
+      - name: app_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: list_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data: {}
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -15578,6 +15692,13 @@ components:
       - tenant_id
       - requests
       - total
+    DependencyListsModeBody:
+      type: object
+      properties:
+        mode:
+          type: string
+      required:
+      - mode
     Deploy:
       type: object
       description: |
@@ -15654,6 +15775,8 @@ components:
             `scaled-zero` (API 2.48.0) : release appliquée à 0 réplique
             (`status` `ready`), jamais jugée sur une fenêtre ; elle est la
             release de l'application et `paas scale web 1` la sert.
+            `pending` : déploiement non commencé, y compris, depuis l'API
+            2.48.1, pendant `awaiting_secrets` (`progressing` en 2.48.0).
         image_digest:
           type: string
           nullable: true
@@ -17024,6 +17147,9 @@ components:
       properties:
         mode:
           type: string
+        method:
+          type: string
+          nullable: true
       required:
       - mode
     ModelServingProvisionRequest:

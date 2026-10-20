@@ -14,7 +14,7 @@ Le script clone la source amont, ajoute ce `paas.xml`, scelle les secrets, véri
 
 Secrets scellés par le script (valeurs dans `~/paas-exemples/<app>.secrets/`) : `PAASADMIN_PASSWORD`, tiré au hasard ; `KANBOARD_INITIAL_PASSWORD`, le mot de passe initial que Kanboard écrit pour son compte `admin` (`admin`, fichier [`valeurs`](valeurs)), que l'installation remplace aussitôt par un mot de passe généré.
 
-Retirer l'app : `./clean.up mon-app` (réversible ; voir [Retirer une app](../README.md#retirer-une-app)).
+Retirer l'app : `./clean.up mon-app` (restaurable pendant la corbeille ; voir [Retirer une app](../README.md#retirer-une-app)).
 
 ## Logiciel d'origine
 

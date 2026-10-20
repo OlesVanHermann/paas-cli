@@ -1,6 +1,6 @@
 # API tenant du PaaS di2amp : guide
 
-Ce guide explique les règles communes à toute l'API. Le détail des **433
+Ce guide explique les règles communes à toute l'API. Le détail des **437
 opérations** de l'API client, domaine par domaine, est dans la
 **[référence générée](API-REFERENCE.md)**. Le contrat machine, qui fait foi, est
 [`openapi.yaml`](openapi.yaml) (OpenAPI 3.0.3), vérifié contre

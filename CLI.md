@@ -4,7 +4,7 @@
 
 Elle s'installe à côté de `paas`, sans le remplacer. Sa version suit celle de la
 plateforme : la 2.48.0, vérifiée contre l'API 2.48.0, offre deux niveaux :
-- `paas-apps api`, qui donne accès aux **433 opérations** de l'API client ;
+- `paas-apps api`, qui donne accès aux **437 opérations** de l'API client ;
 - des commandes métier, pour la session, la lecture des applications, des
   builds et des releases, et le diagnostic complet d'un échec (voir
   [Diagnostiquer un échec](#diagnostiquer-un-échec)). Les autres viendront au
@@ -30,7 +30,7 @@ Pour télécharger un seul exécutable sans cloner le dépôt, suivez le
 | Option | Variable d'environnement | Rôle |
 |---|---|---|
 | `--api-url URL` | `PAAS_API_URL` | Origine de l'API. Par défaut, celle de la session, sinon `https://console.di2amp.com`. Les formes `…/api` sont acceptées |
-| `--app APP` | `PAAS_APP` | Application (nom ou UUID) pour les commandes `apps info`, `apps security-updates`, `builds`, `releases`, `ps` et `secrets` |
+| `--app APP` | `PAAS_APP` | Application (nom ou UUID) pour les commandes `apps info`, `apps security-updates`, `builds`, `releases`, `ps`, `secrets` et `dependencies` |
 | `--json` | | JSON au lieu des tableaux |
 | `--timeout N` | | Délai maximal par requête, en secondes (30 par défaut) |
 
@@ -64,6 +64,11 @@ Variables d'environnement supplémentaires :
 | `ps` | Processus de `--app` (API 2.48.0) : répliques voulues et prêtes, redémarrages des pods de la release courante, état (`scaled-zero`, `running`, `degraded`, `not-ready`) et pods ; un pod d'une release remplacée encore vivant est marqué `(superseded)` |
 | `secrets provided` | Valeurs que vous fournissez à `--app` (API 2.48.0) : chaque nom que son `paas.xml` déclare `secrets.<NOM>.provide`, son état (`provided`, `missing`, `placeholder`) et la release qui attend les valeurs manquantes ; aucune valeur n'est jamais affichée |
 | `secrets provide NOM [--value-file FICHIER]` | Fournit la valeur de `NOM` : lue dans le fichier (sans son saut de ligne final), sinon sur l'entrée standard (saisie sans écho au clavier), **jamais en argument**, envoyée dans le corps de la requête. Dit ce qui reste à fournir ; quand rien ne manque, la release qui attendait repart sans nouveau push |
+| `dependencies list` | Listes de dépendances que la plateforme produit pour `--app` (API 2.51.0) quand sa liste n'est pas exacte (npm sans `package-lock.json`, Python à plages ou sans empreintes, Composer sans `composer.lock`) : le mode (`automatic` par défaut, ou `manual`), les options offertes, et chaque production (état, paquets, branche `paas/dependency-list/…`, message) |
+| `dependencies show ID` | Une production : état, gestionnaire, projet, liste et son SHA-256, provenance, branche et commit |
+| `dependencies produce` | Nouvelle production depuis la tête de la branche de l'application : la liste n'est résolue à nouveau que sur cette demande ; elle revient comme un commit de sa branche, intégré ou proposé selon le mode |
+| `dependencies accept ID` | Intègre une liste proposée à la branche de l'application, par avance rapide (mode `manual`) |
+| `dependencies mode automatic\|manual` | Comment une liste produite rejoint la branche : `automatic` (avance rapide ; recommitée sur la nouvelle tête si vous avez poussé entre-temps) ou `manual` (proposée sur sa branche) |
 
 Le mot de passe se lit **uniquement** sur l'entrée standard
 (`--password-stdin`), ou se saisit au clavier. Il n'existe pas d'option

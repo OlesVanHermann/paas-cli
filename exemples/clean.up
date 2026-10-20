@@ -7,10 +7,11 @@
 # Seule une app installée par ./push.sh depuis ce poste est retirée : son dépôt
 # local ($PAAS_EXEMPLES_DIR/<app>, par défaut ~/paas-exemples/<app>) pousse vers
 # le dépôt Git de l'app. Toute autre app est refusée.
-# La suppression est réversible sur la plateforme : dépôt, volumes et historique
-# sont conservés, et « paas apps restore <uuid> » la rétablit. Le dossier local,
-# secrets compris, est rangé dans $PAAS_EXEMPLES_DIR/.corbeille/ avec l'UUID de
-# l'app : rien n'est effacé définitivement.
+# Sur la plateforme, l'app supprimée reste restaurable (« paas apps restore <uuid> »)
+# pendant le délai de corbeille que la suppression annonce ; ce délai passé, la
+# plateforme efface tout ce qu'elle laisse (dépôt, volumes, images, fiche). Le dossier
+# local, secrets compris, est rangé dans $PAAS_EXEMPLES_DIR/.corbeille/ avec l'UUID de
+# l'app : il n'est pas effacé.
 
 set -euo pipefail
 

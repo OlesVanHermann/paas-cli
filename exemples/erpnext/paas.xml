@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : erpnext. Dérivé du fichier en service sur la plateforme di2amp (dépôt de preuve, commit cb207dc81890, 2026-10-04), planifié sans erreur sur le même arbre le 2026-10-10.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <paas_spec_version>v2.9.0</paas_spec_version>
+  <app><name>erpnext</name><version>16.37.0</version></app>
+  <build><runtime>python</runtime><runtime_version>3.14.7</runtime_version>
+    <recipe>python314-node24-closure-v1</recipe><catalogue>2026.10.03.python.1</catalogue>
+    <toolchains><node>24.20.0</node><yarn>1.22.22</yarn></toolchains>
+    <python><layout>
+      <root>/app/bench</root><source>apps/erpnext</source><venv>env</venv>
+      <working_directory>sites</working_directory><requirements>wheels/requirements.lock</requirements>
+      <closure_sources><item><from>framework/frappe</from><to>apps/frappe</to></item></closure_sources>
+      <tool_packages><item>flit_core==3.12.0</item></tool_packages>
+      <editable_packages><item>apps/frappe</item><item>apps/erpnext</item></editable_packages>
+      <node_workspaces>
+        <item><path>apps/frappe</path><ignore_optional>true</ignore_optional></item>
+        <item><path>apps/erpnext</path><ignore_optional>true</ignore_optional></item>
+        <item><path>apps/erpnext/banking</path><ignore_optional>false</ignore_optional></item>
+      </node_workspaces>
+      <files>
+        <item><path>sites/apps.txt</path><content>frappe
+erpnext
+</content></item>
+        <item><path>sites/common_site_config.json</path><content>{"developer_mode":0}
+</content></item>
+      </files>
+      <links>
+        <item><from>apps/frappe/frappe/public</from><to>sites/assets/frappe</to></item>
+        <item><from>apps/erpnext/erpnext/public</from><to>sites/assets/erpnext</to></item>
+        <item><from>apps/frappe/node_modules</from><to>apps/frappe/frappe/public/node_modules</to></item>
+        <item><from>apps/erpnext/node_modules</from><to>apps/erpnext/erpnext/public/node_modules</to></item>
+      </links>
+      <artifacts><item><from>sites/assets</from><to>assets</to></item></artifacts>
+      <required_outputs><item>assets/assets.json</item><item>apps/erpnext/erpnext/www/banking.html</item></required_outputs>
+      <runtime_node><packages>
+        <item>apps/frappe/node_modules/socket.io</item><item>apps/frappe/node_modules/@redis/client</item>
+        <item>apps/frappe/node_modules/cookie</item><item>apps/frappe/node_modules/ace-builds</item>
+        <item>apps/frappe/node_modules/frappe-gantt</item><item>apps/frappe/node_modules/highlight.js</item>
+        <item>apps/frappe/node_modules/html5-qrcode</item><item>apps/frappe/node_modules/js-sha256</item>
+        <item>apps/frappe/node_modules/photoswipe</item><item>apps/frappe/node_modules/qz-tray</item>
+      </packages></runtime_node>
+    </layout></python>
+    <resources><node_heap_mb>4096</node_heap_mb></resources>
+    <env><FRAPPE_BENCH_ROOT>/app/bench</FRAPPE_BENCH_ROOT><CI>1</CI><FRAPPE_DOCKER_BUILD>1</FRAPPE_DOCKER_BUILD>
+      <ESBUILD_BINARY_PATH>/opt/paas-toolchains/esbuild/0.14.54/esbuild</ESBUILD_BINARY_PATH></env>
+    <steps><item><argv><item>node</item><item>esbuild</item><item>--production</item><item>--run-build-command</item></argv><cwd>apps/frappe</cwd></item></steps>
+    <test><command>python -m py_compile erpnext/__init__.py erpnext/hooks.py erpnext/setup/setup_wizard/setup_wizard.py</command></test>
+  </build>
+  <dependencies><closure><manifest_sha256>2b6f0c7918b4b4c1a9db650e2a8bf0a30cbcd98e7d6a659f2c8be25dcb882626</manifest_sha256></closure></dependencies>
+  <processes>
+    <item><name>web</name><type>web</type><replicas>1</replicas><argv><item>node</item><item>/opt/paas-technical/http.cjs</item><item>/data/config/http.json</item></argv><port>8080</port></item>
+    <item><name>application</name><type>worker</type><mode>in-process</mode><replicas>1</replicas><argv><item>python</item><item>-m</item><item>gunicorn</item><item>--bind</item><item>127.0.0.1:8000</item><item>--workers</item><item>2</item><item>--threads</item><item>2</item><item>--timeout</item><item>180</item><item>frappe.app:application</item></argv></item>
+    <item><name>realtime</name><type>worker</type><mode>in-process</mode><replicas>1</replicas><argv><item>node</item><item>/app/bench/apps/frappe/realtime/index.js</item></argv></item>
+    <item><name>queue</name><type>worker</type><mode>in-process</mode><replicas>1</replicas><argv><item>python</item><item>-m</item><item>frappe.utils.bench_helper</item><item>frappe</item><item>worker</item><item>--queue</item><item>short,default,long</item></argv></item>
+    <item><name>scheduler</name><type>worker</type><mode>in-process</mode><replicas>1</replicas><argv><item>python</item><item>-m</item><item>frappe.utils.bench_helper</item><item>frappe</item><item>schedule</item></argv></item>
+  </processes>
+  <resources><cpu>2</cpu><memory>4Gi</memory></resources>
+  <healthcheck><path>/_health</path><port>8080</port></healthcheck>
+  <services>
+    <database><type>mariadb</type><version>11.8.9</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls><ca_file>/data/tls/mysql-ca.pem</ca_file></database>
+    <redis><type>redis</type><version>7.4.11</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls><persistence>aof</persistence><eviction>noeviction</eviction><ca_file>/data/tls/redis-ca.pem</ca_file><local_endpoint><port>6379</port></local_endpoint></redis>
+  </services>
+  <storage>
+    <volumes><item><name>data</name><mount>/data</mount><size>2Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete>
+      <processes><item>web</item><item>application</item><item>realtime</item><item>queue</item><item>scheduler</item></processes></item></volumes>
+    <seeds><item><from>/app/bench/sites</from><to>/data/sites</to><policy>absent-only</policy></item></seeds>
+    <links>
+      <item><path>/app/bench/sites</path><target>/data/sites</target></item>
+      <item><path>/app/bench/logs</path><target>/data/logs</target></item>
+      <item><path>/app/bench/config</path><target>/data/config</target></item>
+    </links>
+  </storage>
+  <lifecycle><state_directory>/data/lifecycle</state_directory><lock>true</lock><interrupted>refuse</interrupted>
+    <start_files>
+      <item><path>/data/sites/common_site_config.json</path><policy>replace</policy><template><![CDATA[{"default_site": "{{app.host}}", "serve_default_site": true, "developer_mode": 0,
+ "redis_cache": "{{services.redis.local_url}}", "redis_queue": "{{services.redis.local_url}}", "redis_socketio": "{{services.redis.local_url}}",
+ "socketio_port": 9000, "webserver_port": 8000, "scheduler_tick_interval": 60,
+ "chromium_path": "/opt/chrome/chrome-headless-shell", "chromium_start_timeout": 15,
+ "disable_update_check": true, "disable_telemetry": true, "host_name": "{{app.public_url}}",
+ "db_type": "mariadb", "db_host": "{{services.database.host}}", "db_port": {{services.database.port}},
+ "db_ssl_ca": "{{services.database.ca_file}}", "db_ssl_check_hostname": true, "use_mysqlclient": 1}
+]]></template></item>
+      <item><path>/data/config/http.json</path><policy>replace</policy><template><![CDATA[{"listen": {"host": "0.0.0.0", "port": 8080}, "public_url": "{{app.public_url}}",
+ "upstream": {"port": 8000, "timeout_seconds": 180},
+ "headers": {"x-frappe-site-name": "{{app.host}}"},
+ "health": {"path": "/_health", "upstream_path": "/api/method/ping"},
+ "websocket": [{"prefix": "/socket.io/", "port": 9000, "same_origin_polling": true}],
+ "header_routes": {"x-frappe-socket-secret": ["/api/method/frappe.realtime.get_user_info"]},
+ "static": [
+  {"prefix": "/assets/", "root": "/app/bench/assets", "cache_control": "public,max-age=300",
+   "allowed": ["/app/bench/assets/", "/app/bench/apps/frappe/frappe/public/", "/app/bench/apps/erpnext/erpnext/public/",
+     "/app/bench/apps/frappe/node_modules/", "/app/bench/apps/erpnext/node_modules/"]},
+  {"prefix": "/files/", "root": "/data/sites/{{app.host}}/public/files", "cache_control": "private,max-age=0",
+   "allowed": ["/data/sites/{{app.host}}/public/files/"]}]}
+]]></template></item>
+    </start_files>
+    <install_python><timeout_seconds>3600</timeout_seconds><calls>
+      <item><module>frappe</module><function>init</function><args_json>["{{app.host}}"]</args_json><kwargs_json>{"new_site": true}</kwargs_json></item>
+      <item><module>frappe.installer</module><function>_new_site</function>
+        <args_json>["{{services.database.database}}", "{{app.host}}"]</args_json>
+        <kwargs_json>{"db_user": "{{services.database.user}}", "db_password": "{{services.database.password}}", "db_type": "mariadb",
+ "db_host": "{{services.database.host}}", "db_port": "{{services.database.port}}", "setup_db": false, "force": true,
+ "admin_password": "{{generated.secret}}", "install_apps": ["erpnext"], "verbose": false}</kwargs_json></item>
+      <item><module>frappe</module><function>init</function><args_json>["{{app.host}}"]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe</module><function>connect</function><args_json>[]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe</module><function>set_user</function><args_json>["Administrator"]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe.desk.page.setup_wizard.setup_wizard</module><function>setup_complete</function>
+        <args_json>[{"language": "English", "country": "France", "timezone": "Europe/Paris", "currency": "EUR",
+ "full_name": "{{account.title}}", "email": "{{account.email}}", "password": "{{account.password}}",
+ "company_name": "{{account.title}}", "company_abbr": "EPX", "chart_of_accounts": "Standard",
+ "fy_start_date": "2026-01-01", "fy_end_date": "2026-12-31", "enable_telemetry": 0, "setup_demo": 0}]</args_json>
+        <kwargs_json>{}</kwargs_json><expect_json>{"status": "ok"}</expect_json></item>
+      <item><module>frappe</module><function>db.set_value</function><args_json>["User", "{{account.email}}", "username", "{{account.username}}"]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe.utils.user</module><function>add_system_manager</function><args_json>["paasadmin@example.com"]</args_json><kwargs_json>{"first_name": "paasadmin", "password": "{{secrets.PAASADMIN_PASSWORD}}"}</kwargs_json></item>
+      <item><module>frappe</module><function>db.set_value</function><args_json>["User", "paasadmin@example.com", "username", "paasadmin"]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe</module><function>db.set_single_value</function><args_json>["Print Settings", "pdf_generator", "chrome"]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe</module><function>db.set_single_value</function><args_json>["System Settings", "enable_scheduler", 1]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe</module><function>db.set_single_value</function><args_json>["System Settings", "allow_login_using_user_name", 1]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe</module><function>db.set_single_value</function><args_json>["System Settings", "enable_telemetry", 0]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe</module><function>db.commit</function><args_json>[]</args_json><kwargs_json>{}</kwargs_json></item>
+      <item><module>frappe</module><function>destroy</function><args_json>[]</args_json><kwargs_json>{}</kwargs_json></item>
+    </calls></install_python>
+    <upgrade><argv><item>python</item><item>-m</item><item>frappe.utils.bench_helper</item><item>frappe</item><item>--site</item><item>{{app.host}}</item><item>migrate</item></argv><timeout_seconds>3600</timeout_seconds></upgrade>
+    <checks>
+      <item><phase>before-install</phase><service>database</service><query>SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()</query><parameters/><equals>0</equals></item>
+      <item><phase>ready</phase><service>database</service><query>SELECT COUNT(*) FROM `tabUser` WHERE name = %s AND username = %s AND enabled = 1</query><parameters><item>{{account.email}}</item><item>{{account.username}}</item></parameters><equals>1</equals></item>
+      <item><phase>before-upgrade</phase><service>database</service><query>SELECT COUNT(*) FROM `tabUser` WHERE name = %s AND username = %s AND enabled = 1</query><parameters><item>{{account.email}}</item><item>{{account.username}}</item></parameters><equals>1</equals></item>
+    </checks>
+  </lifecycle>
+  <account><username>paasowner</username><email>paasowner@example.com</email><title>ERPNext PaaS XML</title><constraints><password_min>32</password_min><password_max>64</password_max></constraints></account>
+  <!-- Compte de test paasadmin : mot de passe scellé pour la plateforme, lu par l'appel natif ci-dessus. -->
+  <secrets><PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+  <!-- Politique CVE, mode A : une liste d’exceptions (scan du 2026-10-19, ERPNext 16.37.0 et sa fermeture Python publiée par la
+       plateforme). Chaque exception ne couvre que la faille et le paquet nommés, jusqu’à sa date ; toute autre faille HIGH ou
+       CRITICAL bloque l’image. -->
+  <security>
+    <cve_exceptions>
+      <item><id>CVE-2025-26240</id><package>pdfkit</package><expires>2027-04-16</expires>
+        <reason>pdfkit 1.0.0, dépendance de Frappe pour les PDF ; aucune version corrigée publiée. À retirer dès qu’une version corrigée sera dans la fermeture d’ERPNext.</reason></item>
+      <item><id>CVE-2026-106443</id><package>weasyprint</package><expires>2027-04-16</expires>
+        <reason>weasyprint 68.0, dépendance de Frappe pour les PDF ; corrigée en 70.0, absente de la fermeture d’ERPNext que publie la plateforme. À retirer dès qu’elle y sera.</reason></item>
+    </cve_exceptions>
+  </security>
+</paas>

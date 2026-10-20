@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Exemple di2amp : etherpad. Dérivé du fichier installé par push.sh et vérifié en service sur la plateforme di2amp le 2026-10-18 (plateforme 2.48.0, app etherpad-test, build build-a88e07f6), retiré ensuite.
+     Avant usage : lire README.md ; sceller vos propres secrets (chaque valeur A-SCELLER, commande paas secrets seal) ;
+     commiter, vérifier par paas config plan (avec l'instantané du catalogue), pousser l'arbre amont exact avec ce fichier. Documentation : ../docs/ -->
+<paas>
+  <!-- Sources GitHub Etherpad v3.3.7 (release de sécurité GHSA-4mx2-rqx5-2pp6). Le seul ajout au contenu amont est ce fichier XML. -->
+  <paas_spec_version>v2.15.0</paas_spec_version>
+  <app><name>etherpad</name><version>3.3.7</version></app>
+  <build>
+    <runtime>node</runtime><runtime_version>24.20.0</runtime_version>
+    <recipe>node-24.20.0-pnpm-workspace-v2</recipe><catalogue>2026.10.05.node.6</catalogue>
+    <!-- Le Dockerfile amont reste dans Git ; la recette pnpm publiée est le contrat de build. -->
+    <source_dockerfile>20a1938ff3f315f5dd036fd6ac2909998fcd8f356ec26cb678c2589f156675af</source_dockerfile>
+    <!-- Interfaces construites par le script amont (OIDC et administration), copiées dans le serveur. -->
+    <node><package_manager>pnpm</package_manager><version>24.20.0</version><build_script>build:ui</build_script>
+      <outputs><item>src/static/oidc</item><item>src/templates/admin</item></outputs>
+      <!-- Comme l'image amont : la production n'installe que la racine, le serveur (src) et ses outils (bin) ;
+           admin, ui et doc sont des interfaces compilées en fichiers statiques. -->
+      <production_members><item>.</item><item>src</item><item>bin</item></production_members></node>
+    <test><command>cd src &amp;&amp; pnpm exec vitest run easysync</command></test>
+  </build>
+  <!-- Révision publiée du verrou : surcharges de sécurité vers les versions corrigées de la même majeure (dont source-map-js), pair TypeScript
+       de surrealdb (types seuls) retiré du runtime ; le Git client reste intact. -->
+  <dependencies><patches><item><source_sha256>ab47fea4b42f5e6beef69ec3b8587fe99e98fd2cfa87aa992aa221673a3cefc2</source_sha256></item></patches></dependencies>
+  <processes><item><name>web</name><type>web</type><replicas>1</replicas>
+    <argv><item>node</item><item>src/node/server.ts</item><item>--settings</item><item>/app/var/settings.json</item>
+      <item>--apikey</item><item>/app/var/APIKEY.txt</item></argv><port>9001</port></item></processes>
+  <resources><cpu>1</cpu><memory>1Gi</memory></resources>
+  <healthcheck><path>/health</path><port>9001</port></healthcheck>
+  <!-- PostgreSQL dédié, TLS vérifié par node-postgres (autorité et nom du service). -->
+  <services><database>
+    <type>postgresql</type><version>16</version><storage>1Gi</storage><provider>dedicated</provider><tls>required</tls>
+    <ca_file>/app/var/postgresql-ca.pem</ca_file>
+  </database></services>
+  <storage>
+    <volumes>
+      <item><name>var</name><mount>/app/var</mount><size>1Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item>
+      <item><name>plugins</name><mount>/app/src/plugin_packages</mount><size>1Gi</size><access>rwo</access><class>local-path</class><preserve_on_delete>true</preserve_on_delete><processes><item>web</item></processes></item>
+    </volumes>
+  </storage>
+  <!-- Le serveur amont s'exécute en TypeScript par tsx (dépendance de production), comme son image. -->
+  <env>
+    <NODE_OPTIONS>--require tsx/cjs</NODE_OPTIONS><NODE_PATH>/app/src/node_modules</NODE_PATH>
+  </env>
+  <!-- Réglages rendus par paas-entry à chaque démarrage, valeurs échappées en JSON ; les utilisateurs
+       sont le mécanisme natif d'Etherpad (administrator, et paasadmin au mot de passe scellé). La liste des
+       plugins installés est écrite une fois : sans elle, Etherpad lancerait pnpm au premier démarrage. -->
+  <lifecycle><state_directory>/app/var/lifecycle</state_directory>
+    <start_files>
+      <item><path>/app/var/settings.json</path><policy>replace</policy><escape>json</escape>
+        <template>{"title":"Etherpad","ip":"0.0.0.0","port":9001,"trustProxy":true,
+"dbType":"postgres","dbSettings":{"host":"{{services.database.host}}","port":{{services.database.port}},"user":"{{services.database.user}}","password":"{{services.database.password}}","database":"{{services.database.database}}","ssl":{"ca":"{{services.database.ca}}","rejectUnauthorized":true}},
+"requireAuthentication":true,"requireAuthorization":false,
+"users":{"{{account.username}}":{"password":"{{account.password}}","is_admin":true},"paasadmin":{"password":"{{secrets.PAASADMIN_PASSWORD}}","is_admin":false}},
+"authenticationMethod":"apikey","sso":{"issuer":"{{app.public_url}}"},
+"privacy":{"updateCheck":false,"pluginCatalog":false},"updates":{"tier":"off","installMethod":"managed","requireAdminForStatus":true},
+"showSettingsInAdminPage":false,"exposeVersion":false,"cleanup":{"enabled":false},
+"socketTransportProtocols":["websocket","polling"],"defaultPadText":"","loglevel":"INFO","logLayoutType":"basic"}</template></item>
+      <item><path>/app/var/installed_plugins.json</path><policy>absent-only</policy>
+        <template>{"plugins":[{"name":"ep_etherpad-lite","version":"3.3.7"}]}</template></item>
+    </start_files>
+    <http_checks><item><path>/health</path><expect_status>200</expect_status><expect_body>pass</expect_body></item></http_checks>
+  </lifecycle>
+  <account><username>administrator</username><email>administrator@example.invalid</email><title>Etherpad PaaS XML</title>
+    <constraints><password_min>32</password_min><password_max>40</password_max></constraints></account>
+  <secrets><PAASADMIN_PASSWORD><sealed>A-SCELLER</sealed><rotate>never</rotate></PAASADMIN_PASSWORD></secrets>
+  <!-- Mode B (docs/SECURITE.md §2) : aucune faille ne bloque l'image ; le scan tourne et reste enregistré.
+       Ajouté le 2026-10-10 (règle : dernière version sans CVE, sinon sans contrôle CVE) : Etherpad v3.3.7, dernière version publiée, embarque encore des paquets npm vulnérables (1 CRITICAL, 15 HIGH ; une CRITICAL peut rester refusée par la tâche Tekton trivy-scan),
+       d'après le scan local Trivy du 2026-10-10 (base du 2026-10-10). Aucune version publiée n'en est exempte. -->
+  <security><block_on>none</block_on></security>
+</paas>

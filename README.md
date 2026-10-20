@@ -11,15 +11,19 @@ les agents IA (Claude Code…).
 | [`SHA256SUMS`](SHA256SUMS) | Sommes de contrôle des exécutables |
 | [`CLI.md`](CLI.md) | Guide de la CLI : commandes, options, variables d'environnement, codes de sortie |
 | [`API.md`](API.md) | Guide de l'API : authentification, enveloppes, erreurs, pagination |
-| [`API-REFERENCE.md`](API-REFERENCE.md) | **Référence de l'API** : les 433 opérations de l'API client, par domaine, avec leurs paramètres, leurs types et leur appel CLI |
+| [`API-REFERENCE.md`](API-REFERENCE.md) | **Référence de l'API** : les 437 opérations de l'API client, par domaine, avec leurs paramètres, leurs types et leur appel CLI |
 | [`openapi.yaml`](openapi.yaml) | **Contrat de l'API** (OpenAPI 3.0.3), qui fait foi. Il permet aussi de générer un client dans votre langage |
 | [`SKILL-paas-cli.md`](SKILL-paas-cli.md) | Skill pour agents IA : utiliser la CLI |
 | [`SKILL-paas-api.md`](SKILL-paas-api.md) | Skill pour agents IA : appeler l'API en HTTP (curl) |
-| [`exemples/`](exemples/README.md) | **Dix apps à installer en une commande** (WordPress, Drupal…) : un `paas.xml` par app ; `push.sh` installe, `clean.up` retire. Les dix fonctionnent ; FileBrowser montre une liste d'exceptions CVE, listmonk un contrôle CVE désactivé |
+| [`PAASXML-REFERENCE.md`](PAASXML-REFERENCE.md) | **Référence du `paas.xml`** : toutes ses sections et toutes ses clés, avec leur statut mesuré recette par recette, et l'index des codes de refus (qui doit agir, règle) |
+| [`PAASXML-GUIDE.md`](PAASXML-GUIDE.md) | Guide du `paas.xml` : écrire, vérifier hors ligne et pousser une app, diagnostics fréquents |
+| [`PAASXML-FEATURES.md`](PAASXML-FEATURES.md) | Fonctionnalités du `paas.xml` : disponibles, par version, et prévues |
+| [`PAASXML-SECURITE.md`](PAASXML-SECURITE.md) | Sécurité : ce que la plateforme impose, ce que le `paas.xml` déclare (failles, secrets, réseau) |
+| [`exemples/`](exemples/README.md) | **Treize apps à installer en une commande**, en PHP, Go, Node, Ruby et Python (WordPress, Discourse, ERPNext…) : un `paas.xml` par app ; `push.sh` installe, `clean.up` retire. Les dix fonctionnent ; FileBrowser montre une liste d'exceptions CVE, listmonk un contrôle CVE désactivé |
 | [`CHANGELOG.md`](CHANGELOG.md) | Contenu de la version publiée |
 | [`LICENSE`](LICENSE) | Licence MIT |
 
-**État** : CLI **2.48.0**, vérifiée contre l'API **2.48.0** : les 433 opérations
+**État** : CLI **2.51.1**, vérifiée contre l'API **2.51.1** : les 437 opérations
 du contrat répondent sur le serveur en service. La version de la CLI est celle
 de la plateforme qu'elle sert.
 - `paas-apps api` donne accès à **toutes les opérations** de l'API, sauf les
@@ -41,6 +45,10 @@ de la plateforme qu'elle sert.
   (`ps`), les valeurs que vous fournissez à une application et que sa
   release attend (`secrets provided`, `secrets provide`, jamais en
   argument), l'imputation du verdict et sa reclassification (`now`).
+- Depuis la 2.51.0 : les **listes de dépendances que la plateforme produit**
+  (`dependencies list`, `show`, `produce`, `accept`, `mode`) pour une
+  application dont la liste n'est pas exacte : résolues une fois depuis le
+  registre officiel, avec les empreintes, écrites dans son dépôt Git, figées.
 - La CLI s'appelle `paas-apps` et s'installe à côté de la CLI `paas`, sans la
   remplacer.
 
@@ -147,9 +155,14 @@ Les codes et le contenu de l'objet sont décrits dans
    `git push <remote> HEAD:main`.
 
 **Le plus simple pour un logiciel connu : partir d'un exemple.** Le dossier
-[`exemples/`](exemples/README.md) contient dix logiciels (WordPress, Drupal,
-DokuWiki, BookStack, Kanboard, FreshRSS, Piwigo, OpenCart, FileBrowser,
-listmonk), chacun avec son `paas.xml`. Une commande les installe, avec la CLI
+Les quatre documents `PAASXML-…` décrivent le fichier `paas.xml` qu'une app ajoute à son dépôt. Les commandes
+qu'ils citent sont celles de la CLI `paas` de la plateforme (installée par `get.di2amp.com`) ; `paas-apps` lit et
+diagnostique les mêmes applications par l'API.
+
+[`exemples/`](exemples/README.md) contient treize logiciels en cinq langages
+(WordPress, Drupal, DokuWiki, BookStack, Kanboard, FreshRSS, Piwigo, OpenCart en
+PHP ; FileBrowser, listmonk en Go ; Etherpad en Node ; Discourse en Ruby ; ERPNext
+en Python), chacun avec son `paas.xml`. Une commande les installe, avec la CLI
 `paas` 2.30 ou plus récente :
 ```bash
 cd exemples && ./push.sh wordpress mon-blog

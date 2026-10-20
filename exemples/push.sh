@@ -232,4 +232,4 @@ printf 'Adresse : %s\n' "${url:-voir paas apps info $APP}"
 for name in $names; do
     printf 'Secret %s : %s\n' "$name" "$SECRETS/$name"
 done
-printf 'Retirer l'"'"'app : paas apps delete %s (réversible : dépôt, volumes et historique sont conservés)\n' "$APP"
+printf 'Retirer l'"'"'app : ./clean.up %s (restaurable pendant le délai de corbeille que la suppression annonce, puis effacée)\n' "$APP"

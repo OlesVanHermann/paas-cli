@@ -3,6 +3,165 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.51.1 — 2026-10-20
+
+- **CLI `paas-apps` 2.51.1**, vérifiée contre l’API client **2.51.1** (437
+  opérations, chacune présente sur le serveur en service). Elle publie aussi
+  ce que la plateforme 2.51.0 apporte.
+- **Nouvelles commandes** `dependencies list`, `show`, `produce`, `accept` et
+  `mode` (API 2.51.0) : les listes de dépendances que la plateforme produit
+  pour une application dont la liste n’est pas exacte.
+- Ce que la plateforme 2.51.0 change pour vous, dans le `paas.xml` :
+  - **listes de dépendances produites par la plateforme** : npm sans
+    `package-lock.json`, Python à plages ou sans empreintes (`requirements.txt`,
+    `pyproject.toml`, `setup.cfg`), Composer sans `composer.lock` : au push, la
+    plateforme résout la liste une fois, depuis le registre officiel, avec les
+    empreintes, et l’écrit dans le Git de l’application (`paas/dependencies/`,
+    provenance `paas/dependencies.json`) ; chaque build l’installe hors réseau ;
+    elle ne change que sur votre demande (`dependencies produce`) ;
+  - un `yarn.lock` (frontend Yarn 1 d’un build Go) dont des entrées sont hors
+    de leur plage est réparé de même, une fois ; votre `yarn.lock` n’est pas
+    modifié ;
+  - **recette Python simple** raccordée au `paas.xml` : `build.python`,
+    `build.env`, `build.steps`, cycle de vie, comptes, PostgreSQL 16 et
+    Redis 7.4, paquets sans roue construits depuis leur source
+    (`build.python.source_builds`), montages persistants ;
+  - `build.node.manifest` : un `package.json` gardé sous la racine.
+- Ce que la plateforme 2.51.1 corrige : les listes npm et Yarn sont produites
+  en service ; les constructions Python depuis la source passent le build ;
+  une reconstruction d’un commit dont la liste est à produire la fait produire.
+- **CLI** : un build en échec à sa préparation se lit « failed » (il se lisait
+  « succeeded »).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.51.1.
+
+## v2.50.1 — 2026-10-19
+
+- **CLI `paas-apps` 2.50.1**, vérifiée contre l’API client **2.50.1** (433
+  opérations ; contrat inchangé depuis la 2.49.4). Elle publie aussi la 2.50.0
+  et les versions qu’elle portait, jamais publiées seules.
+- Ce que la plateforme 2.50.1 corrige pour vous, sans rien changer à votre
+  `paas.xml` :
+  - une réponse passagère d’un registre, d’une forge ou du proxy des modules Go
+    (429, 500, 502, 503, 504) ou une coupure ne fait plus échouer un build : la
+    préparation retente depuis zéro, trois essais au plus, après 2 puis 4
+    secondes (paquets npm, Yarn classique et berry, archives Git, archive d’un
+    site, PyPI, modules Go, pnpm) ; toute autre réponse est refusée au premier
+    essai, et le refus nomme la cause et le nombre d’essais ;
+  - une indisponibilité qui dure n’est plus imputée à votre déclaration :
+    `ENV_STATIC_ARCHIVE_UNAVAILABLE`, `ENV_GO_GENERATOR_ACQUISITION_UNAVAILABLE`.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.50.1 (règles des
+  codes de refus).
+
+## v2.50.0 — 2026-10-19
+
+- **CLI `paas-apps` 2.50.0**, vérifiée contre l’API client **2.50.0** (433
+  opérations, chacune présente sur le serveur en service ; contrat inchangé
+  depuis la 2.49.4). Elle publie aussi la 2.49.7, la 2.49.5, la 2.49.4 et la
+  2.48.1, jamais publiées seules.
+- Ce que la plateforme 2.50.0 change pour vous, dans le `paas.xml`, sans
+  nouvelle commande :
+  - **Yarn berry** (3 et 4) : une app Node servie par Yarn berry (recette
+    `node-24.20.0-yarn-berry-v1`) et le frontend Yarn berry d’un build Go,
+    installés hors ligne par le Yarn que publie la plateforme ;
+  - **distribution Node installée** : `build.node.dependency_mode` =
+    `installed-git-v1` sert tel quel un arbre qui livre son `node_modules` de
+    production, vérifié contre son inventaire, sans installation ni build ;
+  - **build Node** : `build.resources.node_heap_mb`, `build.env`,
+    `build.steps`, `build.node.projects`, site produit par un build Yarn,
+    `build.node.runtime_dependencies` (dépendances de développement chargées
+    au lancement) ;
+  - **verrous** : `package-lock.json` version 1, archives Git de GitLab et
+    Codeberg, dépendances `file:` et `devEngines.runtime` en pnpm ; Go 1.26.9
+    pour les modules qui refusent Go 1.27 ;
+  - **corrections** : boîte IMAP privée (image du moteur reconstruite),
+    modules natifs Node (bibliothèques de l’image d’exécution), refus de plan
+    qui nomment le fichier en cause.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.50.0 (colonne
+  Yarn berry).
+
+## v2.49.7 — 2026-10-19
+
+- **CLI `paas-apps` 2.49.7**, vérifiée contre l’API client **2.49.7** (433
+  opérations, chacune présente sur le serveur en service ; contrat inchangé
+  depuis la 2.49.4). Elle publie aussi la 2.49.5 et la 2.49.4, jamais
+  publiées seules :
+  - `paas-apps builds list` et `builds info` : un build en cours se lit
+    `running (<étape>)`, ou `running (before <étape>)` pendant la préparation
+    de la recette, au lieu de `pending (…)` ;
+  - ce que la plateforme 2.49.6 et 2.49.7 change pour vous, sans nouvelle
+    commande :
+    - une application supprimée est effacée jusqu’à ses builds, avant les
+      lignes de leurs tâches ; une étape de l’effacement déjà faite est
+      rejouée s’il reste quelque chose de son périmètre ;
+    - une base PostgreSQL reprise telle quelle garde seule l’exception de son
+      volume : celui d’une base réservée sans sa réservation est refusé.
+- **Exemples** : trois logiciels de plus, dans trois autres langages, chacun
+  avec sa recette (N1), ses processus et volumes (N0) et ses services (N2) :
+  [etherpad](exemples/etherpad/) (Node, PostgreSQL), [discourse](exemples/discourse/)
+  (Ruby, PostgreSQL, Redis, SMTP), [erpnext](exemples/erpnext/) (Python, MariaDB,
+  Redis).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.49.7.
+
+## v2.49.5 — 2026-10-18
+
+- **CLI `paas-apps` 2.49.5**, vérifiée contre l’API client **2.49.5** (433
+  opérations, chacune présente sur le serveur en service ; contrat inchangé
+  depuis la 2.49.4). Elle publie aussi la 2.49.4, jamais publiée seule. Ce que
+  la plateforme 2.49.5 change pour vous, sans nouvelle commande :
+  - une base PostgreSQL créée par l’API des addons, reprise telle quelle
+    quand le `paas.xml` déclare PostgreSQL, est admise au déploiement avec son
+    volume de données ; la 2.49.4 la refusait
+    (`N0_POSTGRES_CLAIM_FOREIGN_OWNER`, imputé à la plateforme). Un nouveau
+    push de l’application la déploie, sur la même base et les mêmes données.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.49.5.
+
+## v2.49.4 — 2026-10-18
+
+- **CLI `paas-apps` 2.49.4**, vérifiée contre l’API client **2.49.4** (433
+  opérations, chacune présente sur le serveur en service). Elle publie aussi la
+  2.49.0 à la 2.49.3 de la plateforme, jamais publiées seules :
+  - `paas-apps apps security-updates <app> --method commit|branch` : en mode
+    automatique, comment la révision corrigée arrive dans l’application
+    (`commit`, par défaut : intégrée à sa branche ; `branch` : servie depuis la
+    branche de la plateforme, la sienne intacte). Une méthode seule garde le
+    mode. La commande affiche les options que la plateforme offre à
+    l’application (chaque mode et méthode, sa valeur par défaut, s’il lui est
+    ouvert, ce qu’il fait) ; le contrat gagne `method` dans le corps du `PUT` ;
+  - ce que la plateforme 2.49 change pour vous, sans nouvelle commande :
+    - une application supprimée reste restaurable pendant le délai de la
+      corbeille, que la suppression annonce et inscrit (`retention_until`) ;
+      ce délai passé, la plateforme efface tout ce qu’elle laisse (processus,
+      routage, services, volumes, images, dépôt Git, fiche), et en garde les
+      traces (audit, journal de la purge, usage facturé) ;
+    - une application qui a une base PostgreSQL créée par l’API des addons et
+      qui déclare PostgreSQL dans son `paas.xml` la garde, reprise telle
+      quelle avec ses données (`N2_LEGACY_POSTGRES_ADOPTION_SHAPE_UNSUPPORTED`
+      pour une base à plusieurs instances) ;
+    - une release réhabilitée (prête et stable après un premier verdict
+      `crashloop`) ne montre plus son échec ;
+    - une suppression et une restauration nomment qui les a demandées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.49.4.
+
+## v2.48.1 — 2026-10-18
+
+- **CLI `paas-apps` 2.48.1**, vérifiée contre l'API client **2.48.1** (433
+  opérations, chacune présente sur le serveur en service ; contrat inchangé
+  depuis la 2.48.0). Ce que la plateforme 2.48.1 change pour vous, sans
+  nouvelle commande :
+  - un nom d'application refusé à la création : le message porte le nom
+    proposé (`nom proposé : « … »`), que `paas-apps` affiche ;
+  - une release qui attend vos valeurs (`awaiting_secrets`) a un
+    `rollout_status` `pending` (`progressing` en 2.48.0) ; reprise après la
+    dernière valeur fournie, elle ne garde plus l'erreur
+    `secrets_not_provided` ;
+  - des refus de plan qui disent quoi changer : la recette à déclarer telle
+    que le catalogue la publie, chaque écart d'une variante Go, ce qu'un
+    contrôle d'installation déclaré a obtenu ; un refus causé par un manque
+    publié de la plateforme est imputé à la plateforme.
+- **Documentation du `paas.xml`** publiée avec la CLI : `PAASXML-REFERENCE.md` (toutes les clés, leur statut
+  mesuré recette par recette, l'index des codes de refus), `PAASXML-GUIDE.md`, `PAASXML-FEATURES.md` et
+  `PAASXML-SECURITE.md`, à jour de la plateforme 2.48.1.
+
 ## v2.48.0 — 2026-10-18
 
 - **CLI `paas-apps` 2.48.0**, vérifiée contre l'API client **2.48.0** (433
