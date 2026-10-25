@@ -3,6 +3,37 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.57.1 — 2026-10-25
+
+- **CLI `paas-apps` 2.57.1**, vérifiée contre l’API client **2.57.1** (437
+  opérations, inchangées).
+- Ce que la plateforme 2.57.1 apporte à votre `paas.xml` :
+  - une app dont les seuls processus sont des crons (Node ; Go avec les
+    catalogues `2026.10.25.go.11` et `2026.10.25.go126.3`) est servie : sa
+    release se lit `scheduled` dans `paas-apps releases list`, et
+    `paas-apps run` lance son image ;
+  - une exécution de cron en cours ne bloque plus la mise en service d’une app
+    qui a aussi un web.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.57.1.
+
+## v2.57.0 — 2026-10-25
+
+- **CLI `paas-apps` 2.57.0**, vérifiée contre l’API client **2.57.0** (437
+  opérations, inchangées).
+- Ce que la plateforme 2.57.0 apporte à votre `paas.xml` :
+  - en Go, une app sans processus web : un worker seul, sans port ni route,
+    sondé par sa commande (`healthcheck` de type `exec`) ou par un port local
+    (`tcp`), avec les catalogues `2026.10.25.go.11` et `2026.10.25.go126.3` ;
+  - les recettes Go 1.27.3 (`go-1.27.3-*`) et Go 1.26.10 (`go-1.26.10-*`), dans
+    ces mêmes catalogues ;
+  - Ruby 3.4.11 dans les deux recettes Ruby (catalogues `2026.10.25.ruby.7`,
+    `2026.10.25.ruby.8` et `2026.10.25.ruby.9`) : avec eux,
+    `build.runtime_version` vaut `3.4.11` ;
+  - un `paas.xml` qui nomme un catalogue Go ou Ruby antérieur garde sa
+    recette, mais son image ne passe plus la politique CVE par défaut : passez
+    aux catalogues du 25 octobre.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.57.0.
+
 ## v2.56.0 — 2026-10-25
 
 - **CLI `paas-apps` 2.56.0**, vérifiée contre l’API client **2.56.0** (437

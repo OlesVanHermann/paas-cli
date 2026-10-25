@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-10-25 : plateforme v2.56.0, CLI 2.56.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-10-25 : plateforme v2.57.1, CLI 2.57.1, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -19,7 +19,7 @@ contrôles).
 | Runtimes | PHP 8.4 ; Node 24 (npm, workspaces, pnpm, yarn) et Node 22 ; Go 1.26 et 1.27 ; Python 3.12 et 3.14, fermeture Python + Node ; Ruby 3.4 ; Dockerfile (`build.runtime` `dockerfile`, v2.34.0), à la racine du dépôt ou dessous avec son contexte et son étape cible (`build.dockerfile`, v2.56.0), sur l'outillage, les images des recettes publiées et les bases tierces de la liste publiée (`paas builds bases`) ; profils N3 nommés par un `paas.xml` (v2.56.0) ; statique (se planifie, jamais prouvé) | JVM (N1.JVM), Elixir (N1.ELIXIR), Rust (N1.RUST), .NET (N1.DOTNET), plusieurs conteneurs (N1.COMPOSE), autres versions majeures (N1.VERSIONS) |
 | Build | Budgets de temps publiés par étape (v2.38.0) et `build.resources.timeout_seconds` ; budgets de lecture de l'arbre `source.limits`, fichiers laissés de côté `source.ignore`, fichiers inertes admis par empreinte `source.pinned` (v2.37.0) ; app rangée dans un sous-répertoire d'un monorepo, `source.root` (v2.39.0) ; dossiers laissés de côté entiers `source.ignore_directories`, sous-modules Git `source.gitlinks`, arbres jusqu'à 100 000 fichiers (v2.56.0) ; verrous npm, Yarn et pnpm lus comme leur gestionnaire ; gems Ruby et frontaux npm de PHP et Ruby installés hors réseau (v2.56.0) | `build.resources` `cpu`, `memory` et les clés de tas ou de parallélisme (refusées chacune avec sa raison) |
 | Services | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, SMTP en capture ; base dédiée, TLS vérifié ; trois services par app en PHP, Node et Go, un de chaque réservation (v2.52.0) ; extensions de l'image PostgreSQL publiée, bases MySQL et MariaDB nommées, droit de créer des bases `app_*`, réglage `log_bin_trust_function_creators` (v2.52.0) ; relais MySQL en boucle locale (`local_endpoint`) en PHP, Node et Go (v2.37.0), tunnel Redis en Node et Go (v2.52.0) | PostGIS et PostgreSQL 17 (N2.PGEXT) ; Valkey, OpenSearch, RabbitMQ, S3, memcached, ClickHouse, LDAP, InfluxDB, Meilisearch ; MySQL et MariaDB en Ruby ; envoi réel de courrier (N2.SMTP), IMAP ; réplicas, sauvegarde et PITR (N2.OPTIONS) |
-| Processus | Un processus web ; en Node, PHP et Go, workers et crons dans leurs propres pods et un processus release avant chaque déploiement (v2.56.0), une app Node sans processus web (v2.56.0) ; workers et crons par intervalle dans le conteneur du web, dans toutes les recettes (v2.56.0 ; en Python fermé et Ruby, jusqu'à 7 workers) ; une réplique | Job (N0.PROC) ; processus séparés avec un cycle de vie ; image propre d'un processus (N1.COMPOSE) ; plusieurs réplicas (N0.SCALE) ; stratégies de déploiement (N0.DEPLOY) |
+| Processus | Un processus web ; en Node, PHP et Go, workers et crons dans leurs propres pods et un processus release avant chaque déploiement (v2.56.0), une app Node ou Go sans processus web (v2.56.0, Go depuis v2.57.0), faite seulement de crons comprise (v2.57.1) ; workers et crons par intervalle dans le conteneur du web, dans toutes les recettes (v2.56.0 ; en Python fermé et Ruby, jusqu'à 7 workers) ; une réplique | Job (N0.PROC) ; processus séparés avec un cycle de vie ; image propre d'un processus (N1.COMPOSE) ; plusieurs réplicas (N0.SCALE) ; stratégies de déploiement (N0.DEPLOY) |
 | Stockage | Volumes rwo et rwx, liens (Node et Go depuis v2.56.0), copies initiales ; chemins inscriptibles `storage.writable` en PHP (v2.56.0) | `storage.private` (refusé par la projection, mesuré le 2026-10-15), tmpfs, stockage éphémère, rwx prouvé (N0.STORAGE) |
 | Réseau | HTTPS, websockets, 100 Mo par requête ; liens déclarés entre apps `network.linked_services` (v2.30.0, effectifs quand l'isolation entre apps sera activée) ; tous les chemins du nom court, `/login` compris, vont à l'app (v2.38.1) ; mot de passe demandé par la bordure avant toute requête (`edge.access.basic_auth_secret`, v2.56.0) | Ports TCP (N0.TCP), règles de sortie et IPv6 (N0.NET), domaines (N0.DOMAINS), autres réglages d'entrée par app (N0.EDGE) |
 | Sécurité | Une seule politique pour l'image servie (v2.36.0) : porte CVE, politique déclarée dans le `paas.xml` (`security.cve_exceptions` une par une, toute sévérité, ou `security.block_on` `critical` ou `none`), porte des constats de secrets avec `security.secret_exceptions` ; exceptions de l'opérateur (HIGH) ; secrets scellés | `security.sbom`, `security.require_mfa_for_console` |
@@ -28,7 +28,7 @@ contrôles).
 
 Un `paas.xml` doit nommer `build.recipe` et `build.catalogue`, et vérifier `build.runtime` : `php`, `node`,
 `python`, `go`, `ruby` ou `static`. Le tableau donne les recettes de l'instantané du catalogue de production,
-avec pour chacune le dernier catalogue qui la contient (instantané du 2026-10-19, v2.50.0, 64 recettes). Tout catalogue qui contient la recette convient ; un
+avec pour chacune le dernier catalogue qui la contient (instantané du 2026-10-25, v2.57.0, 98 recettes). Tout catalogue qui contient la recette convient ; un
 exemple garde celui de sa preuve. Liste à jour : `paas environments:catalogue-store`.
 
 | Famille | Recette | Version | Distribution | Profils | Dernier catalogue | Statut |
@@ -48,6 +48,16 @@ exemple garde celui de sa preuve. Liste à jour : `paas environments:catalogue-s
 | GO | `go-1.26.9-node24-pnpm-v2` | 1.26.9 | debian12-glibc2.36 | web | `2026.10.19.go126.2` | publiée en v2.50.0 (Go 1.26.9, mêmes variantes que la ligne 1.27) |
 | GO | `go-1.26.9-node24-yarn-v6` | 1.26.9 | debian12-glibc2.36 | web | `2026.10.19.go126.2` | publiée en v2.50.0 (Go 1.26.9 pour les modules qui refusent Go 1.27 ; frontend Yarn classique ou berry 3 et 4) |
 | GO | `go-1.26.9-static-v2` | 1.26.9 | debian12-glibc2.36 | web | `2026.10.19.go126.2` | publiée en v2.50.0 (Go 1.26.9, mêmes variantes que la ligne 1.27) |
+| GO | `go-1.26.10-cgo-v9` | 1.26.10 | wolfi-glibc2.44 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.26.10-git-v7` | 1.26.10 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.26.10-node24-npm-cgo-v10` | 1.26.10 | wolfi-glibc2.44 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.26.10-node24-npm-git-v8` | 1.26.10 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.26.10-node24-npm-v5` | 1.26.10 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.26.10-node24-pnpm-cgo-v11` | 1.26.10 | wolfi-glibc2.44 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.26.10-node24-pnpm-git-v3` | 1.26.10 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.26.10-node24-pnpm-v2` | 1.26.10 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.26.10-node24-yarn-v6` | 1.26.10 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.26.10-static-v2` | 1.26.10 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go126.3` | publiée en v2.57.0 (Go 1.26.10, profils web, worker et job, images d'exécution révisées) |
 | GO | `go-1.27.1-node24-npm-native-v4` | 1.27.1 | debian12-glibc2.36 | web | `2026.09.13.go.2` | publiée ; aucun exemple ne l’utilise encore |
 | GO | `go-1.27.1-node24-npm-v5` | 1.27.1 | debian12-glibc2.36 | web | `2026.10.16.go.8` | prouvée : filebrowser (2026.10.06.go.5) |
 | GO | `go-1.27.1-node24-pnpm-git-v3` | 1.27.1 | debian12-glibc2.36 | web | `2026.10.16.go.8` | publiée ; aucun exemple ne l’utilise encore |
@@ -64,6 +74,16 @@ exemple garde celui de sa preuve. Liste à jour : `paas environments:catalogue-s
 | GO | `go-1.27.2-node24-pnpm-v2` | 1.27.2 | debian12-glibc2.36 | web | `2026.10.19.go.10` | publiée en v2.44.0 (frontend pnpm) |
 | GO | `go-1.27.2-node24-yarn-v6` | 1.27.2 | debian12-glibc2.36 | web | `2026.10.19.go.10` | publiée en v2.44.0 (frontend Yarn classic) |
 | GO | `go-1.27.2-static-v2` | 1.27.2 | debian12-glibc2.36 | web | `2026.10.19.go.10` | publiée en v2.44.0 (exécutable statique) |
+| GO | `go-1.27.3-cgo-v9` | 1.27.3 | wolfi-glibc2.44 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.27.3-git-v7` | 1.27.3 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.27.3-node24-npm-cgo-v10` | 1.27.3 | wolfi-glibc2.44 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.27.3-node24-npm-git-v8` | 1.27.3 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.27.3-node24-npm-v5` | 1.27.3 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.27.3-node24-pnpm-cgo-v11` | 1.27.3 | wolfi-glibc2.44 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.27.3-node24-pnpm-git-v3` | 1.27.3 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.27.3-node24-pnpm-v2` | 1.27.3 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.27.3-node24-yarn-v6` | 1.27.3 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
+| GO | `go-1.27.3-static-v2` | 1.27.3 | debian12-glibc2.36 | web, worker, job | `2026.10.25.go.11` | publiée en v2.57.0 (Go 1.27.3, profils web, worker et job, images d'exécution révisées) |
 | JVM | `jvm25-clojure-bun-v1` | 25.0.4+7 | ubuntu22.04-glibc2.35 | web | `2026.09.16.jvm.2` | publiée ; `build.jvm` non raccordé (N1.JVM) |
 | NODE | `node-22.23.2-pnpm-minimal-v1` | 22.23.2 | debian12-glibc2.36 | web,worker,job | `2026.09.13.go.2` | publiée ; aucun exemple ne l’utilise encore |
 | NODE | `node-24.20.0-bookworm-minimal-v5` | 24.20.0 | debian12-glibc2.36 | web,worker,job | `2026.09.27.php.18` | publiée ; aucun exemple ne l’utilise encore |
@@ -86,20 +106,20 @@ exemple garde celui de sa preuve. Liste à jour : `paas environments:catalogue-s
 | PHP | `php-8.4.25-apache-alpine-pdo-xml-v3` | 8.4.25 | alpine3.24-musl | web | `2026.09.27.php.18` | publiée ; aucun exemple ne l’utilise encore |
 | PHP | `php-8.4.25-apache-alpine-sqlite-intl-v4` | 8.4.25 | alpine3.24-musl | web | `2026.09.27.php.18` | publiée ; aucun exemple ne l’utilise encore |
 | PHP | `php-8.4.25-apache-alpine-v1` | 8.4.25 | alpine3.24-musl | web | `2026.09.27.php.18` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-cache-v5` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | prouvée : flarum (2026.10.04.php.20), piwigo (2026.10.07.php.21) |
-| PHP | `php-8.4.26-apache-alpine-calendar-v6` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-full-pear-v11` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | publiée ; full-v10 avec PEAR (`PEAR.php` dans le chemin d’inclusion) ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-full-v10` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-full-sqlite3-v12` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | prouvée : Wallos 5.8.3 (classe SQLite3, base créée sur le volume, connexion servie) (2026.10.16.php.24) |
-| PHP | `php-8.4.26-apache-alpine-full-tidy-v13` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | publiée ; aucun exemple ne l'utilise encore (wallabag) (2026.10.16.php.24) |
-| PHP | `php-8.4.26-apache-alpine-full-imap-v14` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | prouvée au build : Agorakit 1.11 (ddeboer/imap exige ext-imap ; Composer installe, extension chargée) (2026.10.16.php.24) |
-| PHP | `php-8.4.26-apache-alpine-iconv-v7` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | prouvée : bookstack (2026.10.04.php.20), dokuwiki (2026.10.04.php.20), drupal (2026.10.04.php.20), joomla (2026.10.04.php.20), opencart (2026.10.04.php.20), suitecrm (2026.10.07.php.21), woocommerce (2026.10.04.php.20), wordpress (2026.10.04.php.20) |
-| PHP | `php-8.4.26-apache-alpine-imagick-calendar-v9` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | prouvée (2026.10.07.php.21) |
-| PHP | `php-8.4.26-apache-alpine-imagick-v8` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | prouvée : nextcloud (2026.10.07.php.21), typo3 (2026.10.07.php.21) |
-| PHP | `php-8.4.26-apache-alpine-pdo-v2` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-pdo-xml-v3` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-sqlite-intl-v4` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | prouvée : freshrss (2026.10.04.php.20), kanboard (2026.10.04.php.20) |
-| PHP | `php-8.4.26-apache-alpine-v1` | 8.4.26 | alpine3.24-musl | web | `2026.10.16.php.24` | publiée ; aucun exemple ne l’utilise encore |
+| PHP | `php-8.4.26-apache-alpine-cache-v5` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : flarum (2026.10.04.php.20), piwigo (2026.10.07.php.21) |
+| PHP | `php-8.4.26-apache-alpine-calendar-v6` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
+| PHP | `php-8.4.26-apache-alpine-full-pear-v11` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; full-v10 avec PEAR (`PEAR.php` dans le chemin d’inclusion) ; aucun exemple ne l’utilise encore |
+| PHP | `php-8.4.26-apache-alpine-full-v10` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
+| PHP | `php-8.4.26-apache-alpine-full-sqlite3-v12` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : Wallos 5.8.3 (classe SQLite3, base créée sur le volume, connexion servie) (2026.10.16.php.24) |
+| PHP | `php-8.4.26-apache-alpine-full-tidy-v13` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l'utilise encore (wallabag) (2026.10.16.php.24) |
+| PHP | `php-8.4.26-apache-alpine-full-imap-v14` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée au build : Agorakit 1.11 (ddeboer/imap exige ext-imap ; Composer installe, extension chargée) (2026.10.16.php.24) |
+| PHP | `php-8.4.26-apache-alpine-iconv-v7` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : bookstack (2026.10.04.php.20), dokuwiki (2026.10.04.php.20), drupal (2026.10.04.php.20), joomla (2026.10.04.php.20), opencart (2026.10.04.php.20), suitecrm (2026.10.07.php.21), woocommerce (2026.10.04.php.20), wordpress (2026.10.04.php.20) |
+| PHP | `php-8.4.26-apache-alpine-imagick-calendar-v9` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée (2026.10.07.php.21) |
+| PHP | `php-8.4.26-apache-alpine-imagick-v8` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : nextcloud (2026.10.07.php.21), typo3 (2026.10.07.php.21) |
+| PHP | `php-8.4.26-apache-alpine-pdo-v2` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
+| PHP | `php-8.4.26-apache-alpine-pdo-xml-v3` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
+| PHP | `php-8.4.26-apache-alpine-sqlite-intl-v4` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : freshrss (2026.10.04.php.20), kanboard (2026.10.04.php.20) |
+| PHP | `php-8.4.26-apache-alpine-v1` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
 | PYTHON | `python-3.12.14-bookworm-v1` | 3.12.14 | debian12-glibc2.36 | web,worker,job | `2026.09.24.python.1` | publiée ; aucun exemple ne l’utilise encore |
 | PYTHON | `python-3.12.14-wolfi-v1` | 3.12.14 | wolfi-glibc2.44 | web,worker,job | `2026.09.24.python.1` | publiée ; aucun exemple ne l’utilise encore |
 | PYTHON | `python-3.14.7-bookworm-v1` | 3.14.7 | debian12-glibc2.36 | web,worker,job | `2026.09.27.php.18` | publiée ; aucun exemple ne l’utilise encore |
@@ -107,8 +127,8 @@ exemple garde celui de sa preuve. Liste à jour : `paas environments:catalogue-s
 | PYTHON | `python-3.14.8-wolfi-v1` | 3.14.8 | wolfi-glibc2.44 | web,worker,job | `2026.10.12.python.1` | publiée (v2.34.0) ; images composées par la plateforme, mesurées 0 CRITICAL / 0 HIGH ; aucun exemple ne l’utilise encore |
 | PYTHON | `python314-node24-closure-v1` | 3.14.7 | wolfi-glibc2.44 | web | `2026.10.03.python.1` | prouvée : erpnext (2026.10.03.python.1) |
 | PYTHON | `seafile13-native-closure-v1` | 3.12.14 | wolfi-glibc2.44 | web | `2026.09.22.native.1` | publiée ; recette native propre à une app (N3), hors doctrine |
-| RUBY | `ruby34-bundler-offline-v2` | 3.4.10 | wolfi-glibc2.44 | web | `2026.09.18.ruby.2` | publiée ; aucun exemple ne l’utilise encore |
-| RUBY | `ruby34-pnpm-offline-v1` | 3.4.10 | wolfi-glibc2.44 | web | `2026.09.30.ruby.3` | prouvée : discourse (2026.09.30.ruby.3) |
+| RUBY | `ruby34-bundler-offline-v2` | 3.4.11 | wolfi-glibc2.44 | web | `2026.10.25.ruby.7` | publiée ; Ruby 3.4.11 depuis v2.57.0 (3.4.10 jusqu'au catalogue 2026.09.18.ruby.2) ; aucun exemple ne l’utilise encore |
+| RUBY | `ruby34-pnpm-offline-v1` | 3.4.11 | wolfi-glibc2.44 | web | `2026.10.25.ruby.9` | prouvée : discourse (2026.09.30.ruby.3, Ruby 3.4.10) ; Ruby 3.4.11 depuis v2.57.0 (pnpm 10.34.6, et 10.34.5 par 2026.10.25.ruby.8) |
 | STATIC | `static-nginx-1.30.4-alpine3.24-v1` | HTML5-CSS-JavaScript-static | alpine3.24-musl | web | `2026.09.27.php.18` | publiée ; refusée par la porte CVE par défaut depuis le 2026-10-15 (`CVE-2026-103111`, HIGH, pcre2 de l'image nginx) : prendre la 1.30.6 |
 | STATIC | `static-nginx-1.30.6-alpine3.24-v1` | HTML5-CSS-JavaScript-static | alpine3.24-musl | web | `2026.10.15.static.1` | prouvée (v2.39.3) : site de test construit et servi, 0 CRITICAL / 0 HIGH ; ligne de catalogue `static`, build et tests sur l'image Python Wolfi de la plateforme |
 
@@ -185,7 +205,7 @@ de son app.
 
 | Domaine | Ce qui est disponible |
 |---|---|
-| Processus | Un processus `web`, port ≥ 1024, sonde HTTP (`healthcheck`), une réplique. En Node, PHP et Go (v2.56.0) : jusqu'à 8 processus, workers et crons chacun dans son propre pod avec sa commande (`argv`), même image, mêmes variables et services ; un `release` joué une fois dans son pod avant chaque déploiement (son échec l'annule, la version en service reste) ; pas encore à côté d'un cycle de vie (`ENV_PROCESS_LAUNCH_UNSUPPORTED`). Sans web (Node ; Go avec la révision de son catalogue) : le premier worker ou cron, sans port ni route, sondé par sa commande (`exec`) ou un port local (`tcp`). Workers et crons par intervalle dans le conteneur du web (`mode` `in-process`), dans toutes les recettes ; en Python fermé et Ruby, un web et jusqu'à 7 workers `in-process`, supervisés ensemble ; arrêt du groupe en 120 s au plus. Un `job` n'est pas encore lancé. |
+| Processus | Un processus `web`, port ≥ 1024, sonde HTTP (`healthcheck`), une réplique. En Node, PHP et Go (v2.56.0) : jusqu'à 8 processus, workers et crons chacun dans son propre pod avec sa commande (`argv`), même image, mêmes variables et services ; un `release` joué une fois dans son pod avant chaque déploiement (son échec l'annule, la version en service reste) ; pas encore à côté d'un cycle de vie (`ENV_PROCESS_LAUNCH_UNSUPPORTED`). Sans web (Node ; Go depuis les catalogues 2026.10.25.go.11 et 2026.10.25.go126.3, v2.57.0) : le premier worker ou cron, sans port ni route, sondé par sa commande (`exec`) ou un port local (`tcp`) ; une app faite seulement de crons (v2.57.1) a sa release prête quand ses CronJobs la portent sur son image, et se lit `scheduled`. Workers et crons par intervalle dans le conteneur du web (`mode` `in-process`), dans toutes les recettes ; en Python fermé et Ruby, un web et jusqu'à 7 workers `in-process`, supervisés ensemble ; arrêt du groupe en 120 s au plus. Un `job` n'est pas encore lancé. |
 | Ressources | `resources.cpu`, `memory`, `cpu_limit`, `memory_limit`. Un pod qui demande plus que n'alloue le plus grand nœud est refusé avant le build, au push comme à `paas builds rebuild` (`N0_RESOURCES_LARGER_THAN_NODES`, v2.38.1), avec une demande qui tient. |
 | Temps de build | Budgets publiés par étape : prepare 600 s, build 3 600 s, tests 2 100 s, build entier 3 600 s ; `build.resources.timeout_seconds` (60 à 21 600 s) relève prepare et build (v2.38.0) ; `paas config plan` les affiche ; un dépassement nomme l'étape, le budget et la durée. |
 | Volumes | Jusqu'à 32, de 1 à 1024 Gio, `rwo` (`local-path`) ou `rwx` (`paas-cephfs`, jamais prouvé). `preserve_on_delete=true` obligatoire ; supprimer l'app garde le volume. Une réplique avec un volume rwo. Un volume réservé déplacé est refusé au gel du plan (`ENV_STORAGE_RESERVED_VOLUME_CHANGED`). |
@@ -358,6 +378,23 @@ plan` l'affiche aussi, `[Cust]` ou `[Paas]`). Les codes et leur règle sont dans
 | Dockerfile (R-0025.1) | `build.dockerfile` : `path`, `context`, `target` ; bases tierces admises par la liste publiée, jamais une image d'application ; le Dockerfile lu comme BuildKit le lit. |
 | Profils N3 et composition (R-0025.4, R-0025.2) | Un `paas.xml` qui nomme la recette d'un profil N3 (`seafile13-native-closure-v1`, `node24-pnpm11-python312-closure-v1`) est projeté sur le profil et jugé comme son `paas.toml` publié. `processes[].build` (l'image propre d'un processus) se déclare et se refuse à sa clé tant que la plateforme construit une image par push. |
 | Corrections (v2.56.0) | Les plans PHP et Ruby techniques portent le code de leur préparation par son empreinte : une app replanifie à son prochain push. Un plan retenu par la détection nomme ses codes. Un champ de formulaire d'installation fait des seules liaisons publiques d'un service n'est pas un secret ; un secret composé avec du texte sous un nom sensible est admis, rendu entier comme secret. Une archive d'un hôte déclaré suit ses redirections https. |
+
+## 5 undecies. Disponible depuis v2.57.0 (en production depuis le 2026-10-25)
+
+| Sujet | Ce qui change |
+|---|---|
+| Go sans processus web (EX-03.1, PR-0026) | Chaque recette Go des catalogues `2026.10.25.go.11` et `2026.10.25.go126.3` publie les profils `web`, `worker` et `job` : une app Go dont le seul processus est un worker (sans port ni route, sondé par sa commande `healthcheck.type` `exec` ou par un port local `tcp`) est servie ; jusque-là refusée (`ENV_PROFILE_UNKNOWN`). Une app dont les seuls processus sont des crons est servie depuis v2.57.1 (section 5 duodecies). |
+| Go 1.27.3 et 1.26.10 | Recettes `go-1.27.3-*` et `go-1.26.10-*` dans ces mêmes catalogues, mêmes variantes que les lignes 1.27 et 1.26 ; outillages de build v10, images d'exécution glibc et git révisées. Un `paas.xml` qui nomme un catalogue Go antérieur garde sa recette, mais son image ne passe plus la politique CVE par défaut : passer à `2026.10.25.go.11` ou `2026.10.25.go126.3`. |
+| Ruby 3.4.11 | Les deux recettes Ruby en Ruby 3.4.11 : `2026.10.25.ruby.7` (`ruby34-bundler-offline-v2`), `2026.10.25.ruby.9` (`ruby34-pnpm-offline-v1`, pnpm 10.34.6) et `2026.10.25.ruby.8` (pnpm 10.34.5) ; une image d'exécution commune ; fermetures de dépendances inchangées. Avec ces catalogues, `build.runtime_version` vaut `3.4.11`. Un `paas.xml` qui nomme un catalogue Ruby antérieur garde sa recette, mais son image ne passe plus la politique CVE par défaut : passer à ces catalogues. Les catalogues `2026.10.25.ruby.4`, `2026.10.25.ruby.5` et `2026.10.25.ruby.6` ne construisent pas (`RUBY_RUNTIME_ABI_UNSUPPORTED`) : ne pas les nommer. |
+| Suppression d'une app | La purge qui suit la corbeille retire chaque objet avec ce qui le contrôle ; un objet sans contrôleur est retiré lui-même ; la fiche de l'app attend que ses objets soient partis. |
+
+## 5 duodecies. Disponible depuis v2.57.1 (en production depuis le 2026-10-25)
+
+| Sujet | Ce qui change |
+|---|---|
+| Apps faites seulement de crons (EX-03) | Une app sans processus web dont les seuls processus sont des crons (Node ; Go avec les catalogues `2026.10.25.go.11` et `2026.10.25.go126.3`) est servie : sa release est prête quand ses CronJobs la portent sur son image, `paas releases list` la lit `scheduled`, et les commandes qui gardent l'image en service (`paas run`, …) passent. Jusqu'en v2.57.0, sa release échouait (`admission_runtime_missing_or_ambiguous`) alors que ses crons tournaient. |
+| Crons à côté du web | Une exécution de cron en cours ne fait plus refuser la mise en service d'une app qui a aussi un web (`admission_runtime_unattributed_pod`) : elle est rattachée à son cron. |
+| Suppression d'une app | La purge retire aussi le cluster MySQL de l'app (InnoDBCluster), et ce que des apps déjà purgées ont laissé. |
 
 ## 6. Prévu
 
