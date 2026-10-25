@@ -3,6 +3,83 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.56.0 — 2026-10-25
+
+- **CLI `paas-apps` 2.56.0**, vérifiée contre l’API client **2.56.0** (437
+  opérations ; les processus d’une app décrivent désormais leur commande
+  exacte, leurs réglages de cron et leur délai d’arrêt). Elle publie aussi la
+  2.52.2, jamais publiée seule.
+- Ce que la plateforme 2.56.0 apporte à votre `paas.xml` :
+  - en Node, PHP et Go, des workers et des crons dans leurs propres pods, et un
+    processus `release` joué avant chaque déploiement ; une app Node sans
+    processus web ; des workers et des crons par intervalle dans le conteneur
+    du web, pour toutes les recettes ;
+  - un mot de passe demandé avant toute requête vers l’app
+    (`edge.access.basic_auth_secret`) ;
+  - les sous-modules Git déclarés (`source.gitlinks`), les dossiers laissés de
+    côté (`source.ignore_directories`) et des arbres jusqu’à 100 000 fichiers ;
+  - PHP : inventaires Composer 1, archives et correctifs Composer déclarés,
+    chemins inscriptibles (`storage.writable`), adresses sans extension
+    (`web.extensionless`) ;
+  - PHP et Ruby : le frontal npm construit par la plateforme ; Ruby : les gems
+    du `Gemfile.lock` installées hors réseau ;
+  - l’installation par formulaires lit la cible et des valeurs de la page
+    (jeton anti-CSRF) ; les comptes Ruby se créent par formulaire ;
+  - un Dockerfile hors de la racine du dépôt, avec son contexte et son étape ;
+    l’index d’un site statique (`build.static.index`) ;
+  - les liens vers un volume (`storage.links`) en Node et Go.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.56.0.
+
+## v2.52.2 — 2026-10-23
+
+- **CLI `paas-apps` 2.52.2**, vérifiée contre l’API client **2.52.2** (437
+  opérations ; contrat inchangé depuis la 2.51.2). Elle publie aussi la 2.51.3,
+  jamais publiée seule.
+- Ce que la plateforme 2.52 apporte à votre `paas.xml` :
+  - jusqu’à trois services privés par app en PHP, Node et Go, un de chaque
+    réservation : PostgreSQL 16 ; MySQL 8.4 ou MariaDB 11.8 ; Redis 7.4 ;
+  - Redis et MariaDB pour les apps Node et Go ; PostgreSQL, MariaDB et Redis
+    pour les apps PHP ;
+  - toute liste des extensions de l’image PostgreSQL publiée, chacune à sa
+    version ;
+  - des bases MySQL et MariaDB nommées (`databases`) et le droit de créer des
+    bases `app_*` (`privileges` : `CREATE_DATABASE`) ;
+  - le réglage `log_bin_trust_function_creators` des bases MySQL et MariaDB ;
+  - un service ajouté à une app déjà installée : l’app garde son installation.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.52.2.
+
+## v2.51.3 — 2026-10-21
+
+- **CLI `paas-apps` 2.51.3**, vérifiée contre l’API client **2.51.3** (437
+  opérations ; contrat inchangé depuis la 2.51.2). Elle publie aussi la 2.51.2,
+  jamais publiée seule.
+- Ce que la plateforme 2.51.3 corrige pour vous, sans rien changer à votre
+  `paas.xml` : la liste de vos applications ne lit plus les SBOM ni les
+  journaux de tests de leurs builds, et la liste de vos applications supprimées
+  est servie par pages : la réponse reste rapide quel que soit leur nombre.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.51.3.
+
+## v2.51.2 — 2026-10-21
+
+- **CLI `paas-apps` 2.51.2**, vérifiée contre l’API client **2.51.2** (437
+  opérations).
+- Ce que la plateforme 2.51.2 corrige pour vous, sans rien changer à votre
+  `paas.xml` :
+  - quand le scan refuse une image pour des paquets de sa recette, la révision
+    corrigée qu’il propose est publiée après le catalogue de votre plan et sans
+    faille CRITICAL ni HIGH au dernier rescan quotidien de son image : une
+    révision devenue vulnérable n’est plus proposée ; de même pour les mises à
+    jour de sécurité ;
+  - l’acceptation d’une liste de dépendances
+    (`POST /v1/apps/{app}/dependency-lists/{id}/accept`) accepte le nom de
+    l’application, comme les autres routes des listes ;
+  - en mode `manual`, un push ou une reconstruction d’un commit dont la liste
+    est proposée rejoint cette proposition, sans seconde production ;
+  - paquets Python construits depuis leur source : l’inventaire des
+    bibliothèques intégrées nomme le paquet source de chacune, que le scan
+    rapproche des avis de sécurité.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.51.2.
+
 ## v2.51.1 — 2026-10-20
 
 - **CLI `paas-apps` 2.51.1**, vérifiée contre l’API client **2.51.1** (437

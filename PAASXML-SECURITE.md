@@ -85,6 +85,10 @@ Affichage d'une échéance : la plateforme enregistre l'instant de fin, le minui
   secret, jamais sa valeur (v2.47.0). Un contrôle d'installation en échec publie sa valeur obtenue masquée de même
   (v2.48.1).
 
+- Sous un nom sensible (`password`, `secret`, `token`, `auth`…), une valeur se compose d'une référence
+  `{{secrets.NOM}}`, seule ou avec du texte autour : la valeur entière est alors traitée comme secrète (v2.56.0). Une
+  valeur littérale y est refusée (`V2_SECRET_VALUE_REFUSED`).
+
 ## 4. Chaîne de build
 
 - Le build part toujours du commit poussé sur le dépôt Git de l'app (`forgejo://`). Une image externe est
@@ -107,7 +111,16 @@ Affichage d'une échéance : la plateforme enregistre l'instant de fin, le minui
 - Routes refusées d'une app PHP (`web.deny_routes`, v2.47.0) : un chemin, quelle que soit sa casse ou son
   extension, et un paramètre de requête par nom et valeur, refusés (403) avant les règles de l'app.
 - Liens déclarés entre apps : disponibles depuis v2.30.0 (FEATURES, section 5 ter). Pas encore déclarables
-  (prévu) : règles de sortie, domaines personnalisés (N0.DOMAINS), réglages d'entrée par app (N0.EDGE).
+  (prévu) : règles de sortie, domaines personnalisés (N0.DOMAINS), autres réglages d'entrée par app (N0.EDGE).
+
+- **Mot de passe de bordure** (v2.56.0, `edge.access.basic_auth_secret`) : le NOM d'un secret déclaré, fourni
+  sans valeur provisoire (`provide`), scellé ou externe, dont la valeur est des lignes htpasswd (`$apr1$`, bcrypt de
+  coût 04 ou 05, SHA-crypt de 5 000 tours au plus). La bordure (le nginx qui sert les apps) demande le mot de passe avant
+  toute requête vers l'app, sur tous ses hôtes, après le contrôle anti-DDoS : une adresse bannie reçoit 403 quel que
+  soit le mot de passe. Le secret n'entre pas dans l'environnement de l'app. Au déploiement, ses lignes sont vérifiées
+  (`V2_EDGE_ACCESS_SECRET_INVALID`, par numéro de ligne) ; la release ne se poursuit qu'une fois le fichier posé par la
+  bordure (`V2_EDGE_ACCESS_NOT_APPLIED`, jamais une app ouverte). Un secret généré, provisoire ou lu par un gabarit de
+  l'app est refusé. Une app construite par son Dockerfile ne le porte pas encore.
 
 ## 6. Accès Git
 

@@ -3,7 +3,7 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.51.1.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.56.0.
 
     Il couvre les 437 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.51.1
+  x-paas-api-version-tested: 2.56.0
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -3318,12 +3318,9 @@ paths:
       - apps
       summary: Intègre une liste proposée à la branche de l'application, par avance rapide (mode manual)
       x-paas-envelope: data
+      x-paas-app-ref: name-or-id
       parameters:
-      - name: app_id
-        in: path
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/AppRef'
       - name: list_id
         in: path
         required: true
@@ -15425,6 +15422,19 @@ components:
       - service_name
       - key_name
       - created_at
+    CronSettings:
+      type: object
+      properties:
+        timezone:
+          type: string
+          nullable: true
+        concurrency:
+          type: string
+          nullable: true
+        timeout_seconds:
+          type: integer
+          format: int64
+          nullable: true
     CurrentRelease:
       type: object
       description: |
@@ -16455,6 +16465,11 @@ components:
           type: integer
           format: int64
           nullable: true
+        command:
+          type: array
+          items:
+            type: string
+          nullable: true
     HostContract:
       type: object
       properties:
@@ -17261,6 +17276,12 @@ components:
             $ref: '#/components/schemas/FileMount'
         runtime:
           $ref: '#/components/schemas/RuntimeSpec'
+        volume_processes:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
     NixpacksInfo:
       type: object
       properties:
@@ -17927,6 +17948,26 @@ components:
           nullable: true
         runtime_language:
           type: string
+          nullable: true
+        argv:
+          type: array
+          items:
+            type: string
+          nullable: true
+        kind:
+          type: string
+          nullable: true
+        cron:
+          allOf:
+          - $ref: '#/components/schemas/CronSettings'
+          nullable: true
+        stop_grace_seconds:
+          type: integer
+          format: int64
+          nullable: true
+        deadline_seconds:
+          type: integer
+          format: int64
           nullable: true
       required:
       - replicas

@@ -110,7 +110,8 @@ paas config plan --catalogue ../catalogue-store.json
 |---|---|---|
 | `V2_PROJECTION_UNSUPPORTED_KEY` | Clé du schéma pas encore raccordée | Retirer la clé ; statut dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) |
 | `V2_REQUIRED_MISSING@build.recipe` | Aucune recette nommée | Choisir une recette de [PAASXML-FEATURES.md](PAASXML-FEATURES.md) |
-| `V2_VALUE_INVALID` sur un nom | Préfixe `PAAS_`, ou valeur littérale sous un nom sensible | Renommer, ou sceller la valeur |
+| `V2_VALUE_INVALID` sur un nom | Préfixe `PAAS_` | Renommer |
+| `V2_SECRET_VALUE_REFUSED` | Valeur littérale sous un nom sensible, ou secret sans exactement une origine (`generate`, `provide`, `external`, `sealed`) | Sceller la valeur, ou la référencer par `{{secrets.NOM}}` (seule ou avec du texte autour, v2.56.0) |
 | `V2_DUPLICATE_NAME` | Même nom en `env` et en `secrets` | Garder le secret, retirer la variable |
 | `ENV_CATALOGUE_UNAVAILABLE` | `plan` sans instantané du catalogue | Ajouter `--catalogue` |
 | `ENV_TECHNICAL_INIT_SOURCE_REQUIRED` | Script de `lifecycle.init` absent du commit | Commiter le script |

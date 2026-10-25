@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-437 opérations, vérifiées contre l'API 2.51.1. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+437 opérations, vérifiées contre l'API 2.56.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -8426,6 +8426,14 @@ Provenance d'un build : sources, étapes, scan, SBOM, signature, promotion
 | `key_name` | string | oui |
 | `created_at` | string | oui |
 
+### Type `CronSettings`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `timezone` | string | non |
+| `concurrency` | string | non |
+| `timeout_seconds` | integer | non |
+
 ### Type `CurrentRelease`
 
 API 2.48.0 : la release qu'une application sert, dans `get_app` : son identifiant, son build, son commit, son état (projeté comme dans `list_deploys` : `running`, `scaled-zero`, `maintenance`…), ses répliques et son image.
@@ -9548,6 +9556,7 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `probe_type` | string | non |
 | `http_headers` | tableau de [`HttpHeaderSpec`](#type-httpheaderspec) | non |
 | `port` | integer | non |
+| `command` | tableau de string | non |
 
 ### Type `HostContract`
 
@@ -10146,6 +10155,7 @@ Fin du journal de l'étape en échec, sans valeur de secret
 | `sidecars` | tableau de [`Sidecar`](#type-sidecar) | non |
 | `files` | tableau de [`FileMount`](#type-filemount) | non |
 | `runtime` | [`RuntimeSpec`](#type-runtimespec) | non |
+| `volume_processes` | objet (valeurs : tableau de string) | non |
 
 ### Type `NixpacksInfo`
 
@@ -10544,6 +10554,11 @@ Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un déma
 | `tracing_sample_rate` | number | non |
 | `service_name` | string | non |
 | `runtime_language` | string | non |
+| `argv` | tableau de string | non |
+| `kind` | string | non |
+| `cron` | [`CronSettings`](#type-cronsettings) | non |
+| `stop_grace_seconds` | integer | non |
+| `deadline_seconds` | integer | non |
 
 ### Type `PromoteCanaryDeployResponse`
 

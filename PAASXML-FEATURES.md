@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-10-18 : plateforme v2.48.1, CLI 2.48.1, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-10-25 : plateforme v2.56.0, CLI 2.56.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -16,12 +16,12 @@ contrôles).
 
 | | Disponible | Pas encore (identifiant de la feuille de route) |
 |---|---|---|
-| Runtimes | PHP 8.4 ; Node 24 (npm, workspaces, pnpm, yarn) et Node 22 ; Go 1.26 et 1.27 ; Python 3.12 et 3.14, fermeture Python + Node ; Ruby 3.4 ; Dockerfile à la racine du dépôt (`build.runtime` `dockerfile`, v2.34.0), sur l'outillage et les images des recettes publiées (`paas builds bases`) ; statique (se planifie, jamais prouvé) | JVM (N1.JVM), Elixir (N1.ELIXIR), Rust (N1.RUST), .NET (N1.DOTNET), plusieurs conteneurs (N1.COMPOSE), autres versions majeures (N1.VERSIONS) |
-| Build | Budgets de temps publiés par étape (v2.38.0) et `build.resources.timeout_seconds` ; budgets de lecture de l'arbre `source.limits`, fichiers laissés de côté `source.ignore`, fichiers inertes admis par empreinte `source.pinned` (v2.37.0) ; app rangée dans un sous-répertoire d'un monorepo, `source.root` (v2.39.0) ; verrous npm, Yarn et pnpm lus comme leur gestionnaire | `build.resources` `cpu`, `memory` et les clés de tas ou de parallélisme (refusées chacune avec sa raison) |
-| Services | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, SMTP en capture ; base dédiée, TLS vérifié ; relais MySQL en boucle locale (`local_endpoint`) en PHP, Node et Go (v2.37.0) | Plusieurs services en PHP, Node et Go (N2.MULTI) ; Valkey, OpenSearch, RabbitMQ, S3, ClickHouse ; envoi réel de courrier (N2.SMTP), IMAP ; extensions PostgreSQL libres (N2.PGEXT) ; options de base (N2.OPTIONS) |
-| Processus | Un processus web ; en Python fermé et Ruby, jusqu'à 7 workers supervisés dans le même conteneur ; une réplique | Worker, cron et job séparés (N0.PROC) ; plusieurs réplicas (N0.SCALE) ; stratégies de déploiement (N0.DEPLOY) |
-| Stockage | Volumes rwo et rwx, liens, copies initiales | `storage.private` (refusé par la projection, mesuré le 2026-10-15), tmpfs, stockage éphémère, rwx prouvé (N0.STORAGE) |
-| Réseau | HTTPS, websockets, 100 Mo par requête ; liens déclarés entre apps `network.linked_services` (v2.30.0, effectifs quand l'isolation entre apps sera activée) ; tous les chemins du nom court, `/login` compris, vont à l'app (v2.38.1) | Ports TCP (N0.TCP), règles de sortie et IPv6 (N0.NET), domaines (N0.DOMAINS), réglages d'entrée par app (N0.EDGE) |
+| Runtimes | PHP 8.4 ; Node 24 (npm, workspaces, pnpm, yarn) et Node 22 ; Go 1.26 et 1.27 ; Python 3.12 et 3.14, fermeture Python + Node ; Ruby 3.4 ; Dockerfile (`build.runtime` `dockerfile`, v2.34.0), à la racine du dépôt ou dessous avec son contexte et son étape cible (`build.dockerfile`, v2.56.0), sur l'outillage, les images des recettes publiées et les bases tierces de la liste publiée (`paas builds bases`) ; profils N3 nommés par un `paas.xml` (v2.56.0) ; statique (se planifie, jamais prouvé) | JVM (N1.JVM), Elixir (N1.ELIXIR), Rust (N1.RUST), .NET (N1.DOTNET), plusieurs conteneurs (N1.COMPOSE), autres versions majeures (N1.VERSIONS) |
+| Build | Budgets de temps publiés par étape (v2.38.0) et `build.resources.timeout_seconds` ; budgets de lecture de l'arbre `source.limits`, fichiers laissés de côté `source.ignore`, fichiers inertes admis par empreinte `source.pinned` (v2.37.0) ; app rangée dans un sous-répertoire d'un monorepo, `source.root` (v2.39.0) ; dossiers laissés de côté entiers `source.ignore_directories`, sous-modules Git `source.gitlinks`, arbres jusqu'à 100 000 fichiers (v2.56.0) ; verrous npm, Yarn et pnpm lus comme leur gestionnaire ; gems Ruby et frontaux npm de PHP et Ruby installés hors réseau (v2.56.0) | `build.resources` `cpu`, `memory` et les clés de tas ou de parallélisme (refusées chacune avec sa raison) |
+| Services | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, SMTP en capture ; base dédiée, TLS vérifié ; trois services par app en PHP, Node et Go, un de chaque réservation (v2.52.0) ; extensions de l'image PostgreSQL publiée, bases MySQL et MariaDB nommées, droit de créer des bases `app_*`, réglage `log_bin_trust_function_creators` (v2.52.0) ; relais MySQL en boucle locale (`local_endpoint`) en PHP, Node et Go (v2.37.0), tunnel Redis en Node et Go (v2.52.0) | PostGIS et PostgreSQL 17 (N2.PGEXT) ; Valkey, OpenSearch, RabbitMQ, S3, memcached, ClickHouse, LDAP, InfluxDB, Meilisearch ; MySQL et MariaDB en Ruby ; envoi réel de courrier (N2.SMTP), IMAP ; réplicas, sauvegarde et PITR (N2.OPTIONS) |
+| Processus | Un processus web ; en Node, PHP et Go, workers et crons dans leurs propres pods et un processus release avant chaque déploiement (v2.56.0), une app Node sans processus web (v2.56.0) ; workers et crons par intervalle dans le conteneur du web, dans toutes les recettes (v2.56.0 ; en Python fermé et Ruby, jusqu'à 7 workers) ; une réplique | Job (N0.PROC) ; processus séparés avec un cycle de vie ; image propre d'un processus (N1.COMPOSE) ; plusieurs réplicas (N0.SCALE) ; stratégies de déploiement (N0.DEPLOY) |
+| Stockage | Volumes rwo et rwx, liens (Node et Go depuis v2.56.0), copies initiales ; chemins inscriptibles `storage.writable` en PHP (v2.56.0) | `storage.private` (refusé par la projection, mesuré le 2026-10-15), tmpfs, stockage éphémère, rwx prouvé (N0.STORAGE) |
+| Réseau | HTTPS, websockets, 100 Mo par requête ; liens déclarés entre apps `network.linked_services` (v2.30.0, effectifs quand l'isolation entre apps sera activée) ; tous les chemins du nom court, `/login` compris, vont à l'app (v2.38.1) ; mot de passe demandé par la bordure avant toute requête (`edge.access.basic_auth_secret`, v2.56.0) | Ports TCP (N0.TCP), règles de sortie et IPv6 (N0.NET), domaines (N0.DOMAINS), autres réglages d'entrée par app (N0.EDGE) |
 | Sécurité | Une seule politique pour l'image servie (v2.36.0) : porte CVE, politique déclarée dans le `paas.xml` (`security.cve_exceptions` une par une, toute sévérité, ou `security.block_on` `critical` ou `none`), porte des constats de secrets avec `security.secret_exceptions` ; exceptions de l'opérateur (HIGH) ; secrets scellés | `security.sbom`, `security.require_mfa_for_console` |
 
 ## 2. Runtimes et recettes publiées (N1)
@@ -136,20 +136,38 @@ de son app.
 
 | Runtime (recette) | Services acceptés | Combien |
 |---|---|---|
-| PHP | MySQL 8.4 | 1 |
-| Node (npm, pnpm) | PostgreSQL 16, MySQL 8.4, MongoDB 8.0 ; SMTP en capture | 1, plus la capture SMTP |
-| Go | PostgreSQL 16, MySQL 8.4, MongoDB 8.0 ; SMTP en capture | 1, plus la capture SMTP |
-| Python fermé (`python314-node24-closure-v1`) | MariaDB 11.8, Redis 7.4 | jusqu'à 3 |
-| Ruby | PostgreSQL 16 par variante publiée, Redis 7.4 ; SMTP en capture | jusqu'à 3 |
-| Python simple (`python-3.14.7-bookworm-v1`) | aucun | 0 |
+| PHP | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4 (v2.52.0 : tous sauf MySQL) | jusqu'à 3, un de chaque réservation : PostgreSQL ; MySQL ou MariaDB ; Redis (v2.52.0) |
+| Node (npm, pnpm, Yarn) | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0 (v2.52.0 : MariaDB et Redis) ; SMTP en capture | jusqu'à 3, un de chaque réservation, plus la capture SMTP (v2.52.0) |
+| Go | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0 (v2.52.0 : MariaDB et Redis) ; SMTP en capture | jusqu'à 3, un de chaque réservation, plus la capture SMTP (v2.52.0) |
+| Python simple | PostgreSQL 16, MariaDB 11.8, Redis 7.4 | jusqu'à 3 |
+| Python fermé (`python314-node24-closure-v1`) | PostgreSQL 16, MariaDB 11.8, Redis 7.4 | jusqu'à 3 |
+| Ruby | PostgreSQL 16 avec au moins une extension (v2.52.0 : toute liste de l'image publiée, jusque-là une variante publiée), Redis 7.4 ; SMTP en capture | jusqu'à 3 |
 
-- PostgreSQL avec extensions : seulement une variante publiée, liste exacte, version `16`. `hstore, pg_trgm,
-  unaccent, vector` (exemple discourse) ou `cube, earthdistance, pg_trgm, unaccent, uuid-ossp, vector`.
+- PostgreSQL avec extensions (v2.52.0) : toute liste des extensions que sert l'image publiée, version `16` :
+  `btree_gin`, `cube`, `earthdistance` (avec `cube`), `hstore`, `ltree`, `pg_trgm`, `pgcrypto`, `unaccent`,
+  `uuid-ossp`, `vector`, chacune créée à sa version publiée. PostGIS n'est pas servi
+  (`ENV_TECHNICAL_POSTGRES_PROFILE_UNSUPPORTED`). Jusqu'à v2.51.3, seules deux listes exactes étaient admises.
+- MySQL 8.4 et MariaDB 11.8 (v2.52.0 ; PHP, Python simple, Node, Go) : `databases`, sept bases nommées au plus,
+  créées avec le service et liées par `MYSQL_DATABASES_JSON` ; `privileges` `CREATE_DATABASE`, l'utilisateur de l'app
+  crée les bases dont le nom commence par `app_` et aucune autre ; `options` `log_bin_trust_function_creators` à
+  `true`, seul réglage admis (le serveur réservé tourne sans journal binaire : fonctions, procédures et déclencheurs
+  de l'app s'y créent).
+- Une réservation ne change plus : un push qui retire un service, ou change ses extensions, ses bases ou son
+  privilège, est refusé (`N2_EXISTING_RESERVATION_CONFLICT_RETAINED`). Un service ajouté est réservé au push suivant ;
+  l'app garde son installation (PHP depuis v2.52.0 ; Node, Go, Python et Ruby depuis v2.52.2).
+- Redis : `persistence` `aof` et `eviction` `noeviction` exigés ; liaison `REDIS_URL` (`rediss://`) et `REDIS_SSL_CA`.
+  MariaDB se lie par `MYSQL_URL`, comme MySQL.
+- `DATABASE_URL` : avec PostgreSQL et MySQL ou MariaDB, elle nomme PostgreSQL ; `MYSQL_URL` nomme MySQL ou MariaDB
+  (v2.52.0 : l'ordre dépendait d'identifiants aléatoires). Le schéma de l'URL est `postgresql://` ; une app qui tire
+  son pilote du schéma tel qu'il est écrit et attend `postgres` déclare `DATABASE_URL` vide dans l'env du service pour
+  lire ses propres variables.
 - En Node et Go, un service exige le cycle de vie du moteur (`lifecycle.state_directory`), `tls=required` et
-  `ca_file`, le chemin où écrire l'autorité de certification.
+  `ca_file`, le chemin où écrire l'autorité de certification. En PHP, l'entrée lie et vérifie chaque service avant de
+  servir ; avec un cycle de vie, PostgreSQL demande une recette à `pdo_pgsql`.
 - `local_endpoint` (v2.37.0) : relais MySQL en boucle locale, en clair côté app et en TLS vérifié vers le serveur,
-  pour un client qui ne parle pas TLS. `DATABASE_URL` et `MYSQL_URL` injectées visent alors le relais ; sans relais
-  ni URL propre au service, le plan avertit (`services.url_without_tls`).
+  pour un client qui ne parle pas TLS ; tunnel Redis en Node et Go depuis v2.52.0. Les URL injectées
+  (`DATABASE_URL` et `MYSQL_URL`, `REDIS_URL`) visent alors le relais ; sans relais ni URL propre au service, le plan
+  avertit (`services.url_without_tls`). MariaDB n'a pas de relais.
 - `services.<nom>.env` : variables par gabarit (`{{services.<nom>.host}}`…), noms en minuscules compris, que l'entrée
   PHP admet aussi depuis v2.38.1.
 - SMTP : capture seulement, en Node et Go (en PHP : `ENV_TECHNICAL_SERVICE_OPTION_UNSUPPORTED`). Les messages vont à un
@@ -160,22 +178,22 @@ de son app.
 - Base PostgreSQL héritée (v2.49.0) : une app qui en a une (créée par `paas addons`) et déclare PostgreSQL la garde,
   reprise telle quelle avec ses données ; une base à plusieurs instances est refusée par son nom. MySQL, Redis et
   MongoDB hérités restent refusés.
-- Options refusées aujourd'hui : `backup`, `plan`, `quota`, `privileges`, `databases`.
+- Options refusées aujourd'hui : `backup`, `plan`, `quota`.
 - La matrice complète, avec la raison de chaque refus, est en annexe de [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md).
 
 ## 4. Processus, stockage, cycle de vie (N0)
 
 | Domaine | Ce qui est disponible |
 |---|---|
-| Processus | Un processus `web`, port ≥ 1024, sonde HTTP (`healthcheck`), une réplique. En Python fermé et Ruby : un web et jusqu'à 7 workers `in-process`, supervisés ensemble ; arrêt du groupe en 120 s au plus. |
+| Processus | Un processus `web`, port ≥ 1024, sonde HTTP (`healthcheck`), une réplique. En Node, PHP et Go (v2.56.0) : jusqu'à 8 processus, workers et crons chacun dans son propre pod avec sa commande (`argv`), même image, mêmes variables et services ; un `release` joué une fois dans son pod avant chaque déploiement (son échec l'annule, la version en service reste) ; pas encore à côté d'un cycle de vie (`ENV_PROCESS_LAUNCH_UNSUPPORTED`). Sans web (Node ; Go avec la révision de son catalogue) : le premier worker ou cron, sans port ni route, sondé par sa commande (`exec`) ou un port local (`tcp`). Workers et crons par intervalle dans le conteneur du web (`mode` `in-process`), dans toutes les recettes ; en Python fermé et Ruby, un web et jusqu'à 7 workers `in-process`, supervisés ensemble ; arrêt du groupe en 120 s au plus. Un `job` n'est pas encore lancé. |
 | Ressources | `resources.cpu`, `memory`, `cpu_limit`, `memory_limit`. Un pod qui demande plus que n'alloue le plus grand nœud est refusé avant le build, au push comme à `paas builds rebuild` (`N0_RESOURCES_LARGER_THAN_NODES`, v2.38.1), avec une demande qui tient. |
 | Temps de build | Budgets publiés par étape : prepare 600 s, build 3 600 s, tests 2 100 s, build entier 3 600 s ; `build.resources.timeout_seconds` (60 à 21 600 s) relève prepare et build (v2.38.0) ; `paas config plan` les affiche ; un dépassement nomme l'étape, le budget et la durée. |
 | Volumes | Jusqu'à 32, de 1 à 1024 Gio, `rwo` (`local-path`) ou `rwx` (`paas-cephfs`, jamais prouvé). `preserve_on_delete=true` obligatoire ; supprimer l'app garde le volume. Une réplique avec un volume rwo. Un volume réservé déplacé est refusé au gel du plan (`ENV_STORAGE_RESERVED_VOLUME_CHANGED`). |
-| Liens et copies | `storage.links` (chemin de l'app vers un volume), `storage.seeds` (copie initiale `absent-only`). `storage.private` n'est pas raccordé (refusé par la projection, mesuré le 2026-10-15) ; la variable de gabarit `{{storage.private}}` existe. |
+| Liens et copies | `storage.links` (chemin de l'app vers un volume ; en Node et Go depuis v2.56.0, posé par l'étape de finition, sa cible créée au démarrage), `storage.seeds` (copie initiale `absent-only`). En PHP, `storage.writable` (v2.56.0) rend inscriptibles `/app` ou 16 chemins de l'arbre au plus, sans rendre inscriptibles les fichiers de l'image ; rien n'y persiste d'un démarrage à l'autre. `storage.private` n'est pas raccordé (refusé par la projection, mesuré le 2026-10-15) ; la variable de gabarit `{{storage.private}}` existe. |
 | Variables | `env` (gabarits `{{…}}` : secrets, services, app), `env_stages`, `files` (rendus au build ou au démarrage). `http_endpoints` : recette npm stable seulement, chaque `target_port` égal au port du process web ; refusé en PHP (`ENV_COMPONENTS_REQUIRE_SEPARATE_QUALIFICATION`). |
 | Comptes | `account` et `accounts` : compte d'administration créé par une commande native ou un formulaire, mot de passe par l'entrée standard. PHP : un contrôle `ready` doit lire le compte (`ENV_TECHNICAL_ACCOUNT_CHECK_REQUIRED`). Node npm : avec un service déclaré seulement (moteur de `paas-entry`), comptes supplémentaires par HTTP. |
 | Cycle de vie | `install`, `prepare`, `upgrade` (commandes natives, entrée standard jusqu'à 16 Kio) ; en PHP `install_http`, `install_php`, verrou (`lock`) et reprise (`interrupted`) ; en Python fermé `install_python` ; `checks` (SQL en lecture seule), `file_checks`, `http_checks`, `mail_sink`, `start_files`, `init` (script du dépôt avant le serveur). Node npm : sans service, seule `init` est lue ; avec un service, le moteur de `paas-entry` lit `state_directory`, `install`, `upgrade`, `http_checks`, `mail_sink` et les comptes, et refuse `init` (mesuré le 2026-10-15). |
-| Entrée HTTPS | Websockets acceptés, 100 Mo par requête, délais de 86 400 s, limite de débit par IP. Hôte de l'app : `apps-<8hex>.<domaine des apps>`. |
+| Entrée HTTPS | Websockets acceptés, 100 Mo par requête, délais de 86 400 s, limite de débit par IP. Hôte de l'app : `apps-<8hex>.<domaine des apps>`. Mot de passe de bordure (v2.56.0) : `edge.access.basic_auth_secret`, voir [PAASXML-SECURITE.md](PAASXML-SECURITE.md). |
 
 ## 5. Sécurité
 
@@ -297,7 +315,7 @@ plan` l'affiche aussi, `[Cust]` ou `[Paas]`). Les codes et leur règle sont dans
 | Corrections (v2.50.0) | Moteur IMAP privé : image reconstruite et réépinglée (l’ancienne avait disparu du registre). Image d’exécution Node minimale : librt, libutil et libanl (modules natifs). pnpm : `engines.pnpm` choisit le pnpm publié ; verrou lu jusqu’à 16 Mio ; paquet d’archive Git ou distante refusé au plan, nommé. `ENV_AUTO_INPUT_INCOMPLETE` nomme le fichier en cause. |
 | Corrections (v2.50.1) | Une réponse passagère d’un registre, d’une forge ou du proxy des modules Go (429, 500, 502, 503, 504) ou une coupure, à l’ouverture ou en cours de téléchargement, est retentée depuis zéro après 2 puis 4 s, trois essais au plus dans le temps de l’acquisition : paquets npm, Yarn classique et berry, archives Git, archive d’un site, PyPI, modules Go, pnpm. Toute autre réponse est refusée au premier essai ; le refus nomme la cause et les essais. Une indisponibilité qui dure n’est plus imputée à votre déclaration (`ENV_STATIC_ARCHIVE_UNAVAILABLE`, `ENV_GO_GENERATOR_ACQUISITION_UNAVAILABLE`). |
 
-## 5 octies. Disponible depuis v2.51.0 et v2.51.1 (en production depuis le 2026-10-20)
+## 5 octies. Disponible depuis v2.51.0 à v2.51.3 (en production depuis le 2026-10-20)
 
 | Sujet | Ce qui change |
 |---|---|
@@ -307,6 +325,39 @@ plan` l'affiche aussi, `[Cust]` ou `[Paas]`). Les codes et leur règle sont dans
 | Manifeste npm hors racine (v2.51.0) | `build.node.manifest` nomme le `package.json` qu’un arbre garde sous la racine (`install/package.json`), pour un projet npm à la racine sans `package.json` : la préparation le place à la racine de la copie de build, le reçu le nomme. |
 | Corrections (v2.51.0) | Composer : un métapaquet est admis dans un verrou, sans archive à acquérir. |
 | Corrections (v2.51.1) | Listes npm et Yarn produites : les résolveurs s’exécutent en service (ils sortaient sans résultat). Constructions Python depuis la source : l’inventaire des bibliothèques intégrées est exporté là où la build écrit (la build échouait). `paas builds rebuild` d’un commit dont la liste est à produire la fait produire, comme un push ; un refus restant nomme `paas dependencies produce`. CLI : un build en échec à sa préparation se lit « failed ». |
+| Corrections (v2.51.2) | Porte CVE : le refus du scan et les mises à jour de sécurité ne proposent une révision corrigée de la recette que si le dernier rescan quotidien de son image ne relève aucune faille CRITICAL ou HIGH et qu’elle est publiée après le catalogue du plan : une révision devenue vulnérable n’est plus proposée. `paas dependencies accept --app` accepte le nom de l’app. Mode `manual` : un push ou une reconstruction d’un commit dont la liste est proposée rejoint cette proposition, sans seconde production. Constructions Python depuis la source : l’inventaire des bibliothèques intégrées nomme le paquet source de chacune, que le scan rapproche des avis de sécurité. |
+| Corrections (v2.51.3) | Liste des apps supprimées (`GET /v1/apps?lifecycle=deleted`, `paas apps deleted`) : servie par pages de 100 au plus (`limit`, `offset`, `meta.total`), les plus récemment supprimées d’abord, sans builds, installation ni panne ; la liste des apps ne lit plus ni SBOM ni journal de tests. Recette Python 3.12 Wolfi : la préparation tourne sur l’image de build de la recette ; sa révision de sécurité Python 3.12.15 sera utilisable une fois son catalogue publié. |
+
+## 5 nonies. Disponible depuis v2.52.0 (en production depuis le 2026-10-22 ; corrections v2.52.1 et v2.52.2 le 2026-10-23)
+
+| Sujet | Ce qui change |
+|---|---|
+| Services des apps Node et Go (v2.52.0, R-0019.1 à R-0019.3) | Redis 7.4 et MariaDB 11.8 à côté de PostgreSQL 16, MySQL 8.4 et MongoDB : trois services privés au plus, un de chaque réservation, et la capture du courrier. Redis : `persistence` `aof`, `eviction` `noeviction`, liaison `REDIS_URL` et `REDIS_SSL_CA` ; son `local_endpoint` ouvre un tunnel local en TLS vérifié. MariaDB : réservée comme MySQL avec son moteur, liée par `MYSQL_URL`. Image `paas-entry` de cette version. |
+| Services des apps PHP (v2.52.0, EX-06, R-0019.3) | MariaDB 11.8, PostgreSQL 16 et Redis 7.4 en plus de MySQL 8.4 : trois services au plus, un de chaque réservation. L'entrée PHP lie et vérifie chacun avant de servir (PostgreSQL en `verify-full`, Redis en TLS avec AUTH). Avec un cycle de vie, PostgreSQL demande une recette à `pdo_pgsql`. Une app qui ajoute un service garde son installation. |
+| Extensions PostgreSQL (v2.52.0, R-0019.6) | Toute liste des dix extensions de l'image publiée, chacune à sa version, sur tous les runtimes qui servent PostgreSQL. PostGIS et PostgreSQL 17 : pas encore. |
+| Bases MySQL et MariaDB (v2.52.0, R-0029.3) | `databases` : sept bases nommées au plus, liées par `MYSQL_DATABASES_JSON` ; `privileges` `CREATE_DATABASE` : l'app crée ses bases `app_*`, aucune autre. PHP, Python simple, Node, Go. Fixés à la création du service. |
+| Réglage serveur (v2.52.0, EX-07) | `options` `log_bin_trust_function_creators` à `true`, liste close ; le serveur réservé tourne sans journal binaire. |
+| Corrections (v2.52.0) | Avec PostgreSQL et MySQL ou MariaDB, `DATABASE_URL` nomme toujours PostgreSQL : son ordre dépendait d'identifiants aléatoires (recette Python simple). |
+| Corrections (v2.52.1) | Les préparations du build (PHP, Go, npm, pnpm, Node installé) admettent les profils de service composés comme le plan de contrôle : Redis en Go et en Node, MariaDB en PHP et en pnpm, bases nommées et droit `CREATE_DATABASE`, extensions PostgreSQL. Elles les refusaient en v2.52.0 (`ENV_AUTO_N2_PROFILE_IDENTITY`, `ENV_GO_N2_IDENTITY`, `ENV_NPM_N2_IDENTITY`, `ENV_PNPM_N2_IDENTITY`). |
+| Corrections (v2.52.2) | Un service ajouté à une app déjà installée (un Redis à côté de sa base) garde l'instance en Node, Go, Python et Ruby, comme en PHP : l'entrée arrêtait chaque démarrage (`ENTRY_LIFECYCLE_IDENTITY_CHANGED`, `TECHNICAL_IDENTITY_CHANGED`). Un service retiré ou déplacé reste refusé. Image `paas-entry` de cette version. |
+
+## 5 decies. Disponible depuis v2.56.0 (en production depuis le 2026-10-25)
+
+| Sujet | Ce qui change |
+|---|---|
+| Composer (R-0006, PR-0072, EX-12.2) | Inventaire `installed.json` au format de Composer 1 lu et analysé ; un `vendor/` livré avec ses paquets de développement entre dans l'image avec ses seuls paquets de production ; `build.php.composer_project` (projet Composer hors racine) ; archives sans commit épinglées par le `paas.xml` (`build.php.composer_archives`, `build.php.composer_archive_hosts`) ; `npm-asset` et `bower-asset` acquis du registre npm par leur intégrité ; `build.php.composer_moved` (un commit verrouillé lu dans le dépôt GitHub qui le sert encore) ; greffon `cweagans/composer-patches` déclaré, ses correctifs des fichiers de l'arbre. |
+| Apps PHP (PR-0074, EX-16, R-0004.6) | `storage.writable` ; `web.extensionless` (`php`, `html` : une adresse sans extension servie par son fichier) ; `source.limits.private_paths`, la borne des chemins privés jusqu'à 128. |
+| Frontaux npm de PHP et Ruby (PR-0033) | `build.frontend.mode = build-node-v1` : la plateforme construit le frontal npm, ses sorties seules entrent dans l'image ; en PHP, après Composer (`build.frontend.after_composer`), copié vers une cible déclarée (`build.frontend.target`, collisions nommées), `build.files` (fichiers qu'un amont fait créer avant son build) ; un projet npm sans verrou a le sien produit une fois ; projets npm à côté d'un projet sous la racine ; workspaces déclarés par motifs. |
+| Gems Ruby (PR-0032) | Les gems du `Gemfile.lock` acquises depuis rubygems.org, vérifiées et installées hors réseau, sources GIT comprises ; un `Gemfile` sans verrou a son `Gemfile.lock` produit une fois par la plateforme ; `build.files` ; `build.ruby.bundle_with` (groupes facultatifs installés et chargés). |
+| Installation et comptes (PR-0023) | Une étape HTTP déclare la cible du formulaire qu'elle lit (`action`) et lit des valeurs de sa réponse par une expression (`capture_regex` : un jeton anti-CSRF d'une page HTML), reprises dans le chemin d'une étape suivante, masquées où l'étape le dit ; l'entrée Ruby crée un compte par les formulaires de l'app, comme l'entrée PHP ; un compte se connecte avec un secret déclaré. |
+| Mot de passe de bordure (EX-17) | `edge.access.basic_auth_secret`, toutes les recettes sauf le Dockerfile : voir [PAASXML-SECURITE.md](PAASXML-SECURITE.md). |
+| Processus (PR-0026, EX-03) | Voir la section 4 : workers, crons et release dans leurs propres pods en Node, PHP et Go ; app sans web ; workers et crons du conteneur dans toutes les recettes ; la fenêtre de stabilité d'une release surveille chacun de ses processus. |
+| Stockage (EX-18, EX-11.3) | `storage.links` en Node et Go ; `source.ignore_directories` : un dossier de l'arbre laissé de côté entier (ni lu, ni compté, ni exporté, ni dans l'image). |
+| Sources (EX-14, R-0076.1) | `source.gitlinks` : chaque sous-module (chemin, URL https publique, commit ; 11 au plus) acquis à son commit par la préparation et inscrit au reçu (`gitlinks.json`) ; un sous-module privé se laisse de côté par `source.ignore_directories`. Arbres jusqu'à 100 000 fichiers et 200 000 entrées avec les dossiers, lus par le protocole Git ; au-delà, refus avec les deux comptes et les deux bornes. |
+| Sites statiques (EX-15, EX-19) | `build.static.index` ; la racine du dépôt publiable ; les entrées cachées et les fichiers de la plateforme laissés de côté de tout dossier publié, inscrits au reçu. |
+| Dockerfile (R-0025.1) | `build.dockerfile` : `path`, `context`, `target` ; bases tierces admises par la liste publiée, jamais une image d'application ; le Dockerfile lu comme BuildKit le lit. |
+| Profils N3 et composition (R-0025.4, R-0025.2) | Un `paas.xml` qui nomme la recette d'un profil N3 (`seafile13-native-closure-v1`, `node24-pnpm11-python312-closure-v1`) est projeté sur le profil et jugé comme son `paas.toml` publié. `processes[].build` (l'image propre d'un processus) se déclare et se refuse à sa clé tant que la plateforme construit une image par push. |
+| Corrections (v2.56.0) | Les plans PHP et Ruby techniques portent le code de leur préparation par son empreinte : une app replanifie à son prochain push. Un plan retenu par la détection nomme ses codes. Un champ de formulaire d'installation fait des seules liaisons publiques d'un service n'est pas un secret ; un secret composé avec du texte sous un nom sensible est admis, rendu entier comme secret. Une archive d'un hôte déclaré suit ses redirections https. |
 
 ## 6. Prévu
 
@@ -318,14 +369,13 @@ qui en a besoin la déclare dans son `paas.xml`. L'ordre suit la feuille de rout
 | EX-02, T-05.4 | Modules natifs Node (liaisons précompilées publiées, ou compilation en bac à sable hors réseau) et correctifs `patch-package` de l'amont appliqués hors réseau : Wiki.js (extract-files), cusdis (moteurs Prisma) |
 | N0.NET | Liens déclarés entre apps : disponibles depuis v2.30.0 (section 5 ter). Règles de sortie, IPv6 : prévus |
 | N1.DATA | Correctifs de verrou et instantanés de registre publiés comme données, sans recompiler la plateforme |
-| N2.BPHP, N2.BNG, N2.BRUBY, N2.BPY | Combinaisons runtime × service manquantes (PHP × PostgreSQL ou Redis, Node et Go × Redis ou MariaDB, Ruby et Python × autres bases) |
-| N2.MULTI | Plusieurs services par app en PHP, Node et Go |
-| N2.PGEXT, N2.OPTIONS | Extensions PostgreSQL déclarables ; privilèges, bases nommées, réplicas, sauvegarde et PITR |
-| N0.PROC | Worker, cron, release et job séparés |
-| N2.OPENSEARCH, N2.RABBITMQ, N2.S3, N2.CLICKHOUSE, N2.VALKEY | Nouveaux services |
-| N0.RUNTIME, N0.EDGE, N0.BUILD, N1.MULTIRT, N1.STATIC | Paquets système, réglages d'entrée par app, secrets de build, assets Node dans une recette PHP, statique prouvé |
+| N2.BRUBY, N2.BPY | Combinaisons runtime × service manquantes (Ruby avec MySQL ou MariaDB, Python avec MySQL). Disponibles depuis v2.52.0 (section 5 nonies) : PHP avec PostgreSQL et Redis, Node et Go avec Redis et MariaDB, plusieurs services par app (N2.BPHP, N2.BNG, N2.MULTI) |
+| N2.PGEXT, N2.OPTIONS | PostGIS et PostgreSQL 17 ; réplicas, sauvegarde et PITR. Disponibles depuis v2.52.0 : les extensions de l'image publiée, les bases nommées et le droit de créer des bases |
+| N0.PROC | Job (commande ponctuelle) ; processus séparés à côté d'un cycle de vie. Disponibles depuis v2.56.0 : worker, cron et release séparés en Node, PHP et Go (section 4) |
+| N2.OPENSEARCH, N2.RABBITMQ, N2.S3, N2.CLICKHOUSE, N2.VALKEY | Nouveaux services (aussi memcached, annuaire LDAP, InfluxDB 2, Meilisearch) |
+| N0.RUNTIME, N0.EDGE, N0.BUILD, N1.MULTIRT, N1.STATIC | Paquets système, autres réglages d'entrée par app, secrets de build, statique prouvé. Disponibles depuis v2.56.0 : mot de passe de bordure, frontal npm dans les recettes PHP et Ruby |
 | N1.JVM, N1.ELIXIR, N1.RUST, N1.DOTNET, N1.VERSIONS | Nouveaux runtimes et versions |
-| N1.COMPOSE | Plusieurs conteneurs (le Dockerfile de l'app est disponible depuis v2.34.0, section 5 quater) |
+| N1.COMPOSE | Plusieurs conteneurs, une image par processus (`processes[].build` se déclare depuis v2.56.0 et reste refusé à sa clé) ; le Dockerfile de l'app est disponible depuis v2.34.0, hors de la racine depuis v2.56.0 |
 | N2.SMTP, N2.IMAP, N0.TCP, N0.DOMAINS | Courrier réel, ports TCP, domaines personnalisés |
 | N0.GPU, N2.INFERENCE, N0.STORAGE | GPU, inférence, stockage des modèles |
 | N0.SCALE, N0.DEPLOY | Réplicas, autoscaling, placement ; stratégies de déploiement |
