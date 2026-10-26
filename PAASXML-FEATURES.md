@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-10-25 : plateforme v2.57.1, CLI 2.57.1, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-10-26 : plateforme v2.60.1, CLI 2.60.1, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -18,7 +18,7 @@ contrôles).
 |---|---|---|
 | Runtimes | PHP 8.4 ; Node 24 (npm, workspaces, pnpm, yarn) et Node 22 ; Go 1.26 et 1.27 ; Python 3.12 et 3.14, fermeture Python + Node ; Ruby 3.4 ; Dockerfile (`build.runtime` `dockerfile`, v2.34.0), à la racine du dépôt ou dessous avec son contexte et son étape cible (`build.dockerfile`, v2.56.0), sur l'outillage, les images des recettes publiées et les bases tierces de la liste publiée (`paas builds bases`) ; profils N3 nommés par un `paas.xml` (v2.56.0) ; statique (se planifie, jamais prouvé) | JVM (N1.JVM), Elixir (N1.ELIXIR), Rust (N1.RUST), .NET (N1.DOTNET), plusieurs conteneurs (N1.COMPOSE), autres versions majeures (N1.VERSIONS) |
 | Build | Budgets de temps publiés par étape (v2.38.0) et `build.resources.timeout_seconds` ; budgets de lecture de l'arbre `source.limits`, fichiers laissés de côté `source.ignore`, fichiers inertes admis par empreinte `source.pinned` (v2.37.0) ; app rangée dans un sous-répertoire d'un monorepo, `source.root` (v2.39.0) ; dossiers laissés de côté entiers `source.ignore_directories`, sous-modules Git `source.gitlinks`, arbres jusqu'à 100 000 fichiers (v2.56.0) ; verrous npm, Yarn et pnpm lus comme leur gestionnaire ; gems Ruby et frontaux npm de PHP et Ruby installés hors réseau (v2.56.0) | `build.resources` `cpu`, `memory` et les clés de tas ou de parallélisme (refusées chacune avec sa raison) |
-| Services | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, SMTP en capture ; base dédiée, TLS vérifié ; trois services par app en PHP, Node et Go, un de chaque réservation (v2.52.0) ; extensions de l'image PostgreSQL publiée, bases MySQL et MariaDB nommées, droit de créer des bases `app_*`, réglage `log_bin_trust_function_creators` (v2.52.0) ; relais MySQL en boucle locale (`local_endpoint`) en PHP, Node et Go (v2.37.0), tunnel Redis en Node et Go (v2.52.0) | PostGIS et PostgreSQL 17 (N2.PGEXT) ; Valkey, OpenSearch, RabbitMQ, S3, memcached, ClickHouse, LDAP, InfluxDB, Meilisearch ; MySQL et MariaDB en Ruby ; envoi réel de courrier (N2.SMTP), IMAP ; réplicas, sauvegarde et PITR (N2.OPTIONS) |
+| Services | PostgreSQL 16 (avec PostGIS 3.6, v2.59.0), MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46 (Node et Go, v2.58.1), OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (Node et Go, v2.60.0), SMTP en capture ; base dédiée, TLS vérifié ; trois services par app en PHP, Node et Go, un de chaque réservation (v2.52.0) ; extensions de l'image PostgreSQL publiée, bases MySQL et MariaDB nommées, droit de créer des bases `app_*`, réglage `log_bin_trust_function_creators` (v2.52.0) ; relais MySQL en boucle locale (`local_endpoint`) en PHP, Node et Go (v2.37.0), tunnel Redis en Node et Go (v2.52.0), tunnel Meilisearch (v2.58.1), tunnels OpenSearch, RabbitMQ, S3 et LDAP (v2.60.0) | PostgreSQL 17 (N2.PGEXT) ; Valkey, memcached, ClickHouse, InfluxDB ; Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en PHP, Python et Ruby ; MySQL et MariaDB en Ruby ; envoi réel de courrier (N2.SMTP), IMAP ; réplicas, sauvegarde et PITR (N2.OPTIONS) |
 | Processus | Un processus web ; en Node, PHP et Go, workers et crons dans leurs propres pods et un processus release avant chaque déploiement (v2.56.0), une app Node ou Go sans processus web (v2.56.0, Go depuis v2.57.0), faite seulement de crons comprise (v2.57.1) ; workers et crons par intervalle dans le conteneur du web, dans toutes les recettes (v2.56.0 ; en Python fermé et Ruby, jusqu'à 7 workers) ; une réplique | Job (N0.PROC) ; processus séparés avec un cycle de vie ; image propre d'un processus (N1.COMPOSE) ; plusieurs réplicas (N0.SCALE) ; stratégies de déploiement (N0.DEPLOY) |
 | Stockage | Volumes rwo et rwx, liens (Node et Go depuis v2.56.0), copies initiales ; chemins inscriptibles `storage.writable` en PHP (v2.56.0) | `storage.private` (refusé par la projection, mesuré le 2026-10-15), tmpfs, stockage éphémère, rwx prouvé (N0.STORAGE) |
 | Réseau | HTTPS, websockets, 100 Mo par requête ; liens déclarés entre apps `network.linked_services` (v2.30.0, effectifs quand l'isolation entre apps sera activée) ; tous les chemins du nom court, `/login` compris, vont à l'app (v2.38.1) ; mot de passe demandé par la bordure avant toute requête (`edge.access.basic_auth_secret`, v2.56.0) | Ports TCP (N0.TCP), règles de sortie et IPv6 (N0.NET), domaines (N0.DOMAINS), autres réglages d'entrée par app (N0.EDGE) |
@@ -157,16 +157,19 @@ de son app.
 | Runtime (recette) | Services acceptés | Combien |
 |---|---|---|
 | PHP | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4 (v2.52.0 : tous sauf MySQL) | jusqu'à 3, un de chaque réservation : PostgreSQL ; MySQL ou MariaDB ; Redis (v2.52.0) |
-| Node (npm, pnpm, Yarn) | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0 (v2.52.0 : MariaDB et Redis) ; SMTP en capture | jusqu'à 3, un de chaque réservation, plus la capture SMTP (v2.52.0) |
-| Go | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0 (v2.52.0 : MariaDB et Redis) ; SMTP en capture | jusqu'à 3, un de chaque réservation, plus la capture SMTP (v2.52.0) |
+| Node (npm, pnpm, Yarn) | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46, OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (v2.52.0 : MariaDB et Redis ; v2.58.1 : Meilisearch ; v2.60.0 : OpenSearch, RabbitMQ, S3 et LDAP) ; SMTP en capture | jusqu'à 3, un de chaque réservation, plus la capture SMTP (v2.52.0) |
+| Go | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46, OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (v2.52.0 : MariaDB et Redis ; v2.58.1 : Meilisearch ; v2.60.0 : OpenSearch, RabbitMQ, S3 et LDAP) ; SMTP en capture | jusqu'à 3, un de chaque réservation, plus la capture SMTP (v2.52.0) |
 | Python simple | PostgreSQL 16, MariaDB 11.8, Redis 7.4 | jusqu'à 3 |
 | Python fermé (`python314-node24-closure-v1`) | PostgreSQL 16, MariaDB 11.8, Redis 7.4 | jusqu'à 3 |
 | Ruby | PostgreSQL 16 avec au moins une extension (v2.52.0 : toute liste de l'image publiée, jusque-là une variante publiée), Redis 7.4 ; SMTP en capture | jusqu'à 3 |
 
 - PostgreSQL avec extensions (v2.52.0) : toute liste des extensions que sert l'image publiée, version `16` :
   `btree_gin`, `cube`, `earthdistance` (avec `cube`), `hstore`, `ltree`, `pg_trgm`, `pgcrypto`, `unaccent`,
-  `uuid-ossp`, `vector`, chacune créée à sa version publiée. PostGIS n'est pas servi
-  (`ENV_TECHNICAL_POSTGRES_PROFILE_UNSUPPORTED`). Jusqu'à v2.51.3, seules deux listes exactes étaient admises.
+  `uuid-ossp`, `vector`, chacune créée à sa version publiée. Jusqu'à v2.51.3, seules deux listes exactes étaient
+  admises. PostGIS (v2.59.0, tous les runtimes servis) : une liste qui nomme `postgis` ou `postgis_topology`
+  (avec `postgis`) réserve l'image PostGIS de la plateforme (PostgreSQL 16.14, PostGIS 3.6.4 sans raster,
+  topologie et tuiles vectorielles, pgvector 0.8.7), 512 Mi, avec les autres extensions de la liste ;
+  `postgis_raster` n'est pas servi (`ENV_TECHNICAL_POSTGRES_PROFILE_UNSUPPORTED`).
 - MySQL 8.4 et MariaDB 11.8 (v2.52.0 ; PHP, Python simple, Node, Go) : `databases`, sept bases nommées au plus,
   créées avec le service et liées par `MYSQL_DATABASES_JSON` ; `privileges` `CREATE_DATABASE`, l'utilisateur de l'app
   crée les bases dont le nom commence par `app_` et aucune autre ; `options` `log_bin_trust_function_creators` à
@@ -177,6 +180,21 @@ de son app.
   l'app garde son installation (PHP depuis v2.52.0 ; Node, Go, Python et Ruby depuis v2.52.2).
 - Redis : `persistence` `aof` et `eviction` `noeviction` exigés ; liaison `REDIS_URL` (`rediss://`) et `REDIS_SSL_CA`.
   MariaDB se lie par `MYSQL_URL`, comme MySQL.
+- Meilisearch (Node et Go, v2.58.1) : version `1.46.0`, `provider` `dedicated`, `tls` `required`, `storage` `1Gi`,
+  `ca_file` sous un volume ; liaison `MEILI_URL` (`https://`), `MEILI_MASTER_KEY` et `MEILI_SSL_CA` ; les gabarits
+  lisent `url`, `host`, `port`, `password` (la clé maîtresse), `ca_file` et `ca`. PHP, Python et Ruby le
+  refusent par leur code.
+- OpenSearch 3.9, RabbitMQ 4.4, S3 et annuaire LDAP (Node et Go, v2.60.0 ; LDAP admis depuis v2.60.1) :
+  `type` `opensearch` (version `3.9.0`), `rabbitmq` (`4.4.0`), `s3` (`4.51`, SeaweedFS) ou `ldap` (`2.7.2`,
+  OpenLDAP), `provider` `dedicated`, `tls` `required`, `storage` `1Gi`, `ca_file` sous un volume. Liaison :
+  `OPENSEARCH_URL` (`https://`), `OPENSEARCH_USERNAME`, `OPENSEARCH_PASSWORD`, `OPENSEARCH_SSL_CA` ;
+  `RABBITMQ_URL` (`amqps://` avec l'utilisateur et le mot de passe, hôte virtuel `/`), `RABBITMQ_USERNAME`,
+  `RABBITMQ_PASSWORD`, `RABBITMQ_SSL_CA` ; `S3_ENDPOINT` (`https://`), `S3_ACCESS_KEY_ID`,
+  `S3_SECRET_ACCESS_KEY`, `S3_SSL_CA`, `S3_REGION` (`us-east-1`), `S3_FORCE_PATH_STYLE` (`true`) ; `LDAP_URL`
+  (`ldaps://`), `LDAP_BIND_DN` (`cn=admin,dc=app`), `LDAP_BIND_PASSWORD`, `LDAP_SSL_CA`, `LDAP_BASE_DN`
+  (`dc=app`). Les gabarits lisent `url`, `host`, `port`, `user`, `password`, `ca_file` et `ca`. Mémoire
+  réservée : OpenSearch 2 Gi, RabbitMQ et S3 512 Mi, LDAP 256 Mi. PHP, Python et Ruby les refusent par leur
+  code.
 - `DATABASE_URL` : avec PostgreSQL et MySQL ou MariaDB, elle nomme PostgreSQL ; `MYSQL_URL` nomme MySQL ou MariaDB
   (v2.52.0 : l'ordre dépendait d'identifiants aléatoires). Le schéma de l'URL est `postgresql://` ; une app qui tire
   son pilote du schéma tel qu'il est écrit et attend `postgres` déclare `DATABASE_URL` vide dans l'env du service pour
@@ -185,8 +203,11 @@ de son app.
   `ca_file`, le chemin où écrire l'autorité de certification. En PHP, l'entrée lie et vérifie chaque service avant de
   servir ; avec un cycle de vie, PostgreSQL demande une recette à `pdo_pgsql`.
 - `local_endpoint` (v2.37.0) : relais MySQL en boucle locale, en clair côté app et en TLS vérifié vers le serveur,
-  pour un client qui ne parle pas TLS ; tunnel Redis en Node et Go depuis v2.52.0. Les URL injectées
-  (`DATABASE_URL` et `MYSQL_URL`, `REDIS_URL`) visent alors le relais ; sans relais ni URL propre au service, le plan
+  pour un client qui ne parle pas TLS ; tunnel Redis en Node et Go depuis v2.52.0, tunnel Meilisearch depuis
+  v2.58.1 (`MEILI_URL` vise alors `http://127.0.0.1:<port>`, la clé reste dans `MEILI_MASTER_KEY`), tunnels
+  OpenSearch, RabbitMQ, S3 et LDAP depuis v2.60.0 (`OPENSEARCH_URL` et `S3_ENDPOINT` en `http://`, `LDAP_URL` en
+  `ldap://`, `RABBITMQ_URL` en `amqp://` avec ses identifiants, sur 127.0.0.1). Les URL injectées
+  (`DATABASE_URL` et `MYSQL_URL`, `REDIS_URL`, celle du service décrit) visent alors le relais ; sans relais ni URL propre au service, le plan
   avertit (`services.url_without_tls`). MariaDB n'a pas de relais.
 - `services.<nom>.env` : variables par gabarit (`{{services.<nom>.host}}`…), noms en minuscules compris, que l'entrée
   PHP admet aussi depuis v2.38.1.
@@ -242,7 +263,7 @@ est affiché avec tous ses détails, comme dans la CLI.
 | `security_scan_blocked` | scan | Chaque faille bloquante (paquet, versions installée et corrigée), la politique, ce qui est accepté, les extraits mode A et mode B. |
 | `admission_*` | selon le code | La cause tirée de la preuve du build et la marche à suivre. |
 | `rollout_failed` (v2.29.0) | rollout | La release ne reste pas prête, ou sa commande de release échoue : la cause (`oom_killed`, `probe_failed`, `process_exited`, `container_config`, `not_ready`, `unschedulable`, `volume_mount`, `image_pull`, `apply_refused`, `apply_timed_out`), l'état du conteneur, les avertissements, les sondes, la limite mémoire, la fin du journal du conteneur et la modification du `paas.xml` (mémoire doublée, sonde, secret manquant). |
-| `database_not_ready` (v2.29.2) | rollout | Le build a réussi, mais une base réservée de l'app (MySQL, PostgreSQL, Redis, MongoDB) n'est pas prête après 120 s : rien n'est déployé. L'état du pod de la base, ses avertissements, la fin de son journal et la marche à suivre (base jamais initialisée : supprimer puis recréer l'app ; base lente : redéployer le même build). |
+| `database_not_ready` (v2.29.2) | rollout | Le build a réussi, mais une base réservée de l'app (MySQL, PostgreSQL, Redis, MongoDB, Meilisearch, OpenSearch, RabbitMQ, S3, LDAP) n'est pas prête après 120 s : rien n'est déployé. L'état du pod de la base, ses avertissements, la fin de son journal et la marche à suivre (base jamais initialisée : supprimer puis recréer l'app ; base lente : redéployer le même build). |
 
 Depuis v2.31.0, chaque erreur dit qui doit agir : `Cust` quand le `paas.xml` ou le dépôt se corrige, `Paas` quand la
 plateforme ne sait pas encore le faire, avec la capacité qui lui manque et la façon dont c'est établi (`paas config
@@ -396,6 +417,25 @@ plan` l'affiche aussi, `[Cust]` ou `[Paas]`). Les codes et leur règle sont dans
 | Crons à côté du web | Une exécution de cron en cours ne fait plus refuser la mise en service d'une app qui a aussi un web (`admission_runtime_unattributed_pod`) : elle est rattachée à son cron. |
 | Suppression d'une app | La purge retire aussi le cluster MySQL de l'app (InnoDBCluster), et ce que des apps déjà purgées ont laissé. |
 
+## 5 terdecies. Disponible depuis v2.58.1 (en production depuis le 2026-10-25)
+
+| Sujet | Ce qui change |
+|---|---|
+| Meilisearch (EX-05) | Une app Go ou Node (npm, pnpm) déclare `services.<nom>.type` `meilisearch`, version `1.46.0` : la plateforme lui réserve un serveur dédié sur son image, en TLS vérifié (l'autorité et le nom du service), sa clé maîtresse dans son environnement, 1 Gi gardé, accessible aux seuls pods de l'app. L'app reçoit `MEILI_URL`, `MEILI_MASTER_KEY` et `MEILI_SSL_CA` ; `local_endpoint` ouvre un relais HTTP sur 127.0.0.1 qui parle TLS vérifié au serveur. Un Meilisearch qui démarre retient la release dans la fenêtre des bases (`N2_MEILISEARCH_PENDING_RETRY_SAME_BUILD`), et l'erreur `database_not_ready` le nomme. |
+
+## 5 quaterdecies. Disponible depuis v2.59.0 (en production depuis le 2026-10-26)
+
+| Sujet | Ce qui change |
+|---|---|
+| PostGIS (R-0019.6) | Une app Python, Ruby, PHP, Node ou Go déclare `postgis` (seul, avec `postgis_topology` ou avec d'autres extensions publiées) dans `services.<nom>.extensions` d'un PostgreSQL `16` : la plateforme lui réserve son PostgreSQL sur son image PostGIS (PostGIS 3.6.4, pgvector 0.8.7), en TLS vérifié, les extensions créées à l'amorçage, 512 Mi. |
+| Images des services | Les images des services réservés des apps (PostgreSQL, MySQL, MariaDB, Redis, MongoDB, Meilisearch) sont rescannées chaque jour avec les images publiées ; elles ne sont pas des bases de Dockerfile. |
+
+## 5 quindecies. Disponible depuis v2.60.0 (en production depuis le 2026-10-26 ; LDAP depuis v2.60.1)
+
+| Sujet | Ce qui change |
+|---|---|
+| OpenSearch, RabbitMQ, S3, LDAP (R-0019.4, EX-05) | Une app Go ou Node (npm, pnpm, Yarn) déclare `services.<nom>.type` `opensearch`, `rabbitmq`, `s3` ou `ldap` à sa version publiée : la plateforme lui réserve son serveur dédié sur son image, en TLS vérifié (l'autorité et le nom du service), un utilisateur et l'identifiant du service dans son environnement, 1 Gi gardé, accessible aux seuls pods de l'app. L'app reçoit l'URL, l'utilisateur, le mot de passe ou la clé, l'autorité et les valeurs fixes du service (section 2) ; `local_endpoint` ouvre un relais sur 127.0.0.1 qui parle TLS vérifié au serveur. Un service qui démarre retient la release dans la fenêtre des bases (`N2_<TYPE>_PENDING_RETRY_SAME_BUILD`), et l'erreur `database_not_ready` le nomme. |
+
 ## 6. Prévu
 
 Chaque capacité est développée comme une option générique : aucune app n'est codée dans la plateforme, l'app
@@ -407,9 +447,9 @@ qui en a besoin la déclare dans son `paas.xml`. L'ordre suit la feuille de rout
 | N0.NET | Liens déclarés entre apps : disponibles depuis v2.30.0 (section 5 ter). Règles de sortie, IPv6 : prévus |
 | N1.DATA | Correctifs de verrou et instantanés de registre publiés comme données, sans recompiler la plateforme |
 | N2.BRUBY, N2.BPY | Combinaisons runtime × service manquantes (Ruby avec MySQL ou MariaDB, Python avec MySQL). Disponibles depuis v2.52.0 (section 5 nonies) : PHP avec PostgreSQL et Redis, Node et Go avec Redis et MariaDB, plusieurs services par app (N2.BPHP, N2.BNG, N2.MULTI) |
-| N2.PGEXT, N2.OPTIONS | PostGIS et PostgreSQL 17 ; réplicas, sauvegarde et PITR. Disponibles depuis v2.52.0 : les extensions de l'image publiée, les bases nommées et le droit de créer des bases |
+| N2.PGEXT, N2.OPTIONS | PostgreSQL 17 ; réplicas, sauvegarde et PITR. Disponibles depuis v2.52.0 : les extensions de l'image publiée, les bases nommées et le droit de créer des bases ; PostGIS depuis v2.59.0 |
 | N0.PROC | Job (commande ponctuelle) ; processus séparés à côté d'un cycle de vie. Disponibles depuis v2.56.0 : worker, cron et release séparés en Node, PHP et Go (section 4) |
-| N2.OPENSEARCH, N2.RABBITMQ, N2.S3, N2.CLICKHOUSE, N2.VALKEY | Nouveaux services (aussi memcached, annuaire LDAP, InfluxDB 2, Meilisearch) |
+| N2.OPENSEARCH, N2.RABBITMQ, N2.S3, N2.CLICKHOUSE, N2.VALKEY | ClickHouse, Valkey, memcached, InfluxDB 2 ; Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en PHP, Python et Ruby. Disponibles depuis v2.58.1 et v2.60.0 en Node et Go : Meilisearch, OpenSearch, RabbitMQ, S3, LDAP |
 | N0.RUNTIME, N0.EDGE, N0.BUILD, N1.MULTIRT, N1.STATIC | Paquets système, autres réglages d'entrée par app, secrets de build, statique prouvé. Disponibles depuis v2.56.0 : mot de passe de bordure, frontal npm dans les recettes PHP et Ruby |
 | N1.JVM, N1.ELIXIR, N1.RUST, N1.DOTNET, N1.VERSIONS | Nouveaux runtimes et versions |
 | N1.COMPOSE | Plusieurs conteneurs, une image par processus (`processes[].build` se déclare depuis v2.56.0 et reste refusé à sa clé) ; le Dockerfile de l'app est disponible depuis v2.34.0, hors de la racine depuis v2.56.0 |

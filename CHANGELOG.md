@@ -3,6 +3,32 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.60.1 — 2026-10-26
+
+- **CLI `paas-apps` 2.60.1**, vérifiée contre l’API client **2.60.1** (437
+  opérations, inchangées).
+- Ce que la plateforme 2.60.1 apporte à votre `paas.xml` :
+  - PostGIS 3.6 pour le PostgreSQL 16 réservé, quel que soit le langage :
+    `postgis` (et `postgis_topology`) dans `services.<nom>.extensions`, avec
+    les autres extensions publiées ;
+  - OpenSearch 3.9, RabbitMQ 4.4, un stockage S3 et un annuaire LDAP réservés
+    pour une app Go ou Node : `services.<nom>.type` `opensearch`, `rabbitmq`,
+    `s3` ou `ldap`, serveur dédié en TLS vérifié ; l’app reçoit l’URL,
+    l’utilisateur, le mot de passe ou la clé et l’autorité du service, et
+    `local_endpoint` ouvre un relais sur 127.0.0.1.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.60.1.
+
+## v2.58.1 — 2026-10-25
+
+- **CLI `paas-apps` 2.58.1**, vérifiée contre l’API client **2.58.1** (437
+  opérations, inchangées).
+- Ce que la plateforme 2.58.1 apporte à votre `paas.xml` :
+  - Meilisearch 1.46, réservé pour une app Go ou Node (npm, pnpm) :
+    `services.<nom>.type` `meilisearch`, serveur dédié en TLS vérifié ; l’app
+    reçoit `MEILI_URL`, `MEILI_MASTER_KEY` et `MEILI_SSL_CA`, et
+    `local_endpoint` ouvre un relais HTTP sur 127.0.0.1.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.58.1.
+
 ## v2.57.1 — 2026-10-25
 
 - **CLI `paas-apps` 2.57.1**, vérifiée contre l’API client **2.57.1** (437
