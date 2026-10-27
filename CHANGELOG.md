@@ -3,6 +3,16 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.63.0 — 2026-10-27
+
+- **CLI `paas-apps` 2.63.0**, vérifiée contre l’API client **2.63.0** (437
+  opérations, inchangées).
+- **Origine par défaut fixée à la construction** : `PAAS_CONSOLE_URL`, posé à
+  la compilation, donne la console que la CLI et le SDK utilisent sans session
+  ni `--api-url` ; sans lui, celle de l’installation de référence.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.63.0 (aucune option
+  changée).
+
 ## v2.62.2 — 2026-10-27
 
 - **CLI `paas-apps` 2.62.2**, vérifiée contre l’API client **2.62.2** (437
