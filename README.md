@@ -23,7 +23,7 @@ les agents IA (Claude Code…).
 | [`CHANGELOG.md`](CHANGELOG.md) | Contenu de la version publiée |
 | [`LICENSE`](LICENSE) | Licence MIT |
 
-**État** : CLI **2.62.0**, vérifiée contre l'API **2.62.0** : les 437 opérations
+**État** : CLI **2.62.1**, vérifiée contre l'API **2.62.1** : les 437 opérations
 du contrat répondent sur le serveur en service. La version de la CLI est celle
 de la plateforme qu'elle sert.
 - `paas-apps api` donne accès à **toutes les opérations** de l'API, sauf les
