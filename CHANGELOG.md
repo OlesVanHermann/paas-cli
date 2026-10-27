@@ -3,6 +3,42 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.62.0 — 2026-10-27
+
+- **CLI `paas-apps` 2.62.0**, vérifiée contre l’API client **2.62.0** (437
+  opérations, inchangées).
+- Ce que la plateforme 2.62.0 apporte à votre `paas.xml` :
+  - en Python (recettes simple et fermée), un service de chaque réservation,
+    jusqu’à huit : PostgreSQL ; MySQL ou MariaDB ; Redis ; et, réservés comme
+    en Go, Node et PHP, Meilisearch, OpenSearch, RabbitMQ, un stockage S3 et un
+    annuaire LDAP ; l’app reçoit l’URL, l’utilisateur, le mot de passe ou la
+    clé et l’autorité de chacun, vérifié avant son démarrage, et
+    `local_endpoint` ouvre un relais sur 127.0.0.1 pour chacun d’eux ;
+  - en Python toujours, MySQL 8.4 aux côtés de MariaDB 11.8, et la taille du
+    volume d’un service que la plateforme décrit : `services.<nom>.storage`
+    `1Gi`, `2Gi`, `5Gi`, `10Gi` ou `20Gi`.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.62.0.
+
+## v2.61.2 — 2026-10-26
+
+- **CLI `paas-apps` 2.61.2**, vérifiée contre l’API client **2.61.2** (437
+  opérations, inchangées).
+- Ce que la plateforme 2.61.2 apporte à votre `paas.xml` :
+  - en PHP, un service de chaque réservation, jusqu’à huit : PostgreSQL ;
+    MySQL ou MariaDB ; Redis ; et, réservés comme en Go et Node, Meilisearch,
+    OpenSearch, RabbitMQ, un stockage S3 et un annuaire LDAP ; l’app reçoit
+    l’URL, l’utilisateur, le mot de passe ou la clé et l’autorité de chacun, et
+    `local_endpoint` ouvre un relais sur 127.0.0.1 pour Redis et pour chacun
+    d’eux ; en Go et Node, jusqu’à neuf services ;
+  - la taille du volume d’un service que la plateforme décrit (Meilisearch,
+    OpenSearch, RabbitMQ, S3, LDAP) : `services.<nom>.storage` `1Gi`, `2Gi`,
+    `5Gi`, `10Gi` ou `20Gi` ;
+  - PHP 8.4.27 : les recettes `php-8.4.27-apache-alpine-…` du catalogue
+    `2026.10.26.php.26`, aux mêmes extensions ; passez `build.runtime_version`,
+    `build.recipe` et `build.catalogue` à cette version : les recettes 8.4.26
+    ne passent plus la politique CVE par défaut.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.61.2.
+
 ## v2.60.1 — 2026-10-26
 
 - **CLI `paas-apps` 2.60.1**, vérifiée contre l’API client **2.60.1** (437

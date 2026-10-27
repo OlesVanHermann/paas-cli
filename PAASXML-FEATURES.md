@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-10-26 : plateforme v2.60.1, CLI 2.60.1, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-10-27 : plateforme v2.62.0, CLI 2.62.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -18,7 +18,7 @@ contrôles).
 |---|---|---|
 | Runtimes | PHP 8.4 ; Node 24 (npm, workspaces, pnpm, yarn) et Node 22 ; Go 1.26 et 1.27 ; Python 3.12 et 3.14, fermeture Python + Node ; Ruby 3.4 ; Dockerfile (`build.runtime` `dockerfile`, v2.34.0), à la racine du dépôt ou dessous avec son contexte et son étape cible (`build.dockerfile`, v2.56.0), sur l'outillage, les images des recettes publiées et les bases tierces de la liste publiée (`paas builds bases`) ; profils N3 nommés par un `paas.xml` (v2.56.0) ; statique (se planifie, jamais prouvé) | JVM (N1.JVM), Elixir (N1.ELIXIR), Rust (N1.RUST), .NET (N1.DOTNET), plusieurs conteneurs (N1.COMPOSE), autres versions majeures (N1.VERSIONS) |
 | Build | Budgets de temps publiés par étape (v2.38.0) et `build.resources.timeout_seconds` ; budgets de lecture de l'arbre `source.limits`, fichiers laissés de côté `source.ignore`, fichiers inertes admis par empreinte `source.pinned` (v2.37.0) ; app rangée dans un sous-répertoire d'un monorepo, `source.root` (v2.39.0) ; dossiers laissés de côté entiers `source.ignore_directories`, sous-modules Git `source.gitlinks`, arbres jusqu'à 100 000 fichiers (v2.56.0) ; verrous npm, Yarn et pnpm lus comme leur gestionnaire ; gems Ruby et frontaux npm de PHP et Ruby installés hors réseau (v2.56.0) | `build.resources` `cpu`, `memory` et les clés de tas ou de parallélisme (refusées chacune avec sa raison) |
-| Services | PostgreSQL 16 (avec PostGIS 3.6, v2.59.0), MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46 (Node et Go, v2.58.1), OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (Node et Go, v2.60.0), SMTP en capture ; base dédiée, TLS vérifié ; trois services par app en PHP, Node et Go, un de chaque réservation (v2.52.0) ; extensions de l'image PostgreSQL publiée, bases MySQL et MariaDB nommées, droit de créer des bases `app_*`, réglage `log_bin_trust_function_creators` (v2.52.0) ; relais MySQL en boucle locale (`local_endpoint`) en PHP, Node et Go (v2.37.0), tunnel Redis en Node et Go (v2.52.0), tunnel Meilisearch (v2.58.1), tunnels OpenSearch, RabbitMQ, S3 et LDAP (v2.60.0) | PostgreSQL 17 (N2.PGEXT) ; Valkey, memcached, ClickHouse, InfluxDB ; Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en PHP, Python et Ruby ; MySQL et MariaDB en Ruby ; envoi réel de courrier (N2.SMTP), IMAP ; réplicas, sauvegarde et PITR (N2.OPTIONS) |
+| Services | PostgreSQL 16 (avec PostGIS 3.6, v2.59.0), MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46 (Node et Go, v2.58.1), OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (Node et Go, v2.60.0), ces cinq-là aussi en PHP (v2.61.0) et en Python (v2.62.0), SMTP en capture ; base dédiée, TLS vérifié ; un service de chaque réservation par app, jusqu'à huit en PHP (v2.61.0) et en Python (v2.62.0), neuf en Node et Go (v2.61.0 ; trois depuis v2.52.0) ; volume de 1, 2, 5, 10 ou 20 Gi déclaré pour les services que la plateforme décrit (v2.61.0) ; extensions de l'image PostgreSQL publiée, bases MySQL et MariaDB nommées, droit de créer des bases `app_*`, réglage `log_bin_trust_function_creators` (v2.52.0) ; relais MySQL en boucle locale (`local_endpoint`) en PHP, Node et Go (v2.37.0), tunnel Redis en Node et Go (v2.52.0), tunnel Meilisearch (v2.58.1), tunnels OpenSearch, RabbitMQ, S3 et LDAP (v2.60.0), tunnels Redis, Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en PHP (v2.61.0), tunnels Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en Python (v2.62.0) | PostgreSQL 17 (N2.PGEXT) ; Valkey, memcached, ClickHouse, InfluxDB ; Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en Ruby ; MySQL et MariaDB en Ruby ; envoi réel de courrier (N2.SMTP), IMAP ; réplicas, sauvegarde et PITR (N2.OPTIONS) |
 | Processus | Un processus web ; en Node, PHP et Go, workers et crons dans leurs propres pods et un processus release avant chaque déploiement (v2.56.0), une app Node ou Go sans processus web (v2.56.0, Go depuis v2.57.0), faite seulement de crons comprise (v2.57.1) ; workers et crons par intervalle dans le conteneur du web, dans toutes les recettes (v2.56.0 ; en Python fermé et Ruby, jusqu'à 7 workers) ; une réplique | Job (N0.PROC) ; processus séparés avec un cycle de vie ; image propre d'un processus (N1.COMPOSE) ; plusieurs réplicas (N0.SCALE) ; stratégies de déploiement (N0.DEPLOY) |
 | Stockage | Volumes rwo et rwx, liens (Node et Go depuis v2.56.0), copies initiales ; chemins inscriptibles `storage.writable` en PHP (v2.56.0) | `storage.private` (refusé par la projection, mesuré le 2026-10-15), tmpfs, stockage éphémère, rwx prouvé (N0.STORAGE) |
 | Réseau | HTTPS, websockets, 100 Mo par requête ; liens déclarés entre apps `network.linked_services` (v2.30.0, effectifs quand l'isolation entre apps sera activée) ; tous les chemins du nom court, `/login` compris, vont à l'app (v2.38.1) ; mot de passe demandé par la bordure avant toute requête (`edge.access.basic_auth_secret`, v2.56.0) | Ports TCP (N0.TCP), règles de sortie et IPv6 (N0.NET), domaines (N0.DOMAINS), autres réglages d'entrée par app (N0.EDGE) |
@@ -28,7 +28,7 @@ contrôles).
 
 Un `paas.xml` doit nommer `build.recipe` et `build.catalogue`, et vérifier `build.runtime` : `php`, `node`,
 `python`, `go`, `ruby` ou `static`. Le tableau donne les recettes de l'instantané du catalogue de production,
-avec pour chacune le dernier catalogue qui la contient (instantané du 2026-10-25, v2.57.0, 98 recettes). Tout catalogue qui contient la recette convient ; un
+avec pour chacune le dernier catalogue qui la contient (instantané du 2026-10-26, v2.61.2, 112 recettes). Tout catalogue qui contient la recette convient ; un
 exemple garde celui de sa preuve. Liste à jour : `paas environments:catalogue-store`.
 
 | Famille | Recette | Version | Distribution | Profils | Dernier catalogue | Statut |
@@ -106,20 +106,34 @@ exemple garde celui de sa preuve. Liste à jour : `paas environments:catalogue-s
 | PHP | `php-8.4.25-apache-alpine-pdo-xml-v3` | 8.4.25 | alpine3.24-musl | web | `2026.09.27.php.18` | publiée ; aucun exemple ne l’utilise encore |
 | PHP | `php-8.4.25-apache-alpine-sqlite-intl-v4` | 8.4.25 | alpine3.24-musl | web | `2026.09.27.php.18` | publiée ; aucun exemple ne l’utilise encore |
 | PHP | `php-8.4.25-apache-alpine-v1` | 8.4.25 | alpine3.24-musl | web | `2026.09.27.php.18` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-cache-v5` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : flarum (2026.10.04.php.20), piwigo (2026.10.07.php.21) |
-| PHP | `php-8.4.26-apache-alpine-calendar-v6` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-full-pear-v11` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; full-v10 avec PEAR (`PEAR.php` dans le chemin d’inclusion) ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-full-v10` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-full-sqlite3-v12` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : Wallos 5.8.3 (classe SQLite3, base créée sur le volume, connexion servie) (2026.10.16.php.24) |
-| PHP | `php-8.4.26-apache-alpine-full-tidy-v13` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l'utilise encore (wallabag) (2026.10.16.php.24) |
-| PHP | `php-8.4.26-apache-alpine-full-imap-v14` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée au build : Agorakit 1.11 (ddeboer/imap exige ext-imap ; Composer installe, extension chargée) (2026.10.16.php.24) |
-| PHP | `php-8.4.26-apache-alpine-iconv-v7` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : bookstack (2026.10.04.php.20), dokuwiki (2026.10.04.php.20), drupal (2026.10.04.php.20), joomla (2026.10.04.php.20), opencart (2026.10.04.php.20), suitecrm (2026.10.07.php.21), woocommerce (2026.10.04.php.20), wordpress (2026.10.04.php.20) |
-| PHP | `php-8.4.26-apache-alpine-imagick-calendar-v9` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée (2026.10.07.php.21) |
-| PHP | `php-8.4.26-apache-alpine-imagick-v8` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : nextcloud (2026.10.07.php.21), typo3 (2026.10.07.php.21) |
-| PHP | `php-8.4.26-apache-alpine-pdo-v2` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-pdo-xml-v3` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
-| PHP | `php-8.4.26-apache-alpine-sqlite-intl-v4` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : freshrss (2026.10.04.php.20), kanboard (2026.10.04.php.20) |
-| PHP | `php-8.4.26-apache-alpine-v1` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore |
+| PHP | `php-8.4.26-apache-alpine-cache-v5` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : flarum (2026.10.04.php.20), piwigo (2026.10.07.php.21) ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-calendar-v6` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-full-pear-v11` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; full-v10 avec PEAR (`PEAR.php` dans le chemin d’inclusion) ; aucun exemple ne l’utilise encore ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-full-v10` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-full-sqlite3-v12` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : Wallos 5.8.3 (classe SQLite3, base créée sur le volume, connexion servie) (2026.10.16.php.24) ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-full-tidy-v13` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l'utilise encore (wallabag) (2026.10.16.php.24) ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-full-imap-v14` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée au build : Agorakit 1.11 (ddeboer/imap exige ext-imap ; Composer installe, extension chargée) (2026.10.16.php.24) ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-iconv-v7` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : bookstack (2026.10.04.php.20), dokuwiki (2026.10.04.php.20), drupal (2026.10.04.php.20), joomla (2026.10.04.php.20), opencart (2026.10.04.php.20), suitecrm (2026.10.07.php.21), woocommerce (2026.10.04.php.20), wordpress (2026.10.04.php.20) ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-imagick-calendar-v9` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée (2026.10.07.php.21) ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-imagick-v8` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : nextcloud (2026.10.07.php.21), typo3 (2026.10.07.php.21) ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-pdo-v2` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-pdo-xml-v3` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-sqlite-intl-v4` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | prouvée : freshrss (2026.10.04.php.20), kanboard (2026.10.04.php.20) ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.26-apache-alpine-v1` | 8.4.26 | alpine3.24-musl | web | `2026.10.18.php.25` | publiée ; aucun exemple ne l’utilise encore ; refusée par la porte CVE par défaut (`CVE-2026-109618`, CRITICAL, php84 8.4.26) : prendre la 8.4.27 |
+| PHP | `php-8.4.27-apache-alpine-cache-v5` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-calendar-v6` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-full-pear-v11` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-full-v10` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | prouvée : services-recette 1.0.0 (sept services, un de chaque réservation, OpenSearch sur 10 Gi) (2026.10.26.php.26) ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-full-sqlite3-v12` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-full-tidy-v13` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-full-imap-v14` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-iconv-v7` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-imagick-calendar-v9` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-imagick-v8` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-pdo-v2` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-pdo-xml-v3` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-sqlite-intl-v4` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
+| PHP | `php-8.4.27-apache-alpine-v1` | 8.4.27 | alpine3.24-musl | web | `2026.10.26.php.26` | publiée ; aucun exemple ne l’utilise encore ; révision de sécurité de la 8.4.26 (PHP 8.4.27, v2.61.2) |
 | PYTHON | `python-3.12.14-bookworm-v1` | 3.12.14 | debian12-glibc2.36 | web,worker,job | `2026.09.24.python.1` | publiée ; aucun exemple ne l’utilise encore |
 | PYTHON | `python-3.12.14-wolfi-v1` | 3.12.14 | wolfi-glibc2.44 | web,worker,job | `2026.09.24.python.1` | publiée ; aucun exemple ne l’utilise encore |
 | PYTHON | `python-3.14.7-bookworm-v1` | 3.14.7 | debian12-glibc2.36 | web,worker,job | `2026.09.27.php.18` | publiée ; aucun exemple ne l’utilise encore |
@@ -132,7 +146,7 @@ exemple garde celui de sa preuve. Liste à jour : `paas environments:catalogue-s
 | STATIC | `static-nginx-1.30.4-alpine3.24-v1` | HTML5-CSS-JavaScript-static | alpine3.24-musl | web | `2026.09.27.php.18` | publiée ; refusée par la porte CVE par défaut depuis le 2026-10-15 (`CVE-2026-103111`, HIGH, pcre2 de l'image nginx) : prendre la 1.30.6 |
 | STATIC | `static-nginx-1.30.6-alpine3.24-v1` | HTML5-CSS-JavaScript-static | alpine3.24-musl | web | `2026.10.15.static.1` | prouvée (v2.39.3) : site de test construit et servi, 0 CRITICAL / 0 HIGH ; ligne de catalogue `static`, build et tests sur l'image Python Wolfi de la plateforme |
 
-Extensions des recettes PHP 8.4.26 (`build.php.extensions` doit correspondre exactement à la recette) :
+Extensions des recettes PHP 8.4.26 et de leurs révisions 8.4.27 (`php-8.4.27-apache-alpine-…`, les mêmes, catalogue `2026.10.26.php.26`) ; `build.php.extensions` doit correspondre exactement à la recette :
 
 | Recette | Extensions |
 |---|---|
@@ -156,11 +170,11 @@ de son app.
 
 | Runtime (recette) | Services acceptés | Combien |
 |---|---|---|
-| PHP | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4 (v2.52.0 : tous sauf MySQL) | jusqu'à 3, un de chaque réservation : PostgreSQL ; MySQL ou MariaDB ; Redis (v2.52.0) |
-| Node (npm, pnpm, Yarn) | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46, OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (v2.52.0 : MariaDB et Redis ; v2.58.1 : Meilisearch ; v2.60.0 : OpenSearch, RabbitMQ, S3 et LDAP) ; SMTP en capture | jusqu'à 3, un de chaque réservation, plus la capture SMTP (v2.52.0) |
-| Go | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46, OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (v2.52.0 : MariaDB et Redis ; v2.58.1 : Meilisearch ; v2.60.0 : OpenSearch, RabbitMQ, S3 et LDAP) ; SMTP en capture | jusqu'à 3, un de chaque réservation, plus la capture SMTP (v2.52.0) |
-| Python simple | PostgreSQL 16, MariaDB 11.8, Redis 7.4 | jusqu'à 3 |
-| Python fermé (`python314-node24-closure-v1`) | PostgreSQL 16, MariaDB 11.8, Redis 7.4 | jusqu'à 3 |
+| PHP | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, Meilisearch 1.46, OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (v2.52.0 : tous sauf MySQL ; v2.61.0 : Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP) | jusqu'à 8, un de chaque réservation : PostgreSQL ; MySQL ou MariaDB ; Redis ; Meilisearch ; OpenSearch ; RabbitMQ ; S3 ; LDAP (v2.61.0 ; 3 depuis v2.52.0) |
+| Node (npm, pnpm, Yarn) | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46, OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (v2.52.0 : MariaDB et Redis ; v2.58.1 : Meilisearch ; v2.60.0 : OpenSearch, RabbitMQ, S3 et LDAP) ; SMTP en capture | jusqu'à 9, un de chaque réservation, plus la capture SMTP (v2.61.0 ; 3 depuis v2.52.0) |
+| Go | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46, OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (v2.52.0 : MariaDB et Redis ; v2.58.1 : Meilisearch ; v2.60.0 : OpenSearch, RabbitMQ, S3 et LDAP) ; SMTP en capture | jusqu'à 9, un de chaque réservation, plus la capture SMTP (v2.61.0 ; 3 depuis v2.52.0) |
+| Python simple | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, Meilisearch 1.46, OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (v2.62.0 : MySQL, Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP) | jusqu'à 8, un de chaque réservation : PostgreSQL ; MySQL ou MariaDB ; Redis ; Meilisearch ; OpenSearch ; RabbitMQ ; S3 ; LDAP (v2.62.0 ; 3 jusque-là) |
+| Python fermé (`python314-node24-closure-v1`) | PostgreSQL 16, MySQL 8.4, MariaDB 11.8, Redis 7.4, Meilisearch 1.46, OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (v2.62.0 : MySQL, Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP) | jusqu'à 8, un de chaque réservation : PostgreSQL ; MySQL ou MariaDB ; Redis ; Meilisearch ; OpenSearch ; RabbitMQ ; S3 ; LDAP (v2.62.0 ; 3 jusque-là) |
 | Ruby | PostgreSQL 16 avec au moins une extension (v2.52.0 : toute liste de l'image publiée, jusque-là une variante publiée), Redis 7.4 ; SMTP en capture | jusqu'à 3 |
 
 - PostgreSQL avec extensions (v2.52.0) : toute liste des extensions que sert l'image publiée, version `16` :
@@ -180,21 +194,39 @@ de son app.
   l'app garde son installation (PHP depuis v2.52.0 ; Node, Go, Python et Ruby depuis v2.52.2).
 - Redis : `persistence` `aof` et `eviction` `noeviction` exigés ; liaison `REDIS_URL` (`rediss://`) et `REDIS_SSL_CA`.
   MariaDB se lie par `MYSQL_URL`, comme MySQL.
-- Meilisearch (Node et Go, v2.58.1) : version `1.46.0`, `provider` `dedicated`, `tls` `required`, `storage` `1Gi`,
+- Meilisearch (Node et Go, v2.58.1 ; PHP, v2.61.0 ; Python, v2.62.0) : version `1.46.0`, `provider` `dedicated`, `tls` `required`, `storage` (ci-dessous),
   `ca_file` sous un volume ; liaison `MEILI_URL` (`https://`), `MEILI_MASTER_KEY` et `MEILI_SSL_CA` ; les gabarits
-  lisent `url`, `host`, `port`, `password` (la clé maîtresse), `ca_file` et `ca`. PHP, Python et Ruby le
-  refusent par leur code.
-- OpenSearch 3.9, RabbitMQ 4.4, S3 et annuaire LDAP (Node et Go, v2.60.0 ; LDAP admis depuis v2.60.1) :
+  lisent `url`, `host`, `port`, `password` (la clé maîtresse), `ca_file` et `ca` (en Python, pas `ca`). Ruby
+  le refuse par son code.
+- OpenSearch 3.9, RabbitMQ 4.4, S3 et annuaire LDAP (Node et Go, v2.60.0 ; LDAP admis depuis v2.60.1 ; PHP,
+  v2.61.0 ; Python, v2.62.0) :
   `type` `opensearch` (version `3.9.0`), `rabbitmq` (`4.4.0`), `s3` (`4.51`, SeaweedFS) ou `ldap` (`2.7.2`,
-  OpenLDAP), `provider` `dedicated`, `tls` `required`, `storage` `1Gi`, `ca_file` sous un volume. Liaison :
+  OpenLDAP), `provider` `dedicated`, `tls` `required`, `storage` (ci-dessous), `ca_file` sous un volume.
+  Liaison :
   `OPENSEARCH_URL` (`https://`), `OPENSEARCH_USERNAME`, `OPENSEARCH_PASSWORD`, `OPENSEARCH_SSL_CA` ;
   `RABBITMQ_URL` (`amqps://` avec l'utilisateur et le mot de passe, hôte virtuel `/`), `RABBITMQ_USERNAME`,
   `RABBITMQ_PASSWORD`, `RABBITMQ_SSL_CA` ; `S3_ENDPOINT` (`https://`), `S3_ACCESS_KEY_ID`,
   `S3_SECRET_ACCESS_KEY`, `S3_SSL_CA`, `S3_REGION` (`us-east-1`), `S3_FORCE_PATH_STYLE` (`true`) ; `LDAP_URL`
   (`ldaps://`), `LDAP_BIND_DN` (`cn=admin,dc=app`), `LDAP_BIND_PASSWORD`, `LDAP_SSL_CA`, `LDAP_BASE_DN`
   (`dc=app`). Les gabarits lisent `url`, `host`, `port`, `user`, `password`, `ca_file` et `ca`. Mémoire
-  réservée : OpenSearch 2 Gi, RabbitMQ et S3 512 Mi, LDAP 256 Mi. PHP, Python et Ruby les refusent par leur
-  code.
+  réservée : OpenSearch 2 Gi, RabbitMQ et S3 512 Mi, LDAP 256 Mi. Ruby les refuse par son code.
+- Volume des services que la plateforme décrit (Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP, v2.61.0) :
+  `storage` `1Gi`, `2Gi`, `5Gi`, `10Gi` ou `20Gi`, réservé à cette taille ; une autre taille est refusée à sa clé
+  (`ENV_TECHNICAL_SERVICE_POLICY`). Jusqu'à v2.60.1, `1Gi` seul. PostgreSQL, MySQL, MariaDB et Redis gardent
+  `1Gi`.
+- En PHP (v2.61.0), l'entrée lie chaque service que la plateforme décrit comme paas-entry (mêmes variables) et
+  le vérifie avant de servir ; un gabarit `services.<nom>.env` qui lit une valeur qu'elle ne fournit pas (la
+  base d'un service décrit, l'utilisateur de Meilisearch) est refusé à sa clé
+  (`ENV_TECHNICAL_SERVICE_ENV_UNBOUND`).
+- En Python (v2.62.0, recettes simple et fermée), l'entrée lie chaque service que la plateforme décrit par
+  les mêmes variables et le vérifie avant de lancer l'app, par son propre protocole et avec la seule
+  bibliothèque standard : aucun pilote à déclarer pour lui. Son autorité est écrite au `ca_file` après
+  celles du système, comme pour PostgreSQL, MySQL et Redis. Les gabarits lisent `url`, `host`, `port`,
+  `user` (sauf Meilisearch), `password` et `ca_file` ; `ca` n'est ouvert qu'à PHP et à paas-entry, le PEM
+  reste dans la variable `<TYPE>_SSL_CA`. Un gabarit `services.<nom>.env` qui lit une valeur que l'entrée
+  ne fournit pas est refusé à sa clé (`ENV_TECHNICAL_SERVICE_ENV_UNBOUND`) ; il lit les valeurs de tout
+  service déclaré (jusqu'à v2.61.2, des seuls services liés avant le sien). MySQL 8.4 s'y réserve aussi,
+  par sa norme publiée (v2.62.0 ; MariaDB 11.8 seul jusque-là).
 - `DATABASE_URL` : avec PostgreSQL et MySQL ou MariaDB, elle nomme PostgreSQL ; `MYSQL_URL` nomme MySQL ou MariaDB
   (v2.52.0 : l'ordre dépendait d'identifiants aléatoires). Le schéma de l'URL est `postgresql://` ; une app qui tire
   son pilote du schéma tel qu'il est écrit et attend `postgres` déclare `DATABASE_URL` vide dans l'env du service pour
@@ -206,8 +238,11 @@ de son app.
   pour un client qui ne parle pas TLS ; tunnel Redis en Node et Go depuis v2.52.0, tunnel Meilisearch depuis
   v2.58.1 (`MEILI_URL` vise alors `http://127.0.0.1:<port>`, la clé reste dans `MEILI_MASTER_KEY`), tunnels
   OpenSearch, RabbitMQ, S3 et LDAP depuis v2.60.0 (`OPENSEARCH_URL` et `S3_ENDPOINT` en `http://`, `LDAP_URL` en
-  `ldap://`, `RABBITMQ_URL` en `amqp://` avec ses identifiants, sur 127.0.0.1). Les URL injectées
-  (`DATABASE_URL` et `MYSQL_URL`, `REDIS_URL`, celle du service décrit) visent alors le relais ; sans relais ni URL propre au service, le plan
+  `ldap://`, `RABBITMQ_URL` en `amqp://` avec ses identifiants, sur 127.0.0.1) ; en PHP depuis v2.61.0, tunnels
+  Redis, Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP, chacun sur un port à lui ; en Python depuis v2.62.0, tunnels Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP
+  (Redis depuis v2.51.0), chacun sur un port à lui, jamais celui du processus web. Les URL injectées
+  (`DATABASE_URL` et `MYSQL_URL`, `REDIS_URL`, celle du service décrit) visent alors le relais (en Python,
+  `REDIS_URL` garde celle du serveur, le gabarit `services.<nom>.local_url` donne celle du relais) ; sans relais ni URL propre au service, le plan
   avertit (`services.url_without_tls`). MariaDB n'a pas de relais.
 - `services.<nom>.env` : variables par gabarit (`{{services.<nom>.host}}`…), noms en minuscules compris, que l'entrée
   PHP admet aussi depuis v2.38.1.
@@ -436,6 +471,24 @@ plan` l'affiche aussi, `[Cust]` ou `[Paas]`). Les codes et leur règle sont dans
 |---|---|
 | OpenSearch, RabbitMQ, S3, LDAP (R-0019.4, EX-05) | Une app Go ou Node (npm, pnpm, Yarn) déclare `services.<nom>.type` `opensearch`, `rabbitmq`, `s3` ou `ldap` à sa version publiée : la plateforme lui réserve son serveur dédié sur son image, en TLS vérifié (l'autorité et le nom du service), un utilisateur et l'identifiant du service dans son environnement, 1 Gi gardé, accessible aux seuls pods de l'app. L'app reçoit l'URL, l'utilisateur, le mot de passe ou la clé, l'autorité et les valeurs fixes du service (section 2) ; `local_endpoint` ouvre un relais sur 127.0.0.1 qui parle TLS vérifié au serveur. Un service qui démarre retient la release dans la fenêtre des bases (`N2_<TYPE>_PENDING_RETRY_SAME_BUILD`), et l'erreur `database_not_ready` le nomme. |
 
+## 5 sexdecies. Disponible depuis v2.61.0 (en production depuis le 2026-10-26 ; plus de trois services à la fois depuis v2.61.2)
+
+| Sujet | Ce qui change |
+|---|---|
+| Services en PHP (R-0019.4, EX-05, R-0019.3) | Une app PHP déclare un service de chaque réservation : PostgreSQL ; MySQL ou MariaDB ; Redis ; Meilisearch ; OpenSearch ; RabbitMQ ; S3 ; LDAP (huit au plus, trois jusqu'à v2.60.1). L'entrée PHP lie chacun (URL, utilisateur, mot de passe ou clé, autorité) et le vérifie avant de servir ; `local_endpoint` lui ouvre un relais sur 127.0.0.1 qui parle TLS vérifié au serveur. En Node et Go, neuf au plus (MongoDB en plus). |
+| Volume déclaré | `services.<nom>.storage` d'un service que la plateforme décrit : `1Gi`, `2Gi`, `5Gi`, `10Gi` ou `20Gi`, réservé à cette taille, dans tous les runtimes qui le servent. |
+| Annuaire LDAP | Le serveur réservé tient les liaisons simultanées dans sa mémoire réservée (256 Mi). |
+| PHP 8.4.27 (catalogue `2026.10.26.php.26`) | Les quatorze recettes PHP en 8.4.27 (`php-8.4.27-apache-alpine-…`, mêmes extensions que la recette 8.4.26 du même nom) : la 8.4.26 porte CVE-2026-109618 (CRITICAL) et CVE-2026-109619 (HIGH), que la porte CVE par défaut refuse. Un `paas.xml` passe `build.runtime_version` à `8.4.27`, `build.recipe` à la recette 8.4.27 et `build.catalogue` à `2026.10.26.php.26` ; un build refusé sur une recette 8.4.26 nomme sa correction. |
+
+## 5 septdecies. Disponible depuis v2.62.0 (en production depuis le 2026-10-27)
+
+| Sujet | Ce qui change |
+|---|---|
+| Services en Python (R-0019.4, EX-05, R-0019.3) | Une app Python, recette simple ou fermée, déclare un service de chaque réservation : PostgreSQL ; MySQL ou MariaDB ; Redis ; Meilisearch ; OpenSearch ; RabbitMQ ; S3 ; LDAP (huit au plus, trois jusqu'à v2.61.2), chaque service décrit avec le volume que sa déclaration nomme (`1Gi` à `20Gi`). L'entrée Python lie chacun (URL, utilisateur, mot de passe ou clé, autorité) et le vérifie avant de lancer l'app, par son protocole ; `local_endpoint` lui ouvre un relais sur 127.0.0.1 qui parle TLS vérifié au serveur, et la variable d'URL du service vise ce relais. |
+| MySQL en Python | MySQL 8.4.10 se réserve pour une app Python, par sa norme publiée (le plan ne lisait que les variantes : MariaDB 11.8.9 seul). |
+| Corrections | Le relais de l'entrée Python (Redis compris) mène chaque connexion jusqu'à sa fermeture ; l'environnement d'un service lit les valeurs de tout service déclaré. |
+| PHP 8.4.27 | La révision de sécurité des recettes PHP (catalogue `2026.10.26.php.26`, section 5 sexdecies) figure au journal de cette version. |
+
 ## 6. Prévu
 
 Chaque capacité est développée comme une option générique : aucune app n'est codée dans la plateforme, l'app
@@ -446,10 +499,10 @@ qui en a besoin la déclare dans son `paas.xml`. L'ordre suit la feuille de rout
 | EX-02, T-05.4 | Modules natifs Node (liaisons précompilées publiées, ou compilation en bac à sable hors réseau) et correctifs `patch-package` de l'amont appliqués hors réseau : Wiki.js (extract-files), cusdis (moteurs Prisma) |
 | N0.NET | Liens déclarés entre apps : disponibles depuis v2.30.0 (section 5 ter). Règles de sortie, IPv6 : prévus |
 | N1.DATA | Correctifs de verrou et instantanés de registre publiés comme données, sans recompiler la plateforme |
-| N2.BRUBY, N2.BPY | Combinaisons runtime × service manquantes (Ruby avec MySQL ou MariaDB, Python avec MySQL). Disponibles depuis v2.52.0 (section 5 nonies) : PHP avec PostgreSQL et Redis, Node et Go avec Redis et MariaDB, plusieurs services par app (N2.BPHP, N2.BNG, N2.MULTI) |
+| N2.BRUBY, N2.BPY | Combinaisons runtime × service manquantes (Ruby avec MySQL ou MariaDB). Disponibles depuis v2.62.0 : Python avec MySQL (section 5 septdecies) ; depuis v2.52.0 (section 5 nonies) : PHP avec PostgreSQL et Redis, Node et Go avec Redis et MariaDB, plusieurs services par app (N2.BPHP, N2.BNG, N2.MULTI) |
 | N2.PGEXT, N2.OPTIONS | PostgreSQL 17 ; réplicas, sauvegarde et PITR. Disponibles depuis v2.52.0 : les extensions de l'image publiée, les bases nommées et le droit de créer des bases ; PostGIS depuis v2.59.0 |
 | N0.PROC | Job (commande ponctuelle) ; processus séparés à côté d'un cycle de vie. Disponibles depuis v2.56.0 : worker, cron et release séparés en Node, PHP et Go (section 4) |
-| N2.OPENSEARCH, N2.RABBITMQ, N2.S3, N2.CLICKHOUSE, N2.VALKEY | ClickHouse, Valkey, memcached, InfluxDB 2 ; Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en PHP, Python et Ruby. Disponibles depuis v2.58.1 et v2.60.0 en Node et Go : Meilisearch, OpenSearch, RabbitMQ, S3, LDAP |
+| N2.OPENSEARCH, N2.RABBITMQ, N2.S3, N2.CLICKHOUSE, N2.VALKEY | ClickHouse, Valkey, memcached, InfluxDB 2 ; Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en Ruby. Disponibles depuis v2.58.1 et v2.60.0 en Node et Go, depuis v2.61.0 en PHP, depuis v2.62.0 en Python : Meilisearch, OpenSearch, RabbitMQ, S3, LDAP |
 | N0.RUNTIME, N0.EDGE, N0.BUILD, N1.MULTIRT, N1.STATIC | Paquets système, autres réglages d'entrée par app, secrets de build, statique prouvé. Disponibles depuis v2.56.0 : mot de passe de bordure, frontal npm dans les recettes PHP et Ruby |
 | N1.JVM, N1.ELIXIR, N1.RUST, N1.DOTNET, N1.VERSIONS | Nouveaux runtimes et versions |
 | N1.COMPOSE | Plusieurs conteneurs, une image par processus (`processes[].build` se déclare depuis v2.56.0 et reste refusé à sa clé) ; le Dockerfile de l'app est disponible depuis v2.34.0, hors de la racine depuis v2.56.0 |
