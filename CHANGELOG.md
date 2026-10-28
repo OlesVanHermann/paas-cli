@@ -3,6 +3,13 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.64.0 — 2026-10-28
+
+- **CLI `paas-apps` 2.64.0**, vérifiée contre l’API client **2.64.0** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.64.0 (aucune option
+  changée).
+
 ## v2.63.1 — 2026-10-27
 
 - **CLI `paas-apps` 2.63.1**, vérifiée contre l’API client **2.63.1** (437
