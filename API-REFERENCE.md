@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-437 opérations, vérifiées contre l'API 2.66.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+437 opérations, vérifiées contre l'API 2.66.4. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -5791,6 +5791,8 @@ Santé, régions et catalogues publics
 `GET /v1/healthz` · publique · réponse valeur seule
 
 Réponse : [`Health`](#type-health)
+
+Aussi en HTTP 503, avec le même corps : une réponse de l'opération, pas une erreur ; le SDK la rend et ne la rejoue pas.
 
 ```bash
 paas-apps api call get_health

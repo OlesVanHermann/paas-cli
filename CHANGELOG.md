@@ -3,6 +3,44 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.66.4 — 2026-10-30
+
+- **CLI `paas-apps` 2.66.4**, vérifiée contre l’API client **2.66.4** (437
+  opérations ; `get_health` répond aussi 503, avec le même corps).
+- **`paas-apps health`** : l’état de chaque dépendance (`db`, `redis`, `kube`)
+  est mesuré par l’API : `ok`, `error`, `timeout` ou `not_configured`. Quand sa
+  base ne répond pas, l’API répond 503 et `status: unavailable` : la commande
+  affiche l’état, puis sort avec le code 6 ; `degraded` sort avec 0.
+- **SDK** : un code que le contrat déclare avec le corps de succès (le 503 de
+  `get_health`) est rendu comme une réponse, jamais comme une erreur, et n’est
+  jamais rejoué (`Operation::answers`).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.66.4 (aucune option
+  changée).
+
+## v2.66.3 — 2026-10-30
+
+- **CLI `paas-apps` 2.66.3**, vérifiée contre l’API client **2.66.3** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.66.3 (aucune option
+  changée).
+
+## v2.66.2 — 2026-10-29
+
+- **CLI `paas-apps` 2.66.2**, vérifiée contre l’API client **2.66.2** (437
+  opérations, inchangées).
+- **Build refusé au scan** : la ligne « Corrected revision published » nomme
+  aussi la version du langage de la recette corrigée (`runtime_version`), quand
+  l’API la donne.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.66.2 (aucune option
+  changée).
+
+## v2.66.1 — 2026-10-29
+
+- **CLI `paas-apps` 2.66.1**, vérifiée contre l’API client **2.66.1** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.66.1 (aucune option
+  changée).
+
 ## v2.66.0 — 2026-10-29
 
 - **CLI `paas-apps` 2.66.0**, vérifiée contre l’API client **2.66.0** (437

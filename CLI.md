@@ -49,7 +49,7 @@ Variables d'environnement supplémentaires :
 | `login --email E [--password-stdin]` | Ouvre une session et l'enregistre (fichier en 0600, dossier en 0700) |
 | `logout` | Révoque le jeton d'accès et supprime la session locale. **Le serveur révoque aussi les accès Git actifs du compte sur toutes les sessions** |
 | `whoami` | Identité de la session : e-mail, rôle, tenant, utilisateur, méthode |
-| `health` | Version de l'API et état de ses dépendances (sans session) |
+| `health` | Version de l'API et état de ses dépendances, mesuré par l'API (sans session) ; code 6 après l'affichage quand l'API répond `unavailable` (sa base ne répond pas) |
 | `regions` | Régions d'hébergement (sans session) |
 | `apps list [--region R]` | Applications actives du tenant, triées par nom ; colonne `FAILURE` : qui doit agir sur l'échec du dernier déploiement (`Cust` ou `Paas`), son code et la capacité qui manque à la plateforme (API 2.31.0) |
 | `apps info [NOM]` | Détail d'une application (`NOM`, sinon `--app`) et, quand son dernier déploiement a échoué, son erreur complète ; ligne `failure` (API 2.48.0) : la même imputation que `apps list` |
@@ -211,7 +211,7 @@ la [référence de l'API](API-REFERENCE.md).
 | 3 | Authentification : pas de session, session expirée ou refusée |
 | 4 | Introuvable (404) |
 | 5 | Réseau ou délai dépassé |
-| 6 | Erreur du serveur (5xx) |
+| 6 | Erreur du serveur (5xx), dont une API `unavailable` pour `health` et `api call get_health` |
 | 7 | Réponse non conforme au contrat |
 
 ## Comportement

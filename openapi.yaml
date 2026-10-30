@@ -3,7 +3,7 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.66.0.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.66.4.
 
     Il couvre les 437 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.66.0
+  x-paas-api-version-tested: 2.66.4
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -9725,7 +9725,13 @@ paths:
       x-paas-envelope: bare
       responses:
         '200':
-          description: Control-plane joignable
+          description: Le control-plane et sa base répondent ; `status` vaut `ok`, ou `degraded` quand Valkey ou l'API Kubernetes ne répond pas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          description: La base du control-plane ne répond pas dans sa borne (`status` vaut `unavailable`) ; même corps
           content:
             application/json:
               schema:
@@ -16411,6 +16417,7 @@ components:
       properties:
         status:
           type: string
+          description: '`ok`, `degraded` (Valkey ou l''API Kubernetes ne répond pas) ou `unavailable` (la base ne répond pas, HTTP 503)'
         version:
           type: string
           description: Version de l'API, par exemple `2.25.3`
@@ -16422,7 +16429,7 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: État de chaque dépendance (`db`, `kube`, `redis`)
+          description: 'État de chaque dépendance (`db`, `kube`, `redis`), interrogée à chaque appel (un même relevé sert pendant 2 s) : `ok`, `error`, `timeout` ou `not_configured`'
         configuration_schema:
           type: string
         configuration_version:
