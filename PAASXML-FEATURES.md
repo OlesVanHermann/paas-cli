@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-10-31 : plateforme v2.70.0, CLI 2.70.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-10-31 : plateforme v2.71.0, CLI 2.71.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -488,6 +488,19 @@ plan` l'affiche aussi, `[Cust]` ou `[Paas]`). Les codes et leur règle sont dans
 | MySQL en Python | MySQL 8.4.10 se réserve pour une app Python, par sa norme publiée (le plan ne lisait que les variantes : MariaDB 11.8.9 seul). |
 | Corrections | Le relais de l'entrée Python (Redis compris) mène chaque connexion jusqu'à sa fermeture ; l'environnement d'un service lit les valeurs de tout service déclaré. |
 | PHP 8.4.27 | La révision de sécurité des recettes PHP (catalogue `2026.10.26.php.26`, section 5 sexdecies) figure au journal de cette version. |
+
+## 5 octodecies. Disponible depuis v2.71.0 (en production depuis le 2026-10-31)
+
+Le plan juge l'arbre que le build produit, pas le seul arbre Git.
+
+| Sujet | Ce qui change |
+|---|---|
+| PHP : ce que Composer écrit (PR-0129) | `build.php.composer_written` déclare les fichiers et dossiers que l'installation Composer écrit dans l'arbre par ses greffons autorisés (`build.php.composer_plugins`, mode `composer-install-lock-v1`) : le contrôleur frontal et les fichiers de projet qu'un greffon de recettes copie, les ressources des modules qu'un greffon expose sous `public/_resources`. 16 chemins au plus, absents du dépôt, aucun dans un autre. Le plan les tient pour l'arbre (contrôleur frontal, racine web). Le build relève l'arbre avant l'installation et le compare après : une écriture non déclarée, un fichier du dépôt modifié ou retiré, un chemin déclaré absent, un lien hors de l'arbre refusent le build en les nommant ; les chemins déclarés entrent dans l'image avec leur reçu (`/opt/paas-dependencies/composer.written.json`). |
+| PHP : page de la racine web | Sans contrôleur frontal déclaré, la racine web porte `index.php` (qui répond aussi aux adresses qui ne nomment aucun fichier), sinon un `index.html` ou le fichier que lit la sonde de santé (`healthcheck.path`), servis sans repli vers PHP. Un fichier écrit au build (`files` rendu au build, `build.php.composer_written`) compte, comme pour `web.front_controller`. |
+| PHP : scripts du vendor | Une commande du cycle de vie ou de création de compte peut lancer un binaire qu'un paquet de production du verrou Composer déclare (`bin`), dans son paquet ou par son relais `vendor/bin` (`php vendor/bin/sake db:build`). |
+| Node : module lancé (PR-0016) | Le module lancé peut être un fichier que le `paas.xml` rend au build (`files`, `render` build) ou une sortie déclarée du build elle-même (`build.node.outputs`, un fichier). |
+| Sites statiques déclarés (PR-0131) | Une recette statique déclarée (runtime `static`) ne lit que sa configuration et le Dockerfile amont déclaré par son empreinte (`build.source_dockerfile`) : le projet à côté du dossier publié, son verrou et ses fichiers de build restent des données ; un `.gitattributes` qui ne transforme aucun fichier est une donnée de la préparation. |
+| Corrections | Une recette déclarée répond par le refus exact de son plan (code et détail) au lieu d'un plan automatique non prêt ; le refus d'un fichier qui changerait le build le nomme. |
 
 ## 6. Prévu
 

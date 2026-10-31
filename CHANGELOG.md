@@ -3,6 +3,15 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.71.0 — 2026-10-31
+
+- **CLI `paas-apps` 2.71.0**, vérifiée contre l’API client **2.71.0** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.71.0 : en PHP,
+  `build.php.composer_written` (ce que l’installation Composer écrit dans
+  l’arbre), la page de la racine web sans contrôleur frontal et les scripts du
+  vendor ; en Node, le module rendu au build ; les sites statiques déclarés.
+
 ## v2.70.0 — 2026-10-31
 
 - **CLI `paas-apps` 2.70.0**, vérifiée contre l’API client **2.70.0** (437
