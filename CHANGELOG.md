@@ -3,6 +3,167 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.73.12 — 2026-11-02
+
+- **CLI `paas-apps` 2.73.12**, vérifiée contre l’API client **2.73.12** (437
+  opérations, inchangées).
+- **SDK** : le composant `ProcessSpec` (les processus d’un déploiement) a le champ
+  facultatif `name`, le nom que le `paas.xml` donne au processus.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.12 : `paas logs --process`
+  trouve un processus par son nom, les exécutions d’un cron comprises.
+
+## v2.73.11 — 2026-11-02
+
+- **CLI `paas-apps` 2.73.11**, vérifiée contre l’API client **2.73.11** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.11 : une app Node sans
+  processus web (un worker, ou des crons seuls) est servie en npm et en pnpm.
+
+## v2.73.10 — 2026-11-02
+
+- **CLI `paas-apps` 2.73.10**, vérifiée contre l’API client **2.73.10** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.10 : l'arbre construit
+  des tests (`build.test.tree` = `built`) est extrait du registre.
+
+## v2.73.9 — 2026-11-02
+
+- **CLI `paas-apps` 2.73.9**, vérifiée contre l’API client **2.73.9** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.9 : en pnpm, l'arbre
+  servi garde les liens de l'arbre de build dont il a déjà la cible.
+
+## v2.73.8 — 2026-11-02
+
+- **CLI `paas-apps` 2.73.8**, vérifiée contre l’API client **2.73.8** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.8 : l'export de
+  l'arbre construit pour les tests (`build.test.tree` = `built`) est borné à 600 s.
+
+## v2.73.7 — 2026-11-02
+
+- **CLI `paas-apps` 2.73.7**, vérifiée contre l’API client **2.73.7** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.7 : une app pnpm qui
+  déclare `build.node.runtime_libraries` = `openssl3` est servie avec OpenSSL 3.
+
+## v2.73.6 — 2026-11-01
+
+- **CLI `paas-apps` 2.73.6**, vérifiée contre l’API client **2.73.6** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.6 : au build d'une
+  app Node, l'adresse de l'app dans `build.env` et les secrets de `build.secrets`.
+
+## v2.73.5 — 2026-11-01
+
+- **CLI `paas-apps` 2.73.5**, vérifiée contre l’API client **2.73.5** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.5 : une étape HTTP
+  du cycle de vie qui attend une redirection (Go, Node) lit la réponse même.
+
+## v2.73.4 — 2026-11-01
+
+- **CLI `paas-apps` 2.73.4**, vérifiée contre l’API client **2.73.4** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.4 : en PHP, un lien
+  de stockage dont le chemin est écrit par l’installation Composer remplace ce
+  chemin au build.
+
+## v2.73.3 — 2026-11-01
+
+- **CLI `paas-apps` 2.73.3**, vérifiée contre l’API client **2.73.3** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.3 : les tests
+  peuvent tourner dans le dossier de travail de l’image construite
+  (`build.test.tree` = `built`) ; ils voient l’environnement que déclare leur
+  image de test.
+
+## v2.73.2 — 2026-11-01
+
+- **CLI `paas-apps` 2.73.2**, vérifiée contre l’API client **2.73.2** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.2 : une dépendance
+  npm groupée transitive (`inBundle`) n’est plus refusée à la préparation quand
+  le plan l’admet.
+
+## v2.73.1 — 2026-11-01
+
+- **CLI `paas-apps` 2.73.1**, vérifiée contre l’API client **2.73.1** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.1 : les builds de
+  Node 22 et de Node 16 en npm et en Yarn classique passent la préparation ;
+  l’installation des recettes Symfony Flex ne lit plus les dépôts Composer du
+  projet.
+
+## v2.73.0 — 2026-11-01
+
+- **CLI `paas-apps` 2.73.0**, vérifiée contre l’API client **2.73.0** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.73.0 : la plateforme
+  installe les recettes Symfony Flex (`composer recipes:install`), un dossier
+  déclaré dans `build.php.composer_written` vaut pour le contrôleur frontal, une
+  entrée npm sans `resolved` est complétée depuis le registre.
+
+## v2.72.3 — 2026-11-01
+
+- **CLI `paas-apps` 2.72.3**, vérifiée contre l’API client **2.72.3** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.72.3 : un hôte qu’un
+  build pnpm ou PHP sans réseau ne peut joindre est imputé au client, à déclarer
+  dans `assets` (`ENV_ASSET_HOST_UNDECLARED`).
+
+## v2.72.2 — 2026-11-01
+
+- **CLI `paas-apps` 2.72.2**, vérifiée contre l’API client **2.72.2** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.72.2 : les scripts
+  d’installation déclarés (`build.node.install_scripts`) tournent aussi pour un
+  paquet installé comme dépendance d’une dépendance (magasin virtuel de pnpm),
+  dans chacune de ses copies installées.
+
+## v2.72.1 — 2026-11-01
+
+- **CLI `paas-apps` 2.72.1**, vérifiée contre l’API client **2.72.1** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.72.1 : un plan pnpm
+  qui déclare des ressources (`assets`) ou des scripts d’installation
+  (`build.node.install_scripts`) n’est plus refusé pour sa taille : il voyage
+  compressé, jusqu’à 128 Kio.
+
+## v2.72.0 — 2026-11-01
+
+- **CLI `paas-apps` 2.72.0**, vérifiée contre l’API client **2.72.0** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.72.0 :
+  - les ressources que le build télécharge se déclarent (`assets` : adresse
+    https, SHA-256, en-têtes de la requête) ; un miroir local les sert à leur
+    adresse pendant le build sans réseau, dans les recettes pnpm et, en PHP, à
+    l’installation Composer des greffons déclarés (recettes Symfony Flex
+    comprises) ;
+  - pnpm : `build.node.install_scripts` nomme les paquets dont la plateforme
+    lance les scripts d’installation, sans réseau ;
+  - Node : un paquet de production dont le binaire natif ne vient que de son
+    script d’installation est refusé au plan, sauf s’il est déclaré dans
+    `build.node.native_unused` ;
+  - Node 22.23.4 et Node 16.20.2 en npm et en Yarn classique.
+
+## v2.71.2 — 2026-10-31
+
+- **CLI `paas-apps` 2.71.2**, vérifiée contre l’API client **2.71.2** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.71.2 : un dossier
+  que l’installation Composer crée au-dessus d’un chemin d’installation d’un
+  paquet (un thème installé dans `themes/<thème>`) n’est plus refusé comme
+  écriture non déclarée.
+
+## v2.71.1 — 2026-10-31
+
+- **CLI `paas-apps` 2.71.1**, vérifiée contre l’API client **2.71.1** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.71.1 :
+  `build.test.image` décrit tel qu’il est (les tests tournent sur l’arbre Git) ;
+  les formes Python du point d’entrée d’un processus.
+
 ## v2.71.0 — 2026-10-31
 
 - **CLI `paas-apps` 2.71.0**, vérifiée contre l’API client **2.71.0** (437

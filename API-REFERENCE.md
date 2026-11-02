@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-437 opérations, vérifiées contre l'API 2.71.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+437 opérations, vérifiées contre l'API 2.73.11. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -10561,6 +10561,7 @@ Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un déma
 | `cron` | [`CronSettings`](#type-cronsettings) | non |
 | `stop_grace_seconds` | integer | non |
 | `deadline_seconds` | integer | non |
+| `name` | string | non |
 
 ### Type `PromoteCanaryDeployResponse`
 
