@@ -3,6 +3,26 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.74.3 — 2026-11-03
+
+- **CLI `paas-apps` 2.74.3**, vérifiée contre l’API client **2.74.3** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.3.
+
+## v2.74.2 — 2026-11-03
+
+- **CLI `paas-apps` 2.74.2**, vérifiée contre l’API client **2.74.2** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.2.
+
+## v2.74.1 — 2026-11-03
+
+- **CLI `paas-apps` 2.74.1**, vérifiée contre l’API client **2.74.1** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.1 : la recette Python 3.14.10,
+  les lanceurs que l’app déclare, une liste produite à côté d’un `uv.lock`, les apps
+  de crons seuls `scheduled`, et l’installation HTTP PHP (délai, redirections, `direct`).
+
 ## v2.73.12 — 2026-11-02
 
 - **CLI `paas-apps` 2.73.12**, vérifiée contre l’API client **2.73.12** (437
