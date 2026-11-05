@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-03 : plateforme v2.74.3, CLI 2.74.3, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-04 : plateforme v2.74.31, CLI 2.74.31, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -532,6 +532,82 @@ entier.
 | Diagnostics | Le refus d'une préparation est résumé par son code et son détail, et l'extrait du journal donne sa ligne au lieu de la pile Python. Un hôte injoignable dans une recette qui sert les ressources déclarées ne dit plus que la plateforme ne les fournit pas. Le rapport d'une commande du cycle de vie en échec donne les 5 premières lignes et les 15 dernières d'une sortie plus longue (« début et fin de sa sortie ») : le message d'une exception n'est plus perdu. |
 | Tests sur l'arbre construit (v2.73.3) | `<tree>built</tree>` dans `build.test` (recette de la plateforme) : les tests tournent dans le dossier de travail de l'image construite et finie, tel qu'il est servi (les fichiers rendus au build, ce qu'écrit l'installation, les dépendances de production), sans rien réinstaller ; `source`, par défaut, garde l'arbre Git préparé. Un export qui échoue fait échouer le build (`ENV_TEST_TREE_EXPORT_FAILED`). |
 | Corrections | v2.73.1 : les builds de Node 22 et de Node 16 en npm (verrou source) et en Yarn classique ne s'arrêtent plus à la préparation (`ENV_NPM_RECIPE_REQUIRED`) ; l'installation des recettes Symfony Flex ne lit plus les dépôts Composer du projet (Packagist compris), que l'étape de Flex qui suit les recettes interrogeait sans réseau : un dépôt Composer du projet n'a pas à être déclaré dans `assets`. v2.73.2 : une dépendance npm groupée transitive (marquée `inBundle`, livrée dans l'archive du paquet qui la groupe) n'est plus refusée à la préparation quand le plan l'admet. v2.73.3 : les tests voient l'environnement que déclare leur image de test (le `OPENSSL_CONF` de la chaîne Node 16, `SSL_CERT_FILE`, `GOFLAGS`…) ; des tests qui n'ont pas pu s'exécuter (préparation de la plateforme en échec) sont imputés à la plateforme (`tests_unavailable`), plus au client. v2.73.4 : PHP, un lien de stockage (`storage.links`) dont le chemin est écrit par l'installation Composer (`build.php.composer_written` : `var/`, `files/` des recettes Symfony Flex) remplace ce chemin au build ; il se posait dans le dossier écrit, qui restait celui de l'image. v2.73.5 : pour une app Go ou Node, une étape HTTP du cycle de vie qui attend une redirection (`expect_status` 3xx) lit la réponse même, sans la suivre ; une commande du cycle de vie en échec donne le début et la fin de sa sortie. v2.73.6 : pour une app Node (npm, Yarn, pnpm), une variable de `build.env` qui vaut exactement `{{app.public_url}}` ou `{{app.host}}` reçoit au build l'adresse de l'app, celle de la release, sous tout nom ; `build.secrets` est lu : chaque secret déclaré de l'app est monté en variable d'environnement sur les commandes du build seules, avec la valeur de la release (générée avant le premier build, scellée, fournie, factice déclaré), jamais dans une couche ni dans le plan ; avec l'un ou l'autre, les tests tournent sur l'arbre construit (`build.test.tree` = `built`). v2.73.7 : une app pnpm qui déclare `build.node.runtime_libraries` = `openssl3` (code natif qui charge OpenSSL 3, comme les moteurs de Prisma) sur la recette `node-24.20.0-pnpm-workspace-v3` du catalogue `2026.11.01.node-libraries.4` est servie par l'image minimale avec OpenSSL 3 (libssl3 3.0.22 de l'archive de sécurité de Debian), rien n'étant copié au build. v2.73.8 : l'export de l'arbre construit pour les tests (`build.test.tree` = `built`) est borné à 600 s (au-delà, le build échoue, nommé), et les étapes d'un build s'adressent au même démon BuildKit. v2.73.9 : en pnpm, l'arbre servi garde les liens de l'arbre de build dont il a déjà la cible : une dépendance de développement que la production installe aussi, que le code construit importe depuis le projet (Next.js et `prettier`), n'arrête plus l'app à son lancement. v2.73.10 : l'arbre construit des tests (`build.test.tree` = `built`) est extrait du registre par l'empreinte de l'image, sans démon BuildKit (toujours borné à 600 s). v2.73.11 : une app Node sans processus web (un worker sondé par sa commande, ou des crons seuls) est servie en npm et en pnpm, sans port ; jusque-là refusée au plan (`ENV_TECHNICAL_NODE_PORT`). v2.73.12 : `paas logs` montre les exécutions d'un cron, et `--process` trouve un processus par son nom même quand la plateforme le déploie sous son type (le cron ou le worker d'une app sans processus web). v2.73.13 : la recette `python-3.14.10-wolfi-v1` (catalogue `2026.11.02.python.1`) sert la ligne Python 3.14, ses étiquettes de roues mesurées dans sa chaîne de build, où se fait la préparation ; la recette `python-3.12.16-wolfi-v1` sur des images révisées (catalogue `2026.11.02.python.2`), sa chaîne avec les en-têtes des bibliothèques d'images ; un processus Python peut nommer un lanceur que l'app déclare ; `build.python.dependency_manager` pip sans `requirements.txt` produit la liste. v2.73.14 : ce lanceur passe la réception du push d'une configuration déclarée ; une liste produite à côté d'un `uv.lock` sert le gestionnaire déclaré. v2.73.15 : un lien de stockage Node sur un dossier que l'arbre livre n'arrête plus le build (EXDEV). v2.73.16 : une requête de l'installation HTTP PHP attend le délai déclaré, au lieu de 30 s. v2.73.17 : une étape juge la redirection qu'elle attend. v2.73.18 : un démarrage que l'entrée de la plateforme refuse le dit (son code et ce qu'il nomme) ; un POST dont le formulaire part ailleurs indique `direct` ; `lifecycle.install` et `lifecycle.install_http` se déclarent ensemble en PHP. |
+
+## 5 unvicies. Disponible de v2.74.4 à v2.74.16 (en production depuis le 2026-11-03)
+
+Ce qui manquait aux dernières apps : Go et son code généré, les verrous npm et pnpm tels que l'amont les écrit, les modules natifs en npm et en Yarn, Node 14 et 16 pour les vieux frontaux, les grandes images.
+
+| Sujet | Ce qui change |
+|---|---|
+| Go | Les étapes déclarées qui génèrent du code (`go run`, `templ generate`) tournent avec les modules vérifiés, `go.mod` et `go.sum` en lecture seule, puis l'étage refait `go mod vendor`. Un module que rien n'importe n'a plus à figurer dans `go.sum` par son contenu ; un module sans `require` n'a ni `go.sum` ni vendor à fournir. Un frontend sur un autre Node que celui de la recette (`build.node.version`) n'est pas reconstruit pour les tests |
+| pnpm | Une archive de commit GitHub ou une archive https épinglée par son SHA-512 s'acquiert et s'installe hors réseau ; un nom de paquet en majuscules passe ; limites nommées (256 Mio par paquet, 1 Gio décompressé, 2 Gio en tout) ; une étape dans le dossier d'un membre du workspace lit les programmes de ses scripts chez ce membre ; un verrou peut porter le SHA-1 exact qu'enregistre un ancien paquet du registre |
+| `build.node.runtime_dependencies` (pnpm) | Comme en npm : les dépendances de développement qu'un processus servi lit (la CLI d'une migration, `prisma migrate deploy`) sont installées avec la production, avec ce dont elles dépendent ; chaque nom est une dépendance de développement d'un membre installé (`ENV_PNPM_RUNTIME_DEPENDENCY_UNDECLARED`) |
+| npm : verrous | Un verrou dont des paquets n'ont ni `resolved` ni `integrity` est complété une fois par la plateforme (`paas/dependencies/package-lock.json`, à ses versions), sans instantané publié par application ; un projet qui groupe ses propres dépendances (`bundleDependencies` à sa racine) est admis |
+| npm et Yarn : modules natifs | `build.node.install_scripts` et `assets`, comme en pnpm : les scripts déclarés tournent après l'installation hors réseau, sous le miroir des ressources déclarées (sqlite3, sharp, bcrypt). En PHP aussi, pour le frontal (`build.frontend.mode = build-node-v1`) |
+| `build.node.runtime_tools` (npm) | `npx` : l'image reçoit un `npx` qui lance un exécutable des dépendances installées, celles de `runtime_dependencies` comprises, et ne télécharge rien |
+| Node 14 et 16 | La ligne `node-npm-source-14` (`node-14.21.3-npm-source-v2`), pour ce qu'aucun Node récent ne construit (node-sass 4) ; Node 14 n'a plus de support : le catalogue le dit, et la porte CVE des applications reste. Le frontal npm d'une recette PHP ou Go se construit sur le Node majeur que nomme `build.node.version` |
+| `build.steps` | Une étape peut lancer `touch` sur un chemin de l'arbre : un fichier vide que le build attend et que l'amont demande de créer (`.env.production`) |
+| Python | Une construction depuis les sources est réparée pour la glibc mesurée de l'image (`manylinux_2_44`) ; un source C ancien que GCC 14 refuse se construit avec `CFLAGS = -fpermissive` dans `build.python.source_builds[].env` ; le nom et la version de l'application sont enregistrés (`importlib.metadata`) ; catalogue `2026.11.03.python.3` : en-têtes d'OpenLDAP et de SASL ; une liste de plusieurs centaines de paquets tient dans le plan (`ENV_PLAN_TRANSPORT_LIMIT`) |
+| Sites Node | `build.static.publish_root` peut nommer un dossier que le framework cache (`.output/public`, `.vitepress/dist`) |
+| `build.resources` | `cpu` et `memory` disent ce dont un build a besoin : admis jusqu'à 8 CPU et 24 Gio, ce que le constructeur partagé offre à un build, refusés au plan au-delà (`ENV_BUILD_RESOURCES_BEYOND_BUILDER`) ; rien n'est réservé |
+| `build.test.tree` | Le plan nomme le fichier rendu au build que lit un test de l'arbre Git (`ENV_TEST_TREE_RENDERED_FILE`) ou que déclare une liste du build (`ENV_BUILD_OUTPUT_RENDERED`) |
+| `healthcheck.type = tcp` | Un processus web se sonde par son port : une app entièrement derrière une authentification répond 401 à toute sonde HTTP |
+| PHP : installation | Le serveur privé d'une installation HTTP sert un `build.php.front_controller` placé sous la racine comme la production ; il envoie `User-Agent` et `Accept`, comme un navigateur ; le formulaire d'un compte supplémentaire déjà créé n'est plus rejoué quand les contrôles `ready` prouvent le résultat ; une réponse 5xx ou vide montre ce que le PHP a écrit, le message d'une erreur fatale compris ; un client du relais MySQL (`local_endpoint`) ne reçoit plus `MYSQL_SSL_CA` ; une commande du cycle de vie peut lancer un script que le paas.xml rend au build (`files`) |
+| MySQL réservé | Le mot de passe d'application d'une réservation nouvelle tient en 32 caractères (128 bits aléatoires) : le formulaire d'un ancien installateur qui s'arrête là le lit ; une réservation qui existe garde le sien |
+| `source.limits.tree_entries` | Jusqu'à 200 000 entrées |
+| API | `GET /v1/apps/{id}?include_deleted=true` lit une app de la corbeille par son identifiant, dans le tenant de l'appelant |
+| Plateforme | Le plan d'un grand monorepo pnpm passe de 36 s à 1 s, et le plan de contrôle répond pendant qu'il planifie ; le constructeur offre 8 CPU et 24 Gio ; le SBOM d'une image de plusieurs centaines de milliers de fichiers ne dépasse plus le délai de sa tâche (syft 1.56.0, 3 minutes au lieu de plus d'une heure) ; une tâche qui échoue après la construction de l'image n'est plus lue dans le journal de cette construction |
+
+## 5 duovicies. Disponible de v2.74.17 à v2.74.21 (en production depuis le 2026-11-03)
+
+Les derniers manques des apps du relevé, et les diagnostics que le rejeu de la campagne WordPress a encore trouvés.
+
+| Sujet | Ce qui change |
+|---|---|
+| Go | Catalogues `2026.11.03.go.12` et `2026.11.03.go126.4` : l'image d'exécution d'une recette cgo porte libstdc++ |
+| `storage.removable` (PHP) | Un dossier de l'arbre que l'application supprime elle-même (son `install/` une fois installée), remis au service |
+| Python simple | Tous les programmes que déclare le projet (`[project.scripts]`) ont leur lanceur ; une app qui ne déclare ni variable, ni secret, ni cycle de vie démarre et reçoit son adresse |
+| MariaDB | Le relais local de `services.<nom>.local_endpoint` sert MariaDB comme MySQL, en clair sur 127.0.0.1, en Node et en Go |
+| Node et Go (paas-entry) | `lifecycle.*.stdin_template` et `lifecycle.*.env` ; un compte supplémentaire par commande native (`accounts.create`), son mot de passe sur l'entrée, jamais dans ses arguments ; la première exécution en échec gardée à côté de la dernière |
+| PHP : installation | Un POST relu poste ce qu'un navigateur envoie du formulaire (champs texte, cases, options) ; une installation jamais finie accepte un nouveau compte initial ; `lifecycle.interrupted` `restart` et `refuse` ; un compte n'est inscrit au journal qu'avec une preuve ; un compte peut poster du JSON directement (`direct` avec `json`) |
+| `paas config plan` | Code de sortie 3 quand le seul refus est une liste de dépendances à produire ; un `paas.xml` pas encore commité est planifié comme le push le trouvera ; une préparation des tests de plus de 8 Kio est refusée (`ENV_TEST_SETUP_LIMIT`, voie : `build.test.tree built`) |
+| pnpm sous turbo | Le pnpm relancé reste sur la version servie, même en mode strict ; `--env-mode=loose` reste nécessaire pour les variables du build et les ressources déclarées (`assets`) |
+| Refus | Chaque clé refusée est nommée, la clé absente une seule fois ; une clé qu'une recette n'exécute pas dit quoi faire ; une valeur scellée sous un autre nom donne la commande pour la sceller de nouveau ; une bibliothèque que l'image n'a pas est nommée (`runtime.library.<nom>`) |
+| Statut d'une app | `running` dit qu'elle sert une release : sans release servie, `error` après un échec, `pending` jusque-là. Des tests sans résultat sont à la charge de la plateforme (`tests_unavailable`) |
+| Branches | Seule la branche de livraison de l'app se construit et se déploie |
+
+## 5 tervicies. Disponible de v2.74.22 à v2.74.27 (en production depuis le 2026-11-04)
+
+Rust, et ce que la vérification complète d'un clone de la release a trouvé.
+
+| Sujet | Ce qui change |
+|---|---|
+| Rust | `build.runtime` rust, recette `rust-1.99.1-v1`, catalogue `2026.11.04.rust.1` : construit depuis le `Cargo.lock`, sans réseau (`cargo vendor --locked` à la préparation, chaque empreinte vérifiée, puis `cargo build --release --locked --offline`). `build.rust` : `toolchain` (une version de Rust 1 jusqu'à celle de la recette), `binaries`, `features`, `default_features`, `package`, `root` |
+| Rust : ce qui tourne | Chaque binaire en `/app/<nom>` ; cycle de vie, comptes par commande ou par HTTP et services par le moteur de la plateforme, comme en Go ; `cargo test` hors réseau sur les mêmes paquets. Image servie : glibc 2.44, libstdc++, OpenSSL 3, SQLite, zlib, zstd, lz4, libsodium, libpq |
+| Arbre du commit | Un arbre sous le plafond de 200 000 entrées est lu en entier, avec ses dossiers (400 000 entrées) ; les messages donnent ce plafond |
+| Sondes | Un processus que sa sonde en échec fait redémarrer et qui s'arrête proprement (code 0) est décrit par sa sonde, plus par « s'arrête sans erreur » |
+
+## 5 quatervicies. Disponible depuis v2.74.28 (en production depuis le 2026-11-04)
+
+Les paquets système.
+
+| Sujet | Ce qui change |
+|---|---|
+| `runtime.packages` | `<runtime><packages><item>ffmpeg</item></packages></runtime>` : un nom de la liste publiée, ou `nom=version` si c'est la version publiée. Installés sans réseau, depuis l'index signé de la distribution, par l'étape de finition de l'image : le scan, le SBOM et la signature les voient comme tout paquet de l'image. Un nom hors de la liste : `ENV_RUNTIME_PACKAGE_UNPUBLISHED`, qui donne la liste |
+| Images qui en reçoivent | Wolfi : Python 3.12 et 3.14, Go, Ruby, Rust, Elixir, composition, Node ; Alpine : PHP, statique. Une app Node sur image minimale est servie par le même Node sur Wolfi, un programme Go statique par l'image Go de Wolfi (v2.74.29) ; la recette et le build ne changent pas. Une autre image sans gestionnaire de paquets : `ENV_RUNTIME_PACKAGES_RECIPE` |
+| La liste | Une ligne du magasin des catalogues (`runtime-packages`), pas du code : une révision de sécurité est une publication, que le build suivant lit. Ce que l'image porte déjà n'est pas réinstallé |
+| Limite | Les paquets sont dans l'image servie, pas dans l'image de test : `build.test.command` ne les trouve pas |
+
+## 5 quinvicies. Disponible depuis v2.74.30 (en production depuis le 2026-11-04)
+
+Les ports autres que le web.
+
+| Sujet | Ce qui change |
+|---|---|
+| `tcp_ports` | `<tcp_ports><item><name>irc</name><port>6667</port></item></tcp_ports>` : raccordé sur toutes les recettes, Dockerfile compris. `target_port` : le port du conteneur, le même par défaut. `protocol` : `tcp` ou `udp`. `process` : le processus qui écoute, `web` par défaut |
+| Ouverture | Chaque déploiement enregistre ce qu'il déclare ; seul un port que l'opérateur a approuvé pour cette app s'ouvre. `paas apps info` dit `awaiting_approval`, puis `open` et l'adresse |
+| Adresse | Une adresse partagée, un port pour une app. Une adresse propre à l'app, sur décision de l'opérateur, si elle doit écouter sur un port standard déjà pris. L'app voit l'adresse d'un nœud du cluster, pas celle de son client |
+| Limites | Au-dessous de 1024 : 25, 110, 143, 465, 587, 993, 995. Pas encore de proxy par protocole : deux apps ne partagent pas un port sur l'adresse partagée, quel que soit le nom demandé |
 
 ## 6. Prévu
 

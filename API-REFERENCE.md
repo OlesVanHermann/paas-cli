@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-437 opérations, vérifiées contre l'API 2.74.3. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+437 opérations, vérifiées contre l'API 2.74.31. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -7479,6 +7479,7 @@ Seuls `id` et `name` sont garantis. `http_endpoints`, `http_endpoints_status` et
 | `signoz_service_id` | string | non |
 | `http_endpoints` | tableau de JSON libre | non |
 | `http_endpoints_status` | string | non |
+| `tcp_ports` | tableau de JSON libre | non |
 | `serving_deploy_id` | string | non |
 | `current_release` | [`CurrentRelease`](#type-currentrelease) | non |
 | `last_error` | [`PaasError`](#type-paaserror) | non |
@@ -11461,6 +11462,9 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 | `port` | integer | oui |
 | `target_port` | integer | non |
 | `name` | string | non |
+| `protocol` | string | non |
+| `dedicated` | boolean | non |
+| `process` | string | non |
 
 ### Type `TeamMember`
 

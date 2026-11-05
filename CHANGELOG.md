@@ -3,6 +3,36 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.74.31 — 2026-11-04
+
+- **CLI `paas-apps` 2.74.31**, vérifiée contre l’API client **2.74.31**.
+- **`paas-apps apps info`** dit les ports autres que le web d’une app, leur état et leur adresse (champ `tcp_ports` de l’app).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.31 : `tcp_ports`, `runtime.packages`, Rust.
+
+## v2.74.23 — 2026-11-04
+
+- **CLI `paas-apps` 2.74.23**, vérifiée contre l’API client **2.74.23** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.23.
+
+## v2.74.22 — 2026-11-03
+
+- **CLI `paas-apps` 2.74.22**, vérifiée contre l’API client **2.74.22** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.22.
+
+## v2.74.21 — 2026-11-03
+
+- **CLI `paas-apps` 2.74.21**, vérifiée contre l’API client **2.74.21** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.21.
+
+## v2.74.16 — 2026-11-03
+
+- **CLI `paas-apps` 2.74.16**, vérifiée contre l’API client **2.74.16** (437
+  opérations, inchangées).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.16.
+
 ## v2.74.3 — 2026-11-03
 
 - **CLI `paas-apps` 2.74.3**, vérifiée contre l’API client **2.74.3** (437
