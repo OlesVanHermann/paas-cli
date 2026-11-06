@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-437 opérations, vérifiées contre l'API 2.74.69. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+438 opérations, vérifiées contre l'API 2.75.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -12,7 +12,7 @@
 | [`auth`](#domaine-auth) | Sessions, connexion (mot de passe, OAuth, MFA), jetons, clés API et clés SSH | 40 |
 | [`billing`](#domaine-billing) | Offres, consommation, factures, moyens de paiement et alertes de dépense | 36 |
 | [`builds`](#domaine-builds) | Constructions d'images, preuves (scan, SBOM, signature), cache et pipelines | 23 |
-| [`config`](#domaine-config) | Variables de configuration, secrets et coffres externes | 36 |
+| [`config`](#domaine-config) | Variables de configuration, secrets et coffres externes | 37 |
 | [`deploys`](#domaine-deploys) | Déploiements (releases), promotion et retour arrière | 14 |
 | [`domains`](#domaine-domains) | Domaines personnalisés et certificats | 6 |
 | [`environments`](#domaine-environments) | Environnements d'exécution standard (catalogue, plans) | 9 |
@@ -4245,6 +4245,7 @@ Variables de configuration, secrets et coffres externes
 | [`get_secret`](#get_secret) | `GET /v1/apps/{app_id}/secrets/{name}` | Métadonnées d'un secret |
 | [`update_secret`](#update_secret) | `PUT /v1/apps/{app_id}/secrets/{name}` | Modifie un secret |
 | [`delete_secret`](#delete_secret) | `DELETE /v1/apps/{app_id}/secrets/{name}` | Supprime un secret |
+| [`rotate_service`](#rotate_service) | `POST /v1/apps/{app_id}/services/{service}/rotate` | Nouveau mot de passe d'un service que la plateforme réserve à l'application (une PostgreSQL de son paas.xml) : changé dans la base et dans l'application, dont les processus redémarrent ; l'ancien est refusé, aucune valeur ne circule |
 | [`validate_paas_config`](#validate_paas_config) | `POST /v1/config/validate` | Valide un fichier paas.toml |
 | [`get_sealing_key`](#get_sealing_key) | `GET /v1/sealing-key` | Clé publique de chiffrement des secrets |
 | [`list_providers`](#list_providers) | `GET /v1/secrets/providers` | Coffres de secrets externes pris en charge |
@@ -4695,6 +4696,23 @@ Réponse : [`DeleteSecretResponse`](#type-deletesecretresponse)
 
 ```bash
 paas-apps api call delete_secret <app_id> <name> --yes
+```
+
+### `rotate_service`
+
+Nouveau mot de passe d'un service que la plateforme réserve à l'application (une PostgreSQL de son paas.xml) : changé dans la base et dans l'application, dont les processus redémarrent ; l'ancien est refusé, aucune valeur ne circule
+
+`POST /v1/apps/{app_id}/services/{service}/rotate` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+| `service` | chemin | string | oui |
+
+Réponse : [`RotateServiceResponse`](#type-rotateserviceresponse)
+
+```bash
+paas-apps api call rotate_service <app_id> <service> --yes
 ```
 
 ### `validate_paas_config`
@@ -7480,6 +7498,7 @@ Seuls `id` et `name` sont garantis. `http_endpoints`, `http_endpoints_status` et
 | `http_endpoints` | tableau de JSON libre | non |
 | `http_endpoints_status` | string | non |
 | `tcp_ports` | tableau de JSON libre | non |
+| `exposed_secrets` | tableau de JSON libre | non |
 | `serving_deploy_id` | string | non |
 | `current_release` | [`CurrentRelease`](#type-currentrelease) | non |
 | `last_error` | [`PaasError`](#type-paaserror) | non |
@@ -7979,6 +7998,13 @@ Provenance d'un build : sources, étapes, scan, SBOM, signature, promotion
 | `code` | JSON libre | oui |
 | `budget_secs` | integer | oui |
 | `estimated_secs` | integer | oui |
+
+### Type `ComposerRead`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `read` | string | oui |
+| `packages` | integer | oui |
 
 ### Type `CompositionRuntime`
 
@@ -8503,6 +8529,7 @@ API 2.48.0 : la release qu'une application sert, dans `get_app` : son identifian
 | `blocking` | tableau de [`Blocking`](#type-blocking) | oui |
 | `secrets` | tableau de [`SecretFinding`](#type-secretfinding) | oui |
 | `error` | [`PaasError`](#type-paaserror) | non |
+| `composer` | tableau de [`ComposerRead`](#type-composerread) | non |
 
 ### Type `CveSummary`
 
@@ -11079,6 +11106,16 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 | `provider` | JSON libre | non |
 | `rotation_count` | JSON libre | non |
 | `rotated_at` | JSON libre | non |
+
+### Type `RotateServiceResponse`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `service` | JSON libre | non |
+| `restarted` | JSON libre | non |
+| `app_id` | JSON libre | non |
+| `new_password` | JSON libre | non |
+| `resolved_exposures` | JSON libre | non |
 
 ### Type `RotateWebhookSecretResponse`
 

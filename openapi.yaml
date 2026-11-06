@@ -3,9 +3,9 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.74.69.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.75.0.
 
-    Il couvre les 437 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
+    Il couvre les 438 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
     Enveloppes des réponses (`x-paas-envelope`) :
     - `data` : `{ "data": T }`
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.74.69
+  x-paas-api-version-tested: 2.75.0
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -6922,6 +6922,44 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+  /v1/apps/{app_id}/services/{service}/rotate:
+    post:
+      operationId: rotate_service
+      tags:
+      - config
+      summary: 'Nouveau mot de passe d''un service que la plateforme réserve à l''application (une PostgreSQL de son paas.xml) : changé dans la base et dans l''application, dont les processus redémarrent ; l''ancien est refusé, aucune valeur ne circule'
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      - name: service
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      service: {}
+                      restarted: {}
+                      app_id: {}
+                      new_password: {}
+                      resolved_exposures: {}
+                    additionalProperties: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/apps/{app_id}/settings/build:
     get:
       operationId: get_build_settings
@@ -13537,6 +13575,13 @@ components:
           items:
             type: object
             additionalProperties: true
+        exposed_secrets:
+          type: array
+          nullable: true
+          description: 'API 2.74.71, dans `get_app` quand il y en a : les secrets de l''application trouvés en clair et pas remplacés depuis : `secret` (le nom, jamais la valeur), `kind` (`client`, une valeur que vous fournissez, ou `platform`, une valeur que la plateforme gère), `surface` (où elle a été vue), `release_id`, `found_at` et `next` (la marche à suivre : une nouvelle valeur, ou `rotate_service` pour le mot de passe d''un service réservé).'
+          items:
+            type: object
+            additionalProperties: true
         serving_deploy_id:
           type: string
           nullable: true
@@ -14643,6 +14688,17 @@ components:
       - code
       - budget_secs
       - estimated_secs
+    ComposerRead:
+      type: object
+      properties:
+        read:
+          type: string
+        packages:
+          type: integer
+          format: int64
+      required:
+      - read
+      - packages
     CompositionRuntime:
       type: object
       properties:
@@ -15580,6 +15636,10 @@ components:
           allOf:
           - $ref: '#/components/schemas/PaasError'
           nullable: true
+        composer:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComposerRead'
       required:
       - build_id
       - app_id
@@ -15741,18 +15801,28 @@ components:
         status:
           type: string
           x-paas-observed-values:
-          - running
+          - building
+          - deploying
+          - awaiting_secrets
           - ready
           - superseded
           - failed
           - crashloop
-          - awaiting_secrets
+          - running
           - scaled-zero
           - maintenance
           - unavailable
           - unknown
           description: |
-            État enregistré ; dans `list_deploys`, la release que l'application
+            État enregistré de la release : `building` (build, tests, scan et
+            signature en cours), `deploying` (image prête, mise en service en
+            cours), `awaiting_secrets` (voir plus bas), `ready` (mise en
+            service réussie ; l'application sert la plus récente),
+            `superseded` (remplacée par une release plus récente mise en
+            service), `crashloop` (ses processus redémarrent sans tenir : la
+            mise en service a échoué) et `failed` (le build ou la mise en
+            service a échoué ; `get_deploy` donne l'erreur complète). Dans
+            `list_deploys`, la release que l'application
             sert porte l'état de son workload : `running`, `scaled-zero`
             (appliquée à 0 réplique, depuis l'API 2.48.0 aussi après la route de
             mise à l'échelle : `paas scale web 1` la sert), `maintenance`,

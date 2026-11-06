@@ -3,6 +3,19 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.75.0 — 2026-11-06
+
+- **CLI `paas-apps` 2.75.0**, vérifiée contre l’API client **2.75.0**.
+- **`paas-apps secrets rotate --service NOM`** : un nouveau mot de passe pour un service que la plateforme réserve à
+  l’application (une PostgreSQL de son `paas.xml`), changé dans la base et dans l’application, dont les processus
+  redémarrent ; l’ancien est refusé. Aucune valeur ne circule.
+- **`paas-apps apps info`** nomme les secrets de l’application trouvés en clair et pas remplacés depuis : où, quand, et
+  la marche à suivre ; jamais la valeur.
+- **`paas-apps builds cve`** dit ce que le SBOM a lu des paquets Composer d’une application PHP, et où.
+- **Contrat public** : l’opération `rotate_service`, le champ `exposed_secrets` d’une application, et les états d’une
+  release décrits (`building`, `deploying`, `awaiting_secrets`, `ready`, `superseded`, `crashloop`, `failed`).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.75.0.
+
 ## v2.74.69 — 2026-11-06
 
 - **CLI `paas-apps` 2.74.69**, vérifiée contre l’API client **2.74.69** ; contrat public inchangé.
