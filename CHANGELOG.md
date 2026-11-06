@@ -3,6 +3,11 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.74.69 — 2026-11-06
+
+- **CLI `paas-apps` 2.74.69**, vérifiée contre l’API client **2.74.69** ; contrat public inchangé.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.69 : front en WebAssembly d’une app Rust (`build.rust.wasm`).
+
 ## v2.74.67 — 2026-11-06
 
 - **CLI `paas-apps` 2.74.67**, vérifiée contre l’API client **2.74.67** ; contrat public inchangé.
