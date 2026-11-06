@@ -3,6 +3,12 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.74.67 — 2026-11-06
+
+- **CLI `paas-apps` 2.74.67**, vérifiée contre l’API client **2.74.67** ; contrat public inchangé.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.74.67 : applications C et C++, .NET, Java, Bun, Perl, Elixir,
+  Ruby 4.0, monorepos Node, secret généré `password-symbols`.
+
 ## v2.74.31 — 2026-11-04
 
 - **CLI `paas-apps` 2.74.31**, vérifiée contre l’API client **2.74.31**.
