@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-06 : plateforme v2.75.0, CLI 2.75.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-11 : plateforme v2.81.54, CLI 2.81.54, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -18,8 +18,8 @@ contrôles).
 |---|---|---|
 | Runtimes | PHP 8.4 ; Node 24 (npm, workspaces, pnpm, yarn), Node 22 (pnpm avec workspaces, npm, Yarn classique et berry, v2.74.53) et Node 16 (npm, Yarn classique, sans support de l'éditeur : avertissement du plan, v2.72.0) ; Go 1.26 et 1.27 ; Python 3.12 et 3.14, fermeture Python + Node ; Ruby 3.4 ; Dockerfile (`build.runtime` `dockerfile`, v2.34.0), à la racine du dépôt ou dessous avec son contexte et son étape cible (`build.dockerfile`, v2.56.0), sur l'outillage, les images des recettes publiées et les bases tierces de la liste publiée (`paas builds bases`) ; profils N3 nommés par un `paas.xml` (v2.56.0) ; statique (se planifie, jamais prouvé) | JVM (N1.JVM), Elixir (N1.ELIXIR), Rust (N1.RUST), .NET (N1.DOTNET), plusieurs conteneurs (N1.COMPOSE), autres versions majeures (N1.VERSIONS) |
 | Build | Budgets de temps publiés par étape (v2.38.0) et `build.resources.timeout_seconds` ; budgets de lecture de l'arbre `source.limits`, fichiers laissés de côté `source.ignore`, fichiers inertes admis par empreinte `source.pinned` (v2.37.0) ; app rangée dans un sous-répertoire d'un monorepo, `source.root` (v2.39.0) ; dossiers laissés de côté entiers `source.ignore_directories`, sous-modules Git `source.gitlinks`, arbres jusqu'à 100 000 fichiers (v2.56.0) ; verrous npm, Yarn et pnpm lus comme leur gestionnaire ; gems Ruby et frontaux npm de PHP et Ruby installés hors réseau (v2.56.0) ; ressources que le build télécharge, déclarées (`assets`) et servies hors réseau par un miroir local en pnpm et à l'installation Composer des greffons PHP, scripts d'installation déclarés en pnpm (`build.node.install_scripts`), paquets Node au binaire posé par leur script refusés au plan sauf déclaration (`build.node.native_unused`) (v2.72.0) | `build.resources` `cpu`, `memory` et les clés de tas ou de parallélisme (refusées chacune avec sa raison) |
-| Services | PostgreSQL 16 (avec PostGIS 3.6, v2.59.0), MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46 (Node et Go, v2.58.1), OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (Node et Go, v2.60.0), ces cinq-là aussi en PHP (v2.61.0) et en Python (v2.62.0), SMTP en capture ; base dédiée, TLS vérifié ; un service de chaque réservation par app, jusqu'à huit en PHP (v2.61.0) et en Python (v2.62.0), neuf en Node et Go (v2.61.0 ; trois depuis v2.52.0) ; volume de 1, 2, 5, 10 ou 20 Gi déclaré pour les services que la plateforme décrit (v2.61.0) ; extensions de l'image PostgreSQL publiée, bases MySQL et MariaDB nommées, droit de créer des bases `app_*`, réglage `log_bin_trust_function_creators` (v2.52.0) ; relais MySQL en boucle locale (`local_endpoint`) en PHP, Node et Go (v2.37.0), tunnel Redis en Node et Go (v2.52.0), tunnel Meilisearch (v2.58.1), tunnels OpenSearch, RabbitMQ, S3 et LDAP (v2.60.0), tunnels Redis, Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en PHP (v2.61.0), tunnels Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en Python (v2.62.0) | PostgreSQL 17 (N2.PGEXT) ; Valkey, memcached, ClickHouse, InfluxDB ; Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en Ruby ; MySQL et MariaDB en Ruby ; envoi réel de courrier (N2.SMTP), IMAP ; réplicas, sauvegarde et PITR (N2.OPTIONS) |
-| Processus | Un processus web ; en Node, PHP et Go, workers et crons dans leurs propres pods et un processus release avant chaque déploiement (v2.56.0), une app Go sans processus web (depuis v2.57.0), faite seulement de crons comprise (v2.57.1), et une app Node en npm ou pnpm (v2.73.11 ; en Yarn quand ses lignes publieront les profils `worker` et `job`) ; workers et crons par intervalle dans le conteneur du web, dans toutes les recettes (v2.56.0 ; en Python fermé et Ruby, jusqu'à 7 workers) ; une réplique | Job (N0.PROC) ; processus séparés avec un cycle de vie ; image propre d'un processus (N1.COMPOSE) ; plusieurs réplicas (N0.SCALE) ; stratégies de déploiement (N0.DEPLOY) |
+| Services | PostgreSQL 16 (avec PostGIS 3.6, v2.59.0) et 17 (v2.79.4), MySQL 8.4, MariaDB 11.8, Redis 7.4, MongoDB 8.0, Meilisearch 1.46 (Node et Go, v2.58.1), OpenSearch 3.9, RabbitMQ 4.4, S3, annuaire LDAP (OpenLDAP 2.7) (Node et Go, v2.60.0), memcached 1.6 par son relais (v2.79.4), inférence (Ollama 0.40 sur le processeur, le modèle déclaré, v2.79.5), ces cinq-là aussi en PHP (v2.61.0) et en Python (v2.62.0), SMTP en capture ; base dédiée, TLS vérifié ; un service de chaque réservation par app, jusqu'à huit en PHP (v2.61.0) et en Python (v2.62.0), neuf en Node et Go (v2.61.0 ; trois depuis v2.52.0) ; volume de 1, 2, 5, 10 ou 20 Gi déclaré pour les services que la plateforme décrit (v2.61.0) ; extensions de l'image PostgreSQL publiée, bases MySQL et MariaDB nommées, droit de créer des bases `app_*`, réglage `log_bin_trust_function_creators` (v2.52.0) ; relais MySQL en boucle locale (`local_endpoint`) en PHP, Node et Go (v2.37.0), tunnel Redis en Node et Go (v2.52.0), tunnel Meilisearch (v2.58.1), tunnels OpenSearch, RabbitMQ, S3 et LDAP (v2.60.0), tunnels Redis, Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en PHP (v2.61.0), tunnels Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en Python (v2.62.0) | PostgreSQL 17 (N2.PGEXT) ; Valkey, memcached, ClickHouse, InfluxDB ; Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en Ruby ; MySQL et MariaDB en Ruby ; envoi réel de courrier (N2.SMTP), IMAP ; réplicas, sauvegarde et PITR (N2.OPTIONS) |
+| Processus | Un processus web ; en Node, PHP et Go, workers et crons dans leurs propres pods et un processus release avant chaque déploiement (v2.56.0), une app Go sans processus web (depuis v2.57.0), faite seulement de crons comprise (v2.57.1), et une app Node en npm ou pnpm (v2.73.11 ; en Yarn quand ses lignes publieront les profils `worker` et `job`) ; workers et crons par intervalle dans le conteneur du web, dans toutes les recettes (v2.56.0 ; en Python fermé et Ruby, jusqu'à 7 workers) ; une réplique ; un job (`processes`, type `job`, v2.76.1) : une commande déclarée que le client lance par son nom (`paas run --process <nom>`, `paas-apps run <nom>`), dans un Job ponctuel de l'image servie, avec ses variables, ses services et ses volumes, sa commande et son délai (30 à 3600 secondes, 3600 par défaut) ceux de la release servie ; jamais lancé par la plateforme | processus séparés avec un cycle de vie ; image propre d'un processus (N1.COMPOSE) ; plusieurs réplicas (N0.SCALE) ; stratégies de déploiement (N0.DEPLOY) |
 | Stockage | Volumes rwo et rwx, liens (Node et Go depuis v2.56.0), copies initiales ; chemins inscriptibles `storage.writable` en PHP (v2.56.0) | `storage.private` (refusé par la projection, mesuré le 2026-10-15), tmpfs, stockage éphémère, rwx prouvé (N0.STORAGE) |
 | Réseau | HTTPS, websockets, 100 Mo par requête ; liens déclarés entre apps `network.linked_services` (v2.30.0, effectifs quand l'isolation entre apps sera activée) ; tous les chemins du nom court, `/login` compris, vont à l'app (v2.38.1) ; mot de passe demandé par la bordure avant toute requête (`edge.access.basic_auth_secret`, v2.56.0) | Ports TCP (N0.TCP), règles de sortie et IPv6 (N0.NET), domaines (N0.DOMAINS), autres réglages d'entrée par app (N0.EDGE) |
 | Sécurité | Une seule politique pour l'image servie (v2.36.0) : porte CVE, politique déclarée dans le `paas.xml` (`security.cve_exceptions` une par une, toute sévérité, ou `security.block_on` `critical` ou `none`), porte des constats de secrets avec `security.secret_exceptions` ; exceptions de l'opérateur (HIGH) ; secrets scellés | `security.sbom`, `security.require_mfa_for_console` |
@@ -246,7 +246,9 @@ de son app.
   (Redis depuis v2.51.0), chacun sur un port à lui, jamais celui du processus web. Les URL injectées
   (`DATABASE_URL` et `MYSQL_URL`, `REDIS_URL`, celle du service décrit) visent alors le relais (en Python,
   `REDIS_URL` garde celle du serveur, le gabarit `services.<nom>.local_url` donne celle du relais) ; sans relais ni URL propre au service, le plan
-  avertit (`services.url_without_tls`). MariaDB n'a pas de relais.
+  avertit (`services.url_without_tls`). MariaDB passe par le relais de MySQL (Node et Go depuis v2.74.17, PHP depuis
+  v2.81.41) ; PostgreSQL a le sien dans les recettes que sert paas-entry depuis v2.81.51 (`local_url` en
+  `postgres://…` sur 127.0.0.1, sans `sslmode`).
 - `services.<nom>.env` : variables par gabarit (`{{services.<nom>.host}}`…), noms en minuscules compris, que l'entrée
   PHP admet aussi depuis v2.38.1.
 - SMTP : capture seulement, en Node et Go (en PHP : `ENV_TECHNICAL_SERVICE_OPTION_UNSUPPORTED`). Les messages vont à un
@@ -272,7 +274,7 @@ de son app.
 | Variables | `env` (gabarits `{{…}}` : secrets, services, app), `env_stages`, `files` (rendus au build ou au démarrage). `http_endpoints` : recette npm stable seulement, chaque `target_port` égal au port du process web ; refusé en PHP (`ENV_COMPONENTS_REQUIRE_SEPARATE_QUALIFICATION`). |
 | Comptes | `account` et `accounts` : compte d'administration créé par une commande native ou un formulaire, mot de passe par l'entrée standard. PHP : un contrôle `ready` doit lire le compte (`ENV_TECHNICAL_ACCOUNT_CHECK_REQUIRED`). Node npm : avec un service déclaré seulement (moteur de `paas-entry`), comptes supplémentaires par HTTP. |
 | Cycle de vie | `install`, `prepare`, `upgrade` (commandes natives, entrée standard jusqu'à 16 Kio) ; en PHP `install_http`, `install_php`, verrou (`lock`) et reprise (`interrupted`) ; en Python fermé `install_python` ; `checks` (SQL en lecture seule), `file_checks`, `http_checks`, `mail_sink`, `start_files`, `init` (script du dépôt avant le serveur). Node npm : sans service, seule `init` est lue ; avec un service, le moteur de `paas-entry` lit `state_directory`, `install`, `upgrade`, `http_checks`, `mail_sink` et les comptes, et refuse `init` (mesuré le 2026-10-15). |
-| Entrée HTTPS | Websockets acceptés, 100 Mo par requête, délais de 86 400 s, limite de débit par IP. Hôte de l'app : `apps-<8hex>.<domaine des apps>`. Mot de passe de bordure (v2.56.0) : `edge.access.basic_auth_secret`, voir [PAASXML-SECURITE.md](PAASXML-SECURITE.md). |
+| Entrée HTTPS | Websockets acceptés, 100 Mo par requête, délais de 86 400 s, limite de débit par IP. Hôte de l'app : `apps-<8hex>.runtime.${PAAS_DOMAIN}`. Mot de passe de bordure (v2.56.0) : `edge.access.basic_auth_secret`, voir [PAASXML-SECURITE.md](PAASXML-SECURITE.md). |
 
 ## 5. Sécurité
 
@@ -312,7 +314,7 @@ plan` l'affiche aussi, `[Cust]` ou `[Paas]`). Les codes et leur règle sont dans
 
 | Sujet | Ce qui change |
 |---|---|
-| Placement des apps | Comportement de la plateforme, sans clé : chaque pod d'une app (web, autres processus, tâches de release, tâches ponctuelles, tâches planifiées) et chaque build `paas.xml` préfèrent les serveurs qui ne portent pas le control-plane (sur ce cluster : un deuxième nœud et un troisième nœud plutôt que le nœud du control-plane). C'est une préférence : un pod qui ne tient sur aucun autre serveur va quand même sur le nœud du control-plane. Un pod qui monte un volume `local-path` reste sur le serveur de ce volume, créé là où le premier pod de l'app a démarré : une app neuve s'installe donc hors de le nœud du control-plane, une app existante à volume `local-path` reste où elle est ; une app sans volume ou à volume CephFS suit la préférence à son prochain déploiement. Les bases réservées ne changent pas encore de placement. Prouvé le 2026-10-10 : app neuve emoncms (build sur un deuxième nœud, scan, volume, base et pod web sur un troisième nœud), reconstruction de ns-cve-304104 (build sur un deuxième nœud, son pod web reste sur le nœud du control-plane avec son volume `local-path`). Les 55 caches de build qui retenaient des builds sur le nœud du control-plane ont été supprimés le même jour. |
+| Placement des apps | Comportement de la plateforme, sans clé : chaque pod d'une app (web, autres processus, tâches de release, tâches ponctuelles, tâches planifiées) et chaque build `paas.xml` préfèrent les serveurs qui ne portent pas le control-plane (les nœuds de travail plutôt que le nœud du control-plane). C'est une préférence : un pod qui ne tient sur aucun autre serveur va quand même sur le nœud du control-plane. Un pod qui monte un volume `local-path` reste sur le serveur de ce volume, créé là où le premier pod de l'app a démarré : une app neuve s'installe donc hors du nœud du control-plane, une app existante à volume `local-path` reste où elle est ; une app sans volume ou à volume CephFS suit la préférence à son prochain déploiement. Les bases réservées ne changent pas encore de placement. Prouvé le 2026-10-10 : app neuve emoncms (build sur un nœud de travail, scan, volume, base et pod web sur un autre), reconstruction de ns-cve-304104 (build sur un nœud de travail, son pod web reste sur le nœud du control-plane avec son volume `local-path`). Les 55 caches de build qui retenaient des builds sur le nœud du control-plane ont été supprimés le même jour. |
 | `network.linked_services` (N0.NET) | Noms des apps du même tenant que l'app appelle. Accepté par la projection (mesuré sur les dix recettes de la référence) et transmis au control-plane dans le manifeste généré. Il prend effet quand l'isolation entre apps (U1) sera activée : seuls ces liens seront alors admis. `network.ipv6`, `network.dedicated_ip` et `network.egress` restent refusés. |
 | Recette npm (N1.NPMENV) | Le script de build tourne sans `NODE_ENV` (comme dans le terminal d'un développeur) après `npm ci --include=dev` : un bundler prend son mode production. L'installation de production et l'image servie gardent `NODE_ENV=production`. Toute app npm le prend à son prochain build. Prouvé sur Nightscout : bundle servi de 1,63 Mo au lieu de 9,28 Mo, aucune requête `/__webpack_hmr` au chargement (Chrome CDP). |
 | `paas builds rebuild` | Reconstruit et redéploie le dernier commit poussé de la branche (`--branch`, `main` par défaut), sans commit vide : après des exceptions déclarées ou accordées, ou un correctif de la plateforme. Même requête que `paas deploy --force`. Prouvé en production sur ns-cve-304104. |
@@ -590,7 +592,7 @@ Rust, et ce que la vérification complète d'un clone de la release a trouvé.
 | Elixir (v2.74.51, R-0027.5) | `build.runtime` elixir, recette `mix-1.19.5-v1`, catalogue `2026.11.05.mix.1` : `build.elixir.root`, `mix_env`, `release`, `tasks`, `frontend`, `frontend_target` ; les dépendances s'installent sans réseau depuis le `mix.lock`, chaque paquet Hex vérifié par son empreinte, chaque dépendance Git à son commit ; la release est servie ; `runtime.packages` s'y installe |
 | Perl (v2.74.49, EX-08.2) | `build.runtime` perl, recette `perl-5.44.0-v1`, catalogue `2026.11.05.perl.2` : `build.perl.root`, `without_features`, `archives`, `replace` (une distribution de la snapshot par une autre version) ; les modules s'installent dans `local/` sans réseau, depuis le `cpanfile.snapshot`, chaque distribution vérifiée par le `CHECKSUMS` de son auteur ; sans `DBD::Pg` ni `DBD::mysql` ; `runtime.packages` s'y installe |
 | Bun (v2.74.48, R-0017.2) | `build.runtime` bun, recette `bun-1.4.4-v1`, catalogue `2026.11.05.bun.1` : `build.bun.root`, `build_script`, `development` ; Bun installe depuis le `bun.lock` de l'arbre, chaque paquet vérifié, sans script ; le build tourne sans réseau ; l'image servie porte Bun et Node 24 ; `runtime.packages` s'y installe |
-| Java (v2.74.45, R-0027.3) | `build.runtime` jvm, recettes `java-17.0.21-v1`, `java-21.0.13-v1`, `java-25.0.5-v1`, catalogue `2026.11.04.java.1` : `build.jvm.build_tool` (maven ou gradle), `artifact`, `root`, `goals`, `properties`, `profiles`, `modules` ; la plateforme produit la liste de ses artefacts (`paas/dependencies/maven.lock.json`, chaque fichier avec son SHA-256) ; le build tourne sans réseau ; le frontal se déclare par `frontend`, `frontend_target` et `build.node` (npm ou Yarn classique) ; `runtime.packages` s'installe sur l'image Java |
+| Java (v2.74.45, R-0027.3) | `build.runtime` jvm, recettes `java-17.0.21-v1`, `java-21.0.13-v1`, `java-25.0.5-v1`, catalogue `2026.11.04.java.1` : `build.jvm.build_tool` (maven, gradle ou, v2.81.45, ant avec Ivy), `artifact`, `root`, `goals`, `properties`, `profiles`, `modules` ; la plateforme produit la liste de ses artefacts (`paas/dependencies/maven.lock.json`, chaque fichier avec son SHA-256) ; le build tourne sans réseau ; le frontal se déclare par `frontend`, `frontend_target` et `build.node` (npm ou Yarn classique) ; `runtime.packages` s'installe sur l'image Java |
 | C et C++ : bibliothèques | `build.native.libraries` : 117 noms publiés par la recette, chacun épinglé, en-têtes au build ; ce que le programme lie est installé dans l'image servie depuis la même source signée, lu par le scan et le SBOM ; un nom hors de la liste est refusé au plan, avec la liste ; libkiwix, libzim et libtorrent-rasterbar n'y sont pas |
 | Arbre du commit | Un arbre sous le plafond de 200 000 entrées est lu en entier, avec ses dossiers (400 000 entrées) ; les messages donnent ce plafond |
 | Sondes | Un processus que sa sonde en échec fait redémarrer et qui s'arrête proprement (code 0) est décrit par sa sonde, plus par « s'arrête sans erreur » |
@@ -617,6 +619,146 @@ Les ports autres que le web.
 | Adresse | Une adresse partagée, un port pour une app. Une adresse propre à l'app, sur décision de l'opérateur, si elle doit écouter sur un port standard déjà pris. L'app voit l'adresse d'un nœud du cluster, pas celle de son client |
 | Limites | Au-dessous de 1024 : 25, 110, 143, 465, 587, 993, 995. Pas encore de proxy par protocole : deux apps ne partagent pas un port sur l'adresse partagée, quel que soit le nom demandé |
 
+## 5 sexvicies. Fonctions (API `/v1/functions`), v2.76.0 (en production depuis v2.81.0, le 2026-11-09)
+
+Une fonction lance, à la demande, une commande de l'image prouvée d'une app, dans une microVM (Kata Containers, Cloud
+Hypervisor) sur un nœud de travail. Chaque appel a son entrée, son résultat et son issue. Elle n'est pas déclarée dans
+le `paas.xml` : elle se crée par l'API ou par `paas functions`.
+
+| Sujet | Ce qui change |
+|---|---|
+| Créer | `POST /v1/functions`. Champs : `app_id` et `build_id` (un build prouvé d'une app du tenant) ; `name` (unique parmi les fonctions en service) ; `command` (argv ; absent : celle de l'image) ; `memory` (64Mi à 64Gi) ; `cpu` (1 à 16) ; `timeout_seconds` (1 à 3600) ; `max_concurrency` (1 à 100). Un GPU qu'aucun nœud n'offre est refusé (`function_gpu_unavailable`) |
+| Appeler | `POST /v1/functions/{id}/invoke` (ou `spawn`, ou `map` pour une liste), avec `input` (JSON, 64 Kio au plus). La réponse est immédiate (`pending`). Au-delà de `max_concurrency` appels en cours : `function_concurrency_limit` |
+| Contrat de la commande | L'utilisateur est 65532. L'entrée est dans `PAAS_INPUT`. Le résultat s'écrit dans le fichier `PAAS_OUTPUT_FILE` (1 Mio au plus). Les sorties standard et d'erreur forment le journal. Réseau : la résolution DNS et le port 8080 des services de la plateforme, rien d'autre |
+| Suivre | `GET /v1/functions/{id}/invocations/{inv}` donne `phase` (`pending`, `running`, `succeeded`, `failed`, `cancelled`), `reason` et `responsibility` (Cust ou Paas), `exit_code`, `started_at`, `finished_at` et `duration_seconds`. Une fois l'appel réussi, il donne aussi `output` pendant 24 h (texte, ou base64 selon `output_encoding`). `DELETE` annule un appel en cours. `…/logs` donne le journal |
+| Raisons | Cust : `FUNCTION_EXIT_NONZERO`, `FUNCTION_MEMORY_EXCEEDED`, `FUNCTION_TIMEOUT`, `FUNCTION_OUTPUT_TOO_LARGE`, `FUNCTION_CANCELLED`, `FUNCTION_DELETED`. Paas : `FUNCTION_RUNTIME_UNAVAILABLE` (aucun nœud ne porte le moteur, ou il ne crée pas la microVM), `FUNCTION_UNSCHEDULABLE`, `FUNCTION_IMAGE_UNAVAILABLE`, `FUNCTION_START_FAILED`, `FUNCTION_NOT_STARTED`, `FUNCTION_OUTPUT_UNREADABLE`, `FUNCTION_JOB_LOST` |
+| Installation | Profil `functions` : le moteur sur chaque nœud de travail (KVM requis) |
+
+## 5 septvicies. Courrier réel, v2.78.1 (en production depuis v2.81.0, le 2026-11-09)
+
+Le relais de courrier de la plateforme, et le serveur de courrier d'une app.
+
+| Sujet | Ce qui change |
+|---|---|
+| Envoi | `services.<nom>` `smtp`, `provider` `shared`, `mode` `relay` : le relais de la plateforme remet les messages aux serveurs des destinataires, signés en DKIM pour le domaine de la plateforme. Liés : `host`, `port`, `user`, `password`, `url`, `from`, `encryption`. Servi aux apps que paas-entry lance (Go, Rust, C et C++, .NET, Java, Bun, Perl, Lua, Erlang, Elixir, Crystal, Haskell, Racket, Objective-C, Node avec pnpm ou avec un service) |
+| Compte | Créé au premier déploiement qui déclare le relais, gardé ensuite, retiré avec l'app. L'expéditeur `<sous-domaine de l'app>@<domaine de la plateforme>` est imposé, à l'enveloppe comme à l'en-tête `From`. Une limite de destinataires par heure ; au-delà, un refus temporaire |
+| Sans relais | `mail_relay_unavailable` (Paas) : l'installation n'en a pas. Le mode `capture` reste servi |
+| Serveur de l'app | Sur une adresse propre (`--dedicated`), `externalTrafficPolicy` est `Local` : l'app lit l'adresse de son client ; le processus qui écoute est placé sur le nœud qui annonce l'adresse. Port 25 ouvert : `paas apps info` donne les enregistrements à poser (A, MX, SPF ; le PTR chez le fournisseur de l'adresse) |
+| Limites | Un seul domaine d'expédition, celui de la plateforme. PHP, Python et Ruby gardent la capture |
+
+## 5 octovicies. Boîte IMAP et port 53, v2.78.2 (en production depuis v2.81.0, le 2026-11-09)
+
+| Sujet | Ce qui change |
+|---|---|
+| Boîte IMAP | `services.<nom>` `imap` (Dovecot 2.4.5) : réservée pour l'app, TLS vérifié, un compte `app`, son volume ; liés : `url` (`imaps://…:31993`), `host`, `port`, `user`, `password` ; relais en clair sur 127.0.0.1 (`local_endpoint`). Apps lancées par paas-entry, PHP et Python ; pas Ruby |
+| Limite | La boîte ne reçoit rien d'Internet : une boîte existante chez un fournisseur se lit par son adresse et ses identifiants en `secrets.*` |
+| Port 53 | `tcp_ports` admet 53 (DNS), en TCP et en UDP, sous l'approbation de l'opérateur ; une adresse propre si une autre app le tient |
+
+## 5 novovicies. Ports : adresse privée et routage TLS, v2.78.3 (en production depuis v2.81.0, le 2026-11-09)
+
+| Sujet | Ce qui change |
+|---|---|
+| Adresse privée | Un port approuvé s'ouvre par défaut sur l'adresse privée de l'installation (le réseau privé de ses nœuds, non routé sur Internet) ; sur l'adresse publique sur décision de l'opérateur. `paas apps info` dit `(private)` ou `(public)` |
+| Plusieurs apps sur un port | `tcp_ports[].route` `sni` : un protocole en TLS dès le premier octet (IMAPS, SMTPS, POP3S, LDAPS, MQTT ou AMQP sur TLS) se partage sur un port de l'adresse ; le routeur TLS de la plateforme mène chaque connexion à l'app qui tient le nom demandé (son hôte de la plateforme, ses domaines vérifiés), sans déchiffrer. Port inférieur à 10000 |
+| Limites | SSH et les protocoles sans nom gardent un port propre à l'app ; le MX de la plateforme pour le courrier entrant, le proxy IMAP et POP par identifiant et le proxy SSH par nom d'utilisateur ne sont pas dans cette version |
+
+## 5 tricies. Plusieurs ports HTTP et WebSocket, v2.78.4 (en production depuis v2.81.0, le 2026-11-09)
+
+| Sujet | Ce qui change |
+|---|---|
+| Frontal du conteneur web | `web.front` : le port que sert la plateforme (`listen`) mène chaque requête, par le préfixe de son chemin, au processus web ou à un worker de son conteneur (`mode = in-process`), sur son port déclaré ou sur `routes[].port` ; un chemin qu'aucune route ne prend va au processus web. Servi par paas-entry (Go, Node, PHP et les autres runtimes qu'il lance) |
+| WebSocket | `routes[].websocket` : la bascule de protocole passe vers ce processus ; une route sans lui ne la passe pas ; un chemin qu'aucune route ne prend la passe au processus web, comme sans frontal |
+| Origines nommées | `http_endpoints` sur n'importe quel port du conteneur web (1024 ou plus), pour toute recette qui lance son processus web ; jusqu'en v2.78.3, la recette npm seule et le port du web seul |
+| Port d'un worker du conteneur | Déclaré, il s'expose par une route du frontal ou une origine nommée |
+| Limites | Ni Ruby, ni Python, ni site publié, ni processus dans son propre pod ; jusqu'en v2.81.33, la plateforme ne servait pas elle-même un dossier construit à côté d'un processus (un SPA était servi par le processus web) : elle le sert depuis v2.81.34 (section 5 septricies) |
+
+## 5 untricies. Courrier entrant et IMAP/POP partagés, v2.78.5 (en production depuis v2.81.0, le 2026-11-09)
+
+| Sujet | Ce qui change |
+|---|---|
+| MX de la plateforme | `tcp_ports[].route` `mx` (port 25) : la plateforme reçoit le courrier des domaines vérifiés de l'app sur son adresse publique partagée, vérifie chaque destinataire auprès du serveur de l'app et le lui remet ; tout autre domaine est refusé |
+| IMAP et POP partagés | `route` `login` (IMAP 143, POP3 110) : STARTTLS exigé, puis la connexion va à l'app qui tient le domaine de l'identifiant (`compte@domaine`) ; les clients se connectent à l'hôte entrant de la plateforme |
+| `paas apps info` | Un port routé dit sa route et, pour `mx` et `login`, l'enregistrement MX ou le serveur que ses clients utilisent |
+| Limites | SSH garde un port propre par app ; le serveur de l'app voit le MX ou le proxy de la plateforme comme pair |
+
+## 5 duotricies. GPU, v2.79.1 (en production depuis v2.81.0, le 2026-11-09 ; sans nœud GPU)
+
+| Sujet | Ce qui change |
+|---|---|
+| `resources.gpu` | Raccordé : une classe (`h100_80gb`, `a100_80gb`, `a100_40gb`, `l40s`, `rtx4090`) et un nombre de GPU par pod du processus web ; placés sur un nœud de la classe avec la classe d'exécution NVIDIA |
+| PyTorch pour CUDA | `build.python.wheel_profile` `pytorch-cuda` : PyTorch construit pour CUDA et ses bibliothèques, depuis la liste de l'app ; demande `resources.gpu` |
+| Sans GPU dans le cluster | L'app est construite, scannée, signée ; son déploiement est refusé par son nom (`N0_GPU_UNAVAILABLE`), la version en place reste servie |
+| Limites | Pas de quota de GPU par tenant ; seuls les pods du processus web reçoivent des GPU ; aucune vérification sur un GPU avant l'arrivée du serveur |
+
+## 5 tritricies. Modèles dans l'image, v2.79.2 (en production depuis v2.81.0, le 2026-11-09)
+
+| Sujet | Ce qui change |
+|---|---|
+| Fichiers posés dans l'arbre | `assets[].dest` raccordé dans la recette Python simple : chaque fichier (adresse, SHA-256) téléchargé avant le build, vérifié et posé à sa destination ; l'image le porte, rien n'est téléchargé au démarrage |
+| Bornes | 2 Gio par fichier, 8 Gio en tout, 30 minutes |
+| Limites | Les autres recettes gardent `dest` non raccordé ; l'inférence comme service vient en v2.79.5 |
+
+## 5 quatertricies. Plusieurs conteneurs, v2.79.3 (en production depuis v2.81.0, le 2026-11-09)
+
+| Sujet | Ce qui change |
+|---|---|
+| Images par processus | `processes[].build` (recette ou Dockerfile, ses tests, `root`) : une image par processus, construite depuis le même commit, testée, scannée, signée ; la release attend toutes les images ; le retour arrière les restaure |
+| Réseau privé de l'app | Un worker sert les autres processus sur son port (Service interne, jamais publié) ; adresse par `{{process.<nom>.host}}`, `.port`, `.url` et `PAAS_PROCESS_<NOM>_*` ; le frontal y mène |
+| App construite par son Dockerfile | Workers, crons, jobs et releases à côté du web ; volumes ; capacités Linux ; variables et secrets appliqués à la release |
+| Limites | Les fichiers déclarés et le cycle de vie restent ceux de l'image du web |
+
+## 5 quintricies. memcached, PostgreSQL 17 et sauvegardes des bases, v2.79.4 (en production depuis v2.81.0, le 2026-11-09)
+
+| Sujet | Ce qui change |
+|---|---|
+| PostgreSQL 17 | `services.<nom>` `postgresql` `version` 17 : sa base réservée, ses extensions (celles de 16, à leurs versions de 17 : `ltree` 1.3, pgvector 0.8.7) ; PostGIS sur 16 seulement ; une base garde sa version (passer à 17 = migrer ses données) |
+| Sauvegardes | Une base PostgreSQL d'un plan payant : une sauvegarde complète par jour et ses journaux archivés, 7 jours (`standard`, `business`) ou 35 avec restauration à un instant (`pro`, `enterprise`) ; `paas addons info` dit le niveau et la dernière sauvegarde |
+| memcached | `services.<nom>` `memcached` (1.6.45) : réservé pour l'app, TLS vérifié, un compte `app` et son mot de passe, 192 Mio d'objets ; liés : `url` (`memcached://…:11211`), `host`, `port`, `user`, `password` ; relais en clair sur 127.0.0.1 (`local_endpoint`), qui s'authentifie pour chaque connexion. Apps lancées par paas-entry, PHP et Python ; pas Ruby |
+| Limites | Le protocole texte seulement (memcached refuse le binaire et SASL) ; un cache en mémoire, perdu à un redémarrage |
+
+## 5 sextricies. Inférence privée, v2.79.5 (en production depuis v2.81.0, le 2026-11-09)
+
+| Sujet | Ce qui change |
+|---|---|
+| Déclaration | `services.<nom>` `inference` (0.40.15), `provider` dedicated, `tls` required, `storage`, `ca_file`, et `model` qui nomme un asset : `name` (minuscules, chiffres, `_`, `.`, `-`), `url` (https) et `sha256` d'un fichier GGUF, sans `dest` ni `headers` |
+| Service | Ollama sur le processeur (4 Gio, 1 à 4 processeurs) : il acquiert le modèle à son premier démarrage (une heure au plus), vérifie son SHA-256, le garde et le charge ; TLS vérifié et une clé ; l'API compatible OpenAI sous `/v1` et les routes d'inférence d'Ollama ; ni pull, ni create, ni delete |
+| Liaison | `url` (`https://…:11434/v1`), `host`, `port`, `password` (la clé), `model` (`<nom>:latest`) ; INFERENCE_URL, INFERENCE_API_KEY, INFERENCE_MODEL, INFERENCE_SSL_CA ; relais en clair sur 127.0.0.1 (`local_endpoint`), la clé à envoyer. Apps lancées par paas-entry, PHP et Python ; pas Ruby |
+| Limites | Un modèle par service, pour la vie de la réservation (un autre modèle : un autre service) ; le volume le contient une fois ; un modèle à la mesure de 4 Gio de mémoire |
+
+## 5 septricies. Corrections et ajouts de v2.81.1 à v2.81.54 (en production du 2026-11-09 au 2026-11-10)
+
+La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrigé par une version, publiée et déployée.
+
+| Sujet | Ce qui change |
+|---|---|
+| Un dossier servi par le frontal (v2.81.34, EX-13) | Une route de `web.front` sert un dossier au lieu d'un processus : `root` (à la place de `upstream`), un chemin absolu de l'image sous `/app`, hors des volumes (un site construit, une sortie du build), ou un dossier d'un volume déclaré (des fichiers que l'app écrit, servis en bac à sable : `Content-Security-Policy: sandbox`). `fallback` : la page que reçoit une navigation qu'aucun fichier ne sert (celle d'une application monopage, `index.html`) ; absente du dossier au démarrage, le frontal ne démarre pas (`FRONT_FALLBACK_MISSING`). GET et HEAD, `ETag` et `Last-Modified`, plages (`Range`) ; ni liste de dossier ni fichier caché (`.well-known` est servi) ; `Cache-Control: no-cache` sur le HTML et la page de repli. Une route `root` n'a ni `port` ni `websocket` |
+| Crons suspendus et repris (v2.81.32, EX-03) | `paas scale <cron> 0` suspend un cron : plus aucune exécution ; `paas scale <cron> 1` le reprend, et une exécution manquée depuis moins de 10 minutes part aussitôt ; un autre nombre est refusé. `paas ps` liste les crons, avec leur planning et leur état (planifié, en cours, suspendu). Une app faite seulement de crons, tous suspendus, est `scaled-zero` |
+| Une valeur fournie atteint la release en service (v2.81.35) | `paas secrets provide` sur une app déjà servie rend de nouveau ses variables et ses fichiers et redémarre ses processus ; un cron la lit à sa prochaine exécution. La réponse dit où la valeur est allée. Jusqu'en v2.81.34, elle attendait le déploiement suivant |
+| App Python sans processus web (v2.81.27 à v2.81.29, EX-03) | La recette Python simple sert une app dont le premier processus est un worker (sans port, sondé par sa commande ou un port TCP local) ou un cron (son CronJob le lance à chaque exécution). Ce cron monte les volumes de l'app ; chaque release remplace son CronJob entier, sa suspension gardée. Ruby et le Python fermé sans processus web restent refusés par leur nom |
+| Python : un arbre sans liste de dépendances (v2.81.31, EX-23) | Les paquets de `build.python.additional_packages` d'un arbre qui n'a ni `requirements.txt`, ni `pyproject.toml`, ni `setup.cfg` deviennent la liste que la plateforme produit |
+| Relais IMAP sur 143 (v2.81.30, R-0028.3) | Le relais local d'une boîte IMAP (`services.<nom>.local_endpoint.port`) peut écouter sur 143, le port du protocole, pour un outil qui vise `127.0.0.1:143` ; un autre port sous 1025 reste refusé |
+| pnpm : `updateConfig` (v2.81.33) | `pnpm-workspace.yaml` peut porter `updateConfig`, que seuls `pnpm update` et `pnpm outdated` lisent |
+| Lignes de langages de v2.77 (v2.81.8 à v2.81.22) | Les images et catalogues de Lua, Erlang/OTP, Crystal, Haskell, Racket, Objective-C, emscripten et Dart/Flutter sont construits et publiés ; leurs plans voyagent au budget élargi (v2.81.12). Dart : `build.dart.hook_defines`, les `hooks.user_defines` des hooks de build du verrou, écrits dans la copie de build (la SQLite du système pour `sqlite3`, sans téléchargement, v2.81.16) ; le build Flutter sans réseau de bout en bout (étapes de génération, `--no-pub`, `--no-example`), ses tests lancés depuis une copie du SDK. Crystal : `build.crystal.git_branch`, le dépôt Git du commit que lisent des macros de compilation (v2.81.13). Haskell : les cibles construites en place ; l'image d'exécution porte la commande `openssl` |
+| C et C++ (v2.81.24 à v2.81.26) | Catalogue c.5 : conflits mesurés sur les paquets, paquets CMake complets ; l'image servie porte les pilotes SQL de Qt 5 et les jeux de caractères de glibc (`iconv`) |
+| Site statique (v2.81.11) | static.2 : le serveur nginx révisé (musl et zlib corrigés), sans faille HIGH ni CRITICAL |
+| Ports privés (v2.81.23) | L'adresse privée des ports des apps n'est annoncée que sur l'interface privée des nœuds (`PRIVATE_NETWORK_INTERFACE`, contrat du site) |
+| PHP dans les étapes de build (v2.81.36, PR-0033) | Dans l'étape Node qu'une recette PHP joue après Composer (`build.frontend.after_composer`), une étape de `build.steps` lance le PHP de la recette : `php [-d NOM=VALEUR]… <script de l'arbre> [arguments]` (la génération des actifs d'un Symfony : `bin/console mautic:assets:generate`), sans réseau ; ailleurs, refusée (`ENV_NODE_STEP_PHP`). Le PHP du build fait confiance au miroir des ressources déclarées (v2.81.37 : Dart Sass d'un sass-bundle) |
+| Montées Composer déclarées (v2.81.38 à v2.81.40) | `build.php.composer_updates` révise le verrou d'un `composer.json` qui déclare des dépôts Git (`vcs`, `git`, `github`, `gitlab`) ou des dossiers (`path`) : leurs paquets restent tels que verrouillés, et la montée de l'un d'eux est refusée par son nom ; la révision ne bloque plus sur les avis de sécurité (le scan de la plateforme reste la barrière) ; l'app est planifiée sur le verrou révisé |
+| MariaDB par le relais PHP (v2.81.41, EX-06) | `services.<nom>.local_endpoint` d'un service MariaDB d'une app PHP : un client qui n'ouvre jamais TLS joint MariaDB en clair sur 127.0.0.1, le relais parle TLS vérifié au serveur (Movim 0.35.5 sur MariaDB 11.8.9) |
+| Copie de stockage d'un fichier rendu au build (v2.81.41) | En PHP, `storage.seeds.from` peut nommer un fichier que le paas.xml rend au build (`files`, render build) : l'entrée PHP le recopie de l'image vers le volume au démarrage, une seule fois |
+| Images PHP révisées (v2.81.42) | Catalogue `2026.11.10.php.28` : les quatorze recettes PHP 8.4.27 sur libxslt 1.1.43-r4 (deux failles HIGH publiées le 2026-11-10, qui bloquaient au scan tout build sur une recette full) et Alpine 3.24.4 (zlib 1.4) ; mêmes ids, version de recette +1. Une app passe `build.catalogue` à `2026.11.10.php.28` |
+| Explications de refus (v2.81.42) | L'index des refus, que montrent l'API, `paas config plan` et cette référence, dit ce que fait la plateforme pour le relais local (MariaDB en PHP), la copie de stockage et la liste de dépendances d'un `composer.json` |
+| SBOM d'un build (v2.81.54) | Le rappel qui enregistre le SBOM réessaie pendant 90 s une erreur passagère (5xx, connexion refusée ou perdue), comme celui des tests ; un autre refus termine l'étape avec son code HTTP et l'erreur de la plateforme. Un refus isolé faisait échouer le build sans dire pourquoi |
+| Maintenance d'une app à processus d'image propre (v2.81.53) | Redémarrage, mise à l'échelle et `paas run` sont admis avec le pod d'un processus à image propre en service : la plateforme reconnaît l'image que la release a admise pour lui. Ils étaient refusés (`admission_runtime_serving_identity_mismatch`) |
+| Release d'une app à processus d'image propre (v2.81.52) | La release retrouve les images de ses processus à image propre, admises au push : elle est promue, le compte initial devient lisible (`submit_installation_credentials`) et un retour arrière vers elle restaure ces images. Elle était marquée en échec alors qu'elle servait (`admission_served_observation_mismatch`) |
+| Relais local PostgreSQL (v2.81.51) | `services.<nom>.local_endpoint` d'un PostgreSQL, dans les recettes que sert paas-entry (Node, Go, recettes compilées) : l'app se joint en clair à 127.0.0.1 par `{{services.<nom>.local_url}}` (`postgres://…`, sans `sslmode`) ; le relais ouvre TLS vérifié jusqu'au service et retire de l'offre du serveur SCRAM-SHA-256-PLUS, que libpq refuse sur une connexion en clair. Pour un client qui ne fait confiance qu'aux autorités publiques (le pool de Lemmy). En PHP, le client se joint en TLS avec l'autorité du service |
+| Identifiants d'avis des exceptions CVE (v2.81.50) | `security.cve_exceptions[].id` et les exceptions de l'opérateur nomment aussi les avis des autres bases que le scan rapporte : `NSWG-ECO-N` (Node.js), `RUSTSEC-AAAA-N`, `GO-AAAA-N`, `PYSEC-AAAA-N`, `TEMP-N-X` (Debian), en plus de CVE et GHSA |
+| Processus à image propre à côté d'un cycle de vie (v2.81.47 à v2.81.49, R-0025.2) | Une app qui déclare un cycle de vie peut avoir un processus à image propre (`processes[].build`) : il reçoit les variables, secrets et liaisons de l'app par son environnement et démarre à côté du web ; sa configuration dérivée ne porte pas les services de l'app et garde les sous-modules, fichiers inertes et chemins laissés de côté de son dossier ; un déploiement applique le web d'abord ; `paas config plan` admet, planifie et contrôle l'export de son image sur son dossier. Un processus de l'image du web dans son propre pod reste refusé à côté d'un cycle de vie (Lemmy et lemmy-ui) |
+| Révisions d'Ivy en propriétés (v2.81.46) | La résolution d'Ivy lit les propriétés que lui donne le build d'Ant : le `build.properties` du dossier du build, puis `build.jvm.properties`, qui l'emportent ; un `ivy.xml` dont une révision est une propriété (`rev="${x.version}"`) se résout |
+| Build Ant avec Ivy (v2.81.45, R-0027.3) | `build.jvm.build_tool` = `ant` : `build.xml` dans le dossier où il tourne, ses cibles dans `goals`, les `-D` dans `properties` ; Ivy 2.5.3 résout `ivy.xml` depuis Maven Central dans la liste produite (`paas/dependencies/maven.lock.json`, avec le jar d'Ivy), le build hors réseau résout depuis elle seule ; un `ivysettings.xml` de l'arbre est refusé (`ENV_JAVA_IVY_SETTINGS_UNSUPPORTED`) (YaCy 1.941) |
+| Recette PHP avec brotli (v2.81.44, EX-04.3) | `php-8.4.27-apache-alpine-full-brotli-v15`, l'image full du catalogue 2026.11.10.php.28 et l'extension brotli (`php84-pecl-brotli` 0.21.0), dans le catalogue `2026.11.10.php.29` : une app dont le `composer.json` exige `ext-brotli` la déclare (`build.recipe`), avec la liste exacte de ses extensions (TransLite) |
+| Compte initial lu dans un fichier (v2.81.43) | En PHP, le compte initial que crée l'installateur natif (`lifecycle.install`, sans `account.create`) peut recevoir son mot de passe dans un fichier que l'entrée rend avant lui (`lifecycle.start_files`, gabarit avec `{{account.password}}`), comme sur son entrée standard : un installateur en ligne de commande qui lit son compte dans son fichier de configuration (Mautic : `mautic:install` lit `admin_*` dans `config/local.php`) ; jamais en argument |
+
 ## 6. Prévu
 
 Chaque capacité est développée comme une option générique : aucune app n'est codée dans la plateforme, l'app
@@ -633,7 +775,7 @@ qui en a besoin la déclare dans son `paas.xml`. L'ordre suit la feuille de rout
 | N2.OPENSEARCH, N2.RABBITMQ, N2.S3, N2.CLICKHOUSE, N2.VALKEY | ClickHouse, Valkey, memcached, InfluxDB 2 ; Meilisearch, OpenSearch, RabbitMQ, S3 et LDAP en Ruby. Disponibles depuis v2.58.1 et v2.60.0 en Node et Go, depuis v2.61.0 en PHP, depuis v2.62.0 en Python : Meilisearch, OpenSearch, RabbitMQ, S3, LDAP |
 | N0.RUNTIME, N0.EDGE, N0.BUILD, N1.MULTIRT, N1.STATIC | Paquets système, autres réglages d'entrée par app, secrets de build, statique prouvé. Disponibles depuis v2.56.0 : mot de passe de bordure, frontal npm dans les recettes PHP et Ruby |
 | N1.JVM, N1.ELIXIR, N1.RUST, N1.DOTNET, N1.VERSIONS | Nouveaux runtimes et versions |
-| N1.COMPOSE | Plusieurs conteneurs, une image par processus (`processes[].build` se déclare depuis v2.56.0 et reste refusé à sa clé) ; le Dockerfile de l'app est disponible depuis v2.34.0, hors de la racine depuis v2.56.0 |
-| N2.SMTP, N2.IMAP, N0.TCP, N0.DOMAINS | Courrier réel, ports TCP, domaines personnalisés |
-| N0.GPU, N2.INFERENCE, N0.STORAGE | GPU, inférence, stockage des modèles |
+| N1.COMPOSE | Disponible depuis v2.79.3 (section 5 quatertricies) : une image par processus (`processes[].build`) ; le Dockerfile de l'app est disponible depuis v2.34.0, hors de la racine depuis v2.56.0 |
+| N2.SMTP, N2.IMAP, N0.TCP, N0.DOMAINS | Domaines d'expédition propres à l'app. Disponibles : ports TCP (v2.74.30), courrier réel, boîte IMAP, courrier entrant et IMAP/POP partagés (v2.78.1 à v2.78.5), domaines vérifiés de l'app |
+| N0.GPU, N2.INFERENCE, N0.STORAGE | Nœuds GPU, quotas de GPU. Disponibles depuis v2.79.1 à v2.79.5 : `resources.gpu`, modèles dans l'image, inférence privée |
 | N0.SCALE, N0.DEPLOY | Réplicas, autoscaling, placement ; stratégies de déploiement |

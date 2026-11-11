@@ -105,8 +105,8 @@ Affichage d'une échéance : la plateforme enregistre l'instant de fin, le minui
 - Bases réservées (PostgreSQL, MySQL, Redis, MongoDB) : TLS vérifié. Depuis la v2.27.0, chaque base n'accepte
   que les pods de son app, plus les sauvegardes et opérateurs de la plateforme (une NetworkPolicy par base).
 - Entrée HTTPS : websockets acceptés, 100 Mo par requête, délais de 86 400 s, limite de débit par IP.
-- Hôte de l'app : `apps-<8hex>.<domaine des apps>`, que donne `url` (v2.48.0). Le nom court
-  `<8hex>.<domaine des apps>` redirige (308) vers lui, tous ses chemins compris (`/login`, `/signup` et `/auth/`
+- Hôte de l'app : `apps-<8hex>.runtime.${PAAS_DOMAIN}`, que donne `url` (v2.48.0). Le nom court
+  `<8hex>.runtime.${PAAS_DOMAIN}` redirige (308) vers lui, tous ses chemins compris (`/login`, `/signup` et `/auth/`
   partaient vers la console avant v2.38.1). Utilisez l'hôte `apps-…` dans la configuration de l'app.
 - Routes refusées d'une app PHP (`web.deny_routes`, v2.47.0) : un chemin, quelle que soit sa casse ou son
   extension, et un paramètre de requête par nom et valeur, refusés (403) avant les règles de l'app.

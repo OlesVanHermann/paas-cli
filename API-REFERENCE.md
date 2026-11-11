@@ -2,15 +2,15 @@
 
 # Référence de l'API tenant
 
-438 opérations, vérifiées contre l'API 2.75.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+444 opérations, vérifiées contre l'API 2.81.54. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
 | [`addons`](#domaine-addons) | Services managés attachés aux applications (bases de données, caches, files…) et leurs sauvegardes | 42 |
 | [`ai`](#domaine-ai) | Agents IA, points de terminaison IA, GPU, fine-tuning et bases vectorielles | 45 |
-| [`apps`](#domaine-apps) | Applications du tenant, cycle de vie, restauration, environnements de prévisualisation | 69 |
+| [`apps`](#domaine-apps) | Applications du tenant, cycle de vie, restauration, environnements de prévisualisation | 72 |
 | [`auth`](#domaine-auth) | Sessions, connexion (mot de passe, OAuth, MFA), jetons, clés API et clés SSH | 40 |
-| [`billing`](#domaine-billing) | Offres, consommation, factures, moyens de paiement et alertes de dépense | 36 |
+| [`billing`](#domaine-billing) | Offres, consommation, factures, moyens de paiement et alertes de dépense | 39 |
 | [`builds`](#domaine-builds) | Constructions d'images, preuves (scan, SBOM, signature), cache et pipelines | 23 |
 | [`config`](#domaine-config) | Variables de configuration, secrets et coffres externes | 37 |
 | [`deploys`](#domaine-deploys) | Déploiements (releases), promotion et retour arrière | 14 |
@@ -1538,6 +1538,9 @@ Applications du tenant, cycle de vie, restauration, environnements de prévisual
 | [`get_security_updates`](#get_security_updates) | `GET /v1/apps/{app_id}/security-updates` | Mode des mises à jour de sécurité d'une application et ses alertes (base corrigée publiée) |
 | [`set_security_updates_mode`](#set_security_updates_mode) | `PUT /v1/apps/{app_id}/security-updates` | Choisit les mises à jour de sécurité d'une application : manual (alertes) ou automatic |
 | [`get_shell_status`](#get_shell_status) | `GET /v1/apps/{app_id}/shell` | Disponibilité du terminal distant d'une application |
+| [`reset_app_state`](#reset_app_state) | `POST /v1/apps/{app_id}/state/reset` | Remet l'application à l'état neuf, confirmée par son nom : elle s'arrête, chaque base que la plateforme lui réserve est copiée dans son propre volume puis vidée, son journal d'installation est mis de côté, et elle redémarre en rejouant son installation ; reprend une remise à zéro interrompue |
+| [`list_app_state_resets`](#list_app_state_resets) | `GET /v1/apps/{app_id}/state/resets` | Remises à zéro de l'application, la plus récente d'abord |
+| [`get_app_state_reset`](#get_app_state_reset) | `GET /v1/apps/{app_id}/state/resets/{reset_id}` | Une remise à zéro, étape par étape : copie de chaque base et où elle est gardée, journal mis de côté, bases vidées |
 | [`regenerate_subdomain`](#regenerate_subdomain) | `POST /v1/apps/{app_id}/subdomain/regenerate` | Attribue un nouveau sous-domaine à une application |
 | [`transfer_app`](#transfer_app) | `POST /v1/apps/{app_id}/transfer` | Transfère une application vers un autre tenant |
 | [`get_installation_configuration`](#get_installation_configuration) | `GET /v1/environment-catalogue/n3/configuration` | Schéma de configuration de l'installation guidée |
@@ -2600,6 +2603,55 @@ Réponse : [`ShellStatus`](#type-shellstatus)
 paas-apps api call get_shell_status <app_id>
 ```
 
+### `reset_app_state`
+
+Remet l'application à l'état neuf, confirmée par son nom : elle s'arrête, chaque base que la plateforme lui réserve est copiée dans son propre volume puis vidée, son journal d'installation est mis de côté, et elle redémarre en rejouant son installation ; reprend une remise à zéro interrompue
+
+`POST /v1/apps/{app_id}/state/reset` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+
+Réponse : JSON libre
+
+```bash
+paas-apps api call reset_app_state <app_id> --yes
+```
+
+### `list_app_state_resets`
+
+Remises à zéro de l'application, la plus récente d'abord
+
+`GET /v1/apps/{app_id}/state/resets` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+
+Réponse : [`ListAppStateResetsResponse`](#type-listappstateresetsresponse)
+
+```bash
+paas-apps api call list_app_state_resets <app_id>
+```
+
+### `get_app_state_reset`
+
+Une remise à zéro, étape par étape : copie de chaque base et où elle est gardée, journal mis de côté, bases vidées
+
+`GET /v1/apps/{app_id}/state/resets/{reset_id}` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+| `reset_id` | chemin | string | oui |
+
+Réponse : JSON libre
+
+```bash
+paas-apps api call get_app_state_reset <app_id> <reset_id>
+```
+
 ### `regenerate_subdomain`
 
 Attribue un nouveau sous-domaine à une application
@@ -3291,8 +3343,11 @@ Offres, consommation, factures, moyens de paiement et alertes de dépense
 | [`list_plans`](#list_plans) | `GET /v1/billing/plans` | Offres disponibles |
 | [`get_billing_quota`](#get_billing_quota) | `GET /v1/billing/quota` | Quotas de facturation |
 | [`get_usage_dashboard`](#get_usage_dashboard) | `GET /v1/billing/usage` | Tableau de bord de consommation |
+| [`download_invoice_pdf`](#download_invoice_pdf) | `GET /v1/invoices/{id}/pdf` | Consulte : pdf |
 | [`redeem_my_promo`](#redeem_my_promo) | `POST /v1/me/redeem-promo` | Utilise un code promotionnel |
 | [`get_public_plans`](#get_public_plans) | `GET /v1/public/plans` | Offres publiques |
+| [`get_billing_profile`](#get_billing_profile) | `GET /v1/tenant/billing-profile` | Consulte : billing profile |
+| [`put_billing_profile`](#put_billing_profile) | `PUT /v1/tenant/billing-profile` | Modifie : billing profile |
 | [`list_tenant_invoices`](#list_tenant_invoices) | `GET /v1/tenant/invoices` | Factures du tenant |
 | [`get_tenant_invoice`](#get_tenant_invoice) | `GET /v1/tenant/invoices/{id}` | Détail d'une facture du tenant |
 | [`get_tenant_invoice_pdf`](#get_tenant_invoice_pdf) | `GET /v1/tenant/invoices/{id}/pdf` | Facture du tenant au format PDF |
@@ -3565,6 +3620,25 @@ Réponse : [`UsageDashboard`](#type-usagedashboard)
 paas-apps api call get_usage_dashboard
 ```
 
+### `download_invoice_pdf`
+
+Consulte : pdf
+
+`GET /v1/invoices/{id}/pdf` · publique · réponse contenu brut
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `id` | chemin | string | oui |
+| `tenant` | requête | string | oui |
+| `expires` | requête | integer | oui |
+| `signature` | requête | string | oui |
+
+Réponse : contenu brut
+
+```bash
+paas-apps api call download_invoice_pdf <id> [-q clé=valeur]
+```
+
 ### `redeem_my_promo`
 
 Utilise un code promotionnel
@@ -3587,6 +3661,31 @@ Réponse : tableau de [`PlanCatalogEntry`](#type-plancatalogentry)
 
 ```bash
 paas-apps api call get_public_plans
+```
+
+### `get_billing_profile`
+
+Consulte : billing profile
+
+`GET /v1/tenant/billing-profile` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+Réponse : [`BillingProfile`](#type-billingprofile)
+
+```bash
+paas-apps api call get_billing_profile
+```
+
+### `put_billing_profile`
+
+Modifie : billing profile
+
+`PUT /v1/tenant/billing-profile` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+Corps : [`BillingProfile`](#type-billingprofile)  
+Réponse : [`BillingProfile`](#type-billingprofile)
+
+```bash
+paas-apps api call put_billing_profile -d '<json>' --yes
 ```
 
 ### `list_tenant_invoices`
@@ -5399,7 +5498,7 @@ Fonctions serverless
 
 `GET /v1/functions` · authentifiée (session ou jeton) · réponse `{"data": …}`
 
-Réponse : tableau de [`FunctionDeployment`](#type-functiondeployment)
+Réponse : tableau de JSON libre
 
 ```bash
 paas-apps api call list_functions
@@ -5412,7 +5511,7 @@ Crée une fonction serverless
 `POST /v1/functions` · authentifiée (session ou jeton) · réponse `{"data": …}`
 
 Corps : [`CreateFunctionRequest`](#type-createfunctionrequest)  
-Réponse : [`FunctionDeployment`](#type-functiondeployment)
+Réponse : JSON libre
 
 ```bash
 paas-apps api call create_function -d '<json>' --yes
@@ -5428,7 +5527,7 @@ Détail d'une fonction
 |---|---|---|---|
 | `id` | chemin | string | oui |
 
-Réponse : [`FunctionDeployment`](#type-functiondeployment)
+Réponse : JSON libre
 
 ```bash
 paas-apps api call get_function <id>
@@ -7389,6 +7488,14 @@ paas-apps api call post_restore_snapshot <app_id> <name> <snapshot_id> --yes
 | `instances` | integer | oui |
 | `size` | string | non |
 
+### Type `AddonBackup`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `tier` | string | oui |
+| `last_backup` | string | non |
+| `last_completed_at` | string | non |
+
 ### Type `AdmissionPreflight`
 
 | Champ | Type | Obligatoire |
@@ -7518,6 +7625,7 @@ Seuls `id` et `name` sont garantis. `http_endpoints`, `http_endpoints_status` et
 | `status` | string | oui |
 | `var_name` | string | oui |
 | `aliases` | tableau de string | non |
+| `backup` | [`AddonBackup`](#type-addonbackup) | non |
 
 ### Type `AppConfigMap`
 
@@ -7823,6 +7931,14 @@ L'échec du dernier déploiement d'une application, dans la liste (`last_failure
 | `plan` | [`Plan`](#type-plan) | oui |
 | `usage` | [`UsageDashboard`](#type-usagedashboard) | oui |
 | `last_invoice` | [`Invoice`](#type-invoice) | non |
+
+### Type `BillingProfile`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `legal_name` | string | oui |
+| `address_lines` | tableau de string | oui |
+| `vat_number` | string | non |
 
 ### Type `BillingQuotaResponse`
 
@@ -8277,6 +8393,7 @@ Provenance d'un build : sources, étapes, scan, SBOM, signature, promotion
 | `tenant_id` | string | non |
 | `name` | string | oui |
 | `image` | string | oui |
+| `command` | tableau de string | non |
 | `gpu_type` | string | non |
 | `gpu_count` | integer | non |
 | `memory` | string | non |
@@ -8530,6 +8647,7 @@ API 2.48.0 : la release qu'une application sert, dans `get_app` : son identifian
 | `secrets` | tableau de [`SecretFinding`](#type-secretfinding) | oui |
 | `error` | [`PaasError`](#type-paaserror) | non |
 | `composer` | tableau de [`ComposerRead`](#type-composerread) | non |
+| `database` | [`ScanDatabase`](#type-scandatabase) | non |
 
 ### Type `CveSummary`
 
@@ -8951,23 +9069,6 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `bandwidth_gb` | number | oui |
 | `build_minutes` | number | oui |
 
-### Type `FunctionDeployment`
-
-| Champ | Type | Obligatoire |
-|---|---|---|
-| `app_id` | string | non |
-| `build_id` | string | non |
-| `id` | string | oui |
-| `tenant_id` | string | oui |
-| `name` | string | oui |
-| `image` | string | oui |
-| `gpu_type` | string | non |
-| `gpu_count` | integer | non |
-| `memory` | string | non |
-| `cpu` | integer | non |
-| `timeout_seconds` | integer | non |
-| `max_concurrency` | integer | non |
-
 ### Type `FunctionInvocation`
 
 | Champ | Type | Obligatoire |
@@ -8978,6 +9079,21 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `phase` | string | oui |
 | `input_ref` | string | non |
 | `output_ref` | string | non |
+| `reason` | string | non |
+| `error` | string | non |
+| `exit_code` | integer | non |
+| `started_at` | string | non |
+| `finished_at` | string | non |
+| `duration_seconds` | number | non |
+| `gpu_seconds` | number | non |
+| `output_bytes` | integer | non |
+| `namespace` | string | non |
+| `cancel_requested` | boolean | non |
+| `forgotten` | boolean | non |
+| `created_at` | string | non |
+| `responsibility` | JSON libre | non |
+| `output` | string | non |
+| `output_encoding` | JSON libre | non |
 
 ### Type `GetAddonMetricsResponse`
 
@@ -9703,6 +9819,7 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `issued_at` | string | oui |
 | `due_at` | string | oui |
 | `paid_at` | string | non |
+| `number` | string | non |
 
 ### Type `InvoiceListItem`
 
@@ -9735,6 +9852,8 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 |---|---|---|
 | `url` | string | non |
 | `note` | string | oui |
+| `sha256` | string | non |
+| `expires_at` | string | non |
 
 ### Type `InvokeRequest`
 
@@ -9875,6 +9994,13 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `name` | JSON libre | non |
 | `status` | JSON libre | non |
 | `alerts` | JSON libre | non |
+
+### Type `ListAppStateResetsResponse`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `app_id` | JSON libre | non |
+| `resets` | JSON libre | non |
 
 ### Type `ListBillingAlertsResponse`
 
@@ -10557,6 +10683,7 @@ Erreur complète d'un build, d'un scan, d'un plan, d'une admission ou d'un déma
 | `replicas` | integer | oui |
 | `ready` | integer | oui |
 | `pods` | tableau de [`PodRef`](#type-podref) | non |
+| `schedule` | string | non |
 
 ### Type `ProcessScaleInfo`
 
@@ -10645,6 +10772,7 @@ API 2.48.0 : la valeur d'un nom que le paas.xml déclare fournie par le locatair
 |---|---|---|
 | `name` | JSON libre | non |
 | `resumed_deploy_id` | JSON libre | non |
+| `reached` | JSON libre | non |
 | `state` | JSON libre | non |
 | `missing` | JSON libre | non |
 
@@ -11139,7 +11267,8 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 
 | Champ | Type | Obligatoire |
 |---|---|---|
-| `command` | string | oui |
+| `command` | string | non |
+| `process` | string | non |
 | `run_type` | string | non |
 | `size` | string | non |
 | `timeout_seconds` | integer | non |
@@ -11225,6 +11354,14 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 | `target_memory_percent` | integer | non |
 | `scale_down_stabilization_secs` | integer | non |
 | `scale_up_stabilization_secs` | integer | non |
+
+### Type `ScanDatabase`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `updated_at` | string | oui |
+| `age_hours` | integer | oui |
+| `source` | string | non |
 
 ### Type `ScanResult`
 
@@ -11501,6 +11638,8 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 | `name` | string | non |
 | `protocol` | string | non |
 | `dedicated` | boolean | non |
+| `private` | boolean | non |
+| `route` | string | non |
 | `process` | string | non |
 
 ### Type `TeamMember`

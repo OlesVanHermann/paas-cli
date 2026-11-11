@@ -3,6 +3,28 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.81.54 — 2026-11-11
+
+- **CLI `paas-apps` 2.81.54**, vérifiée contre l’API client **2.81.54**.
+- **`paas-apps apps reset-state`** : remet une application à l’état neuf et rejoue son installation ; avec
+  `--volumes`, les données de ses services décrits et ses volumes sont mis de côté, jamais effacés.
+- **`paas-apps run NOM`** : lance un job que l’application déclare et le suit jusqu’à sa fin.
+- **`paas-apps builds cve`** dit la base de failles qui a servi au scan, sa date et son âge.
+- **`paas-apps builds bases`** : une révision remplacée affiche `superseded`, sans échéance.
+- **`paas-apps ps`** : un cron donne son planning et son état, `scheduled` entre deux exécutions, `running`
+  pendant l’une d’elles, `suspended` quand il est suspendu.
+- **`paas-apps secrets provide`** dit ce que devient la valeur quand une release est déjà servie : ses processus
+  ont redémarré pour la lire, ou la liront à leur prochain démarrage ; sinon la release suivante la lira, ou elle
+  est gardée, avec ce qu’il faut relancer.
+- **Contrat public** de l’API 2.81.54 : les fonctions et leurs appels enregistrés, les factures émises et leur PDF, les
+  sauvegardes des services, les ports TCP privés ou routés, la base de failles d’un rapport de scan,
+  le planning d’un cron (`schedule`) et ce qu’atteint une valeur fournie (`reached`).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.81.54 : étapes de build PHP, montées Composer déclarées,
+  MariaDB par le relais local en PHP, catalogues PHP 2026.11.10.php.28 et php.29 (recette avec brotli), installation
+  sans navigateur avec le compte initial généré, build Java par Ant avec les dépendances qu’Ivy résout, processus à
+  image propre à côté d’un cycle de vie, release et maintenance d’une app à processus d’image propre, relais local
+  PostgreSQL, exceptions CVE nommées par l’identifiant de leur base d’avis.
+
 ## v2.75.0 — 2026-11-06
 
 - **CLI `paas-apps` 2.75.0**, vérifiée contre l’API client **2.75.0**.

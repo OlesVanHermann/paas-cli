@@ -84,6 +84,8 @@ export PAAS_CREDENTIALS_FILE=/dev/shm/paas-session-$$/credentials.json
 | Bases admises pour le `FROM` d'un Dockerfile, et dernier rescan de chaque image publiée (`RESCAN`) | `paas-apps builds bases` |
 | Mises à jour de sécurité d'une application : mode et historique | `paas-apps apps security-updates NOM` |
 | Choisir le mode des mises à jour de sécurité | `paas-apps apps security-updates NOM --mode manual` (ou `automatic`) |
+| Remettre une application à l'état neuf : bases copiées puis vidées, journal d'installation mis de côté, installation rejouée | `paas-apps apps reset-state NOM --confirm NOM` |
+| Suivre les remises à zéro d'une application | `paas-apps apps reset-state NOM --status` |
 | Releases avec leur état courant et leur code d'échec | `paas-apps --app NOM releases list --limit 5` |
 | Une release et son échec complet | `paas-apps --app NOM releases info RELEASE_ID` |
 | Processus et pods de la release courante (`(superseded)` : release remplacée) | `paas-apps --app NOM ps` |
@@ -236,7 +238,12 @@ BUILD=$(paas-apps --app NOM --json builds list --limit 1 | jq -r '.[0].build_id'
   `paas scale web 1` la sert. `awaiting_secrets` : la release attend des
   valeurs que la personne fournit (`secrets provided`) ; demandez-les-lui,
   ne les inventez pas, et transmettez-les par fichier privé ou entrée
-  standard (`secrets provide`).
+  standard (`secrets provide`). Une valeur fournie à une application déjà
+  servie l'atteint (API 2.81.35) : la commande dit si ses processus ont
+  redémarré, ou ce qu'il reste à relancer.
+- **Cron** : `ps` donne son planning et son état (API 2.81.32) :
+  `scheduled` entre deux exécutions, `running` pendant l'une d'elles,
+  `suspended` quand `paas scale CRON 0` l'a suspendu (`1` le reprend).
 - **Qui doit agir** : la ligne `owner` est l'imputation du verdict ; une
   ligne `now` donne la lecture des règles du jour quand elle diffère : la
   marche à suivre affichée suit `now`.
