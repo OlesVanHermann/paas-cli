@@ -3,7 +3,7 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.81.54.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.81.68.
 
     Il couvre les 444 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.81.54
+  x-paas-api-version-tested: 2.81.68
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -14555,6 +14555,8 @@ components:
           $ref: '#/components/schemas/Percentage'
         status:
           type: string
+        enforced:
+          type: boolean
       required:
       - plan
       - period_start
@@ -14563,6 +14565,7 @@ components:
       - limits
       - percentage
       - status
+      - enforced
     Block:
       type: object
       properties:
