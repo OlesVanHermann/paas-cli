@@ -3,7 +3,7 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.81.68.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.81.76.
 
     Il couvre les 444 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.81.68
+  x-paas-api-version-tested: 2.81.76
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -13657,6 +13657,12 @@ components:
           nullable: true
           x-paas-observed-values:
           - running
+          - sleeping
+          - scheduled
+          - pending
+          - error
+          - blocked
+          description: '`running` : l''application sert une version ; `sleeping` (API 2.81.71) : aucun de ses processus ne tourne (mise à 0, mise en veille), `paas scale web 1` la réveille et son adresse rend une page 503 qui le dit ; `scheduled` : une application de crons seuls ; `pending` : sa première version n''est pas encore en service ; `error` : sa dernière version a échoué ; `blocked` : son installation est arrêtée.'
         error_message:
           type: string
           nullable: true
@@ -13767,6 +13773,10 @@ components:
           items:
             type: object
             additionalProperties: true
+        web:
+          type: boolean
+          nullable: true
+          description: 'API 2.81.72 : si l''application a un processus web, celui que sert son adresse : `true` (même à 0 réplique), `false` quand elle sert une version sans processus web (un worker, un serveur TCP, des crons seuls : son adresse ne sert pas de pages), `null` quand ce n''est pas connu (aucune version servie).'
         exposed_secrets:
           type: array
           nullable: true

@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-444 opérations, vérifiées contre l'API 2.81.68. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+444 opérations, vérifiées contre l'API 2.81.76. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -7605,6 +7605,7 @@ Seuls `id` et `name` sont garantis. `http_endpoints`, `http_endpoints_status` et
 | `http_endpoints` | tableau de JSON libre | non |
 | `http_endpoints_status` | string | non |
 | `tcp_ports` | tableau de JSON libre | non |
+| `web` | boolean | non |
 | `exposed_secrets` | tableau de JSON libre | non |
 | `serving_deploy_id` | string | non |
 | `current_release` | [`CurrentRelease`](#type-currentrelease) | non |

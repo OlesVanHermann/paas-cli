@@ -1,6 +1,6 @@
 # Guide : écrire, vérifier et pousser un paas.xml
 
-État au 2026-11-11, plateforme v2.81.68, CLI 2.81.60. Chaque commande et chaque code d'erreur cités ici ont été
+État au 2026-11-12, plateforme v2.81.76, CLI 2.81.60. Chaque commande et chaque code d'erreur cités ici ont été
 mesurés, à la version qu'ils nomment.
 
 ## 1. Partir d'un exemple ou d'un squelette
@@ -229,6 +229,7 @@ paas config plan --catalogue ../catalogue-store.json
 | `ENV_JAVA_IVY_SETTINGS_UNSUPPORTED` | L'arbre d'un build Ant porte ses propres réglages d'Ivy (`ivysettings.xml`) : ils nommeraient d'autres dépôts que la liste produite | Pas encore servi (v2.81.45) : un build dont les dépendances sont sur Maven Central s'en passe ; sinon, c'est à la plateforme d'évoluer (`Paas`) |
 | `ENV_DEPENDENCY_LIST_STALE` après un changement de `build.jvm.properties` | La liste a été produite pour d'autres options ; les propriétés en font partie, Maven et Ivy les lisent | `paas dependencies produce --app <app>` la refait depuis la tête de la branche ; le build repart ensuite seul |
 | `ENV_PHP_EXTENSION_UNAVAILABLE` pour `brotli` | Le `composer.json` exige `ext-brotli` et aucune recette déclarée ne la porte | `build.recipe` à `php-8.4.27-apache-alpine-full-brotli-v15` et `build.catalogue` à `2026.11.10.php.29` (v2.81.44), avec les 33 extensions de la recette, dans l'ordre du catalogue |
+| `security_scan_blocked` sur apache2 2.4.69-r0 (CVE-2026-119618, 2026-11-12) | Une faille CRITICAL dans l'image de toute recette PHP du catalogue php.29 | `build.catalogue` à `2026.11.12.php.30` (v2.81.76) : la même recette, corrigée |
 | `security_scan_blocked` sur libxslt 1.1.43-r3 (2026-11-10) | Deux failles HIGH dans l'image d'une recette PHP full du catalogue php.27 | `build.catalogue` à `2026.11.10.php.28` (v2.81.42) : la même recette, corrigée |
 | `admission_served_observation_mismatch` sur la release d'une app dont un processus a son image propre ; compte initial illisible (409 « initial application credentials are not available ») | Avant v2.81.52, la release ne retrouvait pas les images de ces processus | Depuis v2.81.52 : redéployer (`paas deploy --force`) ; l'app à 0 réplique, la release s'applique à 0 et est promue |
 | `admission_runtime_serving_identity_mismatch` sur `paas scale`, un redémarrage ou `paas run` d'une telle app | Avant v2.81.53, le pod du processus à image propre n'était pas reconnu | Depuis v2.81.53 : admis |
@@ -271,6 +272,7 @@ paas config plan --catalogue ../catalogue-store.json
 | `V2_VALUE_INVALID@security.block_on` | `medium` ou `low` | `high`, `critical` ou `none` |
 | `V2_DUPLICATE_NAME@security.cve_exceptions[N]` | Deux entrées pour la même faille dans le même paquet | En garder une |
 | `rollout_failed` | La release est construite et admise mais ne reste pas prête, ou sa commande de release échoue | Lire `details.reason` et la fin du journal : `oom_killed` → `resources.memory` ; `probe_failed` → `healthcheck` et port d'écoute ; `process_exited` → commande, variables, secrets ; `container_config` → secret manquant ; `not_ready` → sonde de démarrage |
+| `lifecycle_http_check_failed` | Une vérification HTTP du paas.xml (`lifecycle.http_checks`) n'est pas satisfaite : la page ne rend pas le statut ou le texte attendus | Lire `details.technical_step` (la vérification, la requête, le statut reçu, l'attente) et la réponse dans l'extrait du journal ; compléter l'app (contenu, données) ou corriger la vérification |
 | `admission_build_required`, « source must start with forgejo:// » | Image ou dépôt Git externe | Pousser l'arbre sur le dépôt de l'app |
 | `build_policy.base_not_admitted`, `build_policy.vendor_application_image` | Build par le `Dockerfile` du dépôt sur une base qui n'est ni l'outillage ni une image de recette publiée, ou sur une image d'application | Partir d'une base listée par `paas builds bases`, ou écrire un `paas.xml` avec une recette ; le Dockerfile amont reste alors une source inerte |
 | `Permission denied (publickey)` | Clé SSH sans effet | Pousser en HTTPS (étape 5.1) |

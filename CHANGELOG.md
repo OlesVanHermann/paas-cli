@@ -3,9 +3,11 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
-## v2.81.68 — 2026-11-11
+## v2.81.76 — 2026-11-12
 
-- **CLI `paas-apps` 2.81.68**, vérifiée contre l’API client **2.81.68**.
+- **CLI `paas-apps` 2.81.76**, vérifiée contre l’API client **2.81.76**.
+- **`paas-apps apps list`** et **`apps info`** : une application sans processus web (un worker, un serveur TCP, des
+  crons seuls) le disent (`no web process`) au lieu de présenter son adresse comme un site.
 - **`paas-apps apps reset-state`** : remet une application à l’état neuf et rejoue son installation ; avec
   `--volumes`, les données de ses services décrits et ses volumes sont mis de côté, jamais effacés.
 - **`paas-apps run NOM`** : lance un job que l’application déclare et le suit jusqu’à sa fin.
@@ -16,11 +18,12 @@ version installée.
 - **`paas-apps secrets provide`** dit ce que devient la valeur quand une release est déjà servie : ses processus
   ont redémarré pour la lire, ou la liront à leur prochain démarrage ; sinon la release suivante la lira, ou elle
   est gardée, avec ce qu’il faut relancer.
-- **Contrat public** de l’API 2.81.68 : les fonctions et leurs appels enregistrés, les factures émises et leur PDF, les
+- **Contrat public** de l’API 2.81.76 : les fonctions et leurs appels enregistrés, les factures émises et leur PDF, les
   sauvegardes des services, les ports TCP privés ou routés, la base de failles d’un rapport de scan,
   le planning d’un cron (`schedule`), ce qu’atteint une valeur fournie (`reached`) et si le quota du palier gratuit
-  s’applique (`enforced`).
-- **Documentation du `paas.xml`** à jour de la plateforme 2.81.68 : étapes de build PHP, montées Composer déclarées,
+  s’applique (`enforced`), si une application a un processus web (`web`) et l’état `sleeping` d’une application
+  dont aucun processus ne tourne.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.81.76 : étapes de build PHP, montées Composer déclarées,
   MariaDB par le relais local en PHP, catalogues PHP 2026.11.10.php.28 et php.29 (recette avec brotli), installation
   sans navigateur avec le compte initial généré, build Java par Ant avec les dépendances qu’Ivy résout, processus à
   image propre à côté d’un cycle de vie, release et maintenance d’une app à processus d’image propre, relais local
@@ -28,7 +31,10 @@ version installée.
   rien, usage compté jusqu’à la purge d’une app, service d’un module autonome en pnpm (`build.node.standalone`), projets .NET construits avant la publication
   (`build.dotnet.prebuild`), frontal Bun d’un build Go, frontal Yarn berry d’un build Java ou .NET, but Maven
   nommé par son exécution (`build.jvm.goals`), montées de version déclarées en Java et en .NET
-  (`build.jvm.dependency_updates`, `build.dotnet.dependency_updates`).
+  (`build.jvm.dependency_updates`, `build.dotnet.dependency_updates`), copies de stockage remplacées à chaque
+  démarrage ou une fois par commit (`storage.seeds` en `always` ou `once`), vérifications HTTP
+  (`lifecycle.http_checks`) aussi en PHP, Python et Ruby et le refus `lifecycle_http_check_failed`, catalogue PHP
+  2026.11.12.php.30 (Apache httpd 2.4.71).
 
 ## v2.75.0 — 2026-11-06
 
