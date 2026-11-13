@@ -3,6 +3,15 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.87.0 — 2026-11-13
+
+- **CLI `paas-apps` 2.87.0**, vérifiée contre l’API client **2.87.0** : mêmes commandes et même contrat public
+  que 2.86.0.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.87.0 : un arbre poussé sans configuration est lu
+  comme sa famille, jamais reconnu à ses fichiers ; les variables qu’une image lit pour sa base se déclarent
+  depuis les champs du service (`services.*.env`) ; catalogue PHP `2026.11.13.php.32` (libpq 18.7 dans les
+  images qui chargent pgsql, zlib 1.4 dans les images PHP 8.5).
+
 ## v2.86.0 — 2026-11-13
 
 - **CLI `paas-apps` 2.86.0**, vérifiée contre l’API client **2.86.0**.

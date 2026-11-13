@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-13 : plateforme v2.86.0, CLI 2.86.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-13 : plateforme v2.87.0, CLI 2.87.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -790,6 +790,14 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Composer (v2.82.0) | `ext-Zend-OPcache` est servi par l'OPcache de la recette ; les montées (`build.php.composer_updates`) d'un verrou au content-hash périmé passent, et les extensions des seules dépendances de développement ne les arrêtent plus |
 | Publiés le 2026-11-13, après le déploiement | La liste C `c.6` (libvips) et la ligne Go `go.15` (libvips, libtensorflow, ONNX Runtime) ; SSH et borg dans une image servie (`packages.8` : `openssh-server` et la roue `borgbackup==1.4.5` que la plateforme construit) |
 | Publiée plus tard | La ligne Meteor (`build.runtime` meteor, `build.meteor`) attend que l'outil de Meteor 3.6 soit révisé (failles CRITICAL de ses dépendances npm) |
+
+## 5 novotricies. v2.87.0 (en production depuis le 2026-11-13)
+
+| Fonction | Ce qui change |
+|---|---|
+| Aucune application reconnue à son nom (v2.87.0) | La plateforme ne traite jamais une application par son nom : un arbre poussé sans configuration n'est plus reconnu à ses fichiers ni à ses dépendances comme un logiciel connu ; il est lu et planifié comme sa famille (langage, gestionnaire de paquets, verrous), ou refusé par le refus nommé de sa famille. Ce qui est propre à une application se déclare dans son `paas.xml`. |
+| Variables d'une image (v2.87.0) | Les variables qu'une image lit pour sa base ne se déduisent plus du nom de l'image : elles se déclarent depuis les champs du service (`services.*.env`, gabarits `{{services.<n>.…}}`) ; le langage de l'instrumentation OpenTelemetry se déclare quand l'image ne le dit pas. |
+| Publié le 2026-11-13 : PHP (catalogue `2026.11.13.php.32`) | Les six images PHP 8.4 qui chargent `pgsql` passent à libpq 18.7 (les 38 failles HIGH de libpq 18.6 refusaient leurs builds au scan), les deux images PHP 8.5 à zlib 1.4 ; les recettes gardent leurs identifiants, les plans figés gardent leur catalogue. |
 
 ## 6. Prévu
 
