@@ -3,9 +3,11 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
-## v2.81.76 — 2026-11-12
+## v2.86.0 — 2026-11-13
 
-- **CLI `paas-apps` 2.81.76**, vérifiée contre l’API client **2.81.76**.
+- **CLI `paas-apps` 2.86.0**, vérifiée contre l’API client **2.86.0**.
+- **`paas-apps apps info`** : une plage de ports s’affiche par son premier et son dernier port
+  (`port 49152-49200/udp open 10.0.0.41:49152-49200`), sur l’adresse privée propre à l’application.
 - **`paas-apps apps list`** et **`apps info`** : une application sans processus web (un worker, un serveur TCP, des
   crons seuls) le disent (`no web process`) au lieu de présenter son adresse comme un site.
 - **`paas-apps apps reset-state`** : remet une application à l’état neuf et rejoue son installation ; avec
@@ -18,12 +20,13 @@ version installée.
 - **`paas-apps secrets provide`** dit ce que devient la valeur quand une release est déjà servie : ses processus
   ont redémarré pour la lire, ou la liront à leur prochain démarrage ; sinon la release suivante la lira, ou elle
   est gardée, avec ce qu’il faut relancer.
-- **Contrat public** de l’API 2.81.76 : les fonctions et leurs appels enregistrés, les factures émises et leur PDF, les
+- **Contrat public** de l’API 2.86.0 : les fonctions et leurs appels enregistrés, les factures émises et leur PDF, les
   sauvegardes des services, les ports TCP privés ou routés, la base de failles d’un rapport de scan,
   le planning d’un cron (`schedule`), ce qu’atteint une valeur fournie (`reached`) et si le quota du palier gratuit
   s’applique (`enforced`), si une application a un processus web (`web`) et l’état `sleeping` d’une application
-  dont aucun processus ne tourne.
-- **Documentation du `paas.xml`** à jour de la plateforme 2.81.76 : étapes de build PHP, montées Composer déclarées,
+  dont aucun processus ne tourne, la plage d’un port TCP (`port_end`) et l’adresse où elle s’ouvre (`address`), le
+  texte qu’une sonde attend dans la réponse (`expect_body`).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.86.0 : étapes de build PHP, montées Composer déclarées,
   MariaDB par le relais local en PHP, catalogues PHP 2026.11.10.php.28 et php.29 (recette avec brotli), installation
   sans navigateur avec le compte initial généré, build Java par Ant avec les dépendances qu’Ivy résout, processus à
   image propre à côté d’un cycle de vie, release et maintenance d’une app à processus d’image propre, relais local
@@ -34,7 +37,11 @@ version installée.
   (`build.jvm.dependency_updates`, `build.dotnet.dependency_updates`), copies de stockage remplacées à chaque
   démarrage ou une fois par commit (`storage.seeds` en `always` ou `once`), vérifications HTTP
   (`lifecycle.http_checks`) aussi en PHP, Python et Ruby et le refus `lifecycle_http_check_failed`, catalogue PHP
-  2026.11.12.php.30 (Apache httpd 2.4.71).
+  2026.11.12.php.30 (Apache httpd 2.4.71) ; et de 2.82.0 à 2.86.0 : plages de ports TCP sur une adresse propre à
+  l’application (`tcp_ports[].port_range`, `{{app.tcp_address}}`), téléchargements d’un Dockerfile servis par la
+  plateforme, PHP 8.5 (catalogue php.31), Node 26 avec pnpm (node26.1), frontal Yarn avec cgo d’un build Go
+  (go.14), montées Gradle et Python, listes `build.python.requirements_files`, `source.vendored_node_modules`,
+  projet pnpm sous la racine (`build.node.root`), sonde qui lit la réponse (`healthcheck.expect_body`).
 
 ## v2.75.0 — 2026-11-06
 

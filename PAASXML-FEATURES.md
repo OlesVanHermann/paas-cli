@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-12 : plateforme v2.81.76, CLI 2.81.60, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-13 : plateforme v2.86.0, CLI 2.86.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -771,6 +771,25 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Build Ant avec Ivy (v2.81.45, R-0027.3) | `build.jvm.build_tool` = `ant` : `build.xml` dans le dossier où il tourne, ses cibles dans `goals`, les `-D` dans `properties` ; Ivy 2.5.3 résout `ivy.xml` depuis Maven Central dans la liste produite (`paas/dependencies/maven.lock.json`, avec le jar d'Ivy), le build hors réseau résout depuis elle seule ; un `ivysettings.xml` de l'arbre est refusé (`ENV_JAVA_IVY_SETTINGS_UNSUPPORTED`) (YaCy 1.941) |
 | Recette PHP avec brotli (v2.81.44, EX-04.3) | `php-8.4.27-apache-alpine-full-brotli-v15`, l'image full du catalogue 2026.11.10.php.28 et l'extension brotli (`php84-pecl-brotli` 0.21.0), dans le catalogue `2026.11.10.php.29` : une app dont le `composer.json` exige `ext-brotli` la déclare (`build.recipe`), avec la liste exacte de ses extensions (TransLite) |
 | Compte initial lu dans un fichier (v2.81.43) | En PHP, le compte initial que crée l'installateur natif (`lifecycle.install`, sans `account.create`) peut recevoir son mot de passe dans un fichier que l'entrée rend avant lui (`lifecycle.start_files`, gabarit avec `{{account.password}}`), comme sur son entrée standard : un installateur en ligne de commande qui lit son compte dans son fichier de configuration (Mautic : `mautic:install` lit `admin_*` dans `config/local.php`) ; jamais en argument |
+
+## 5 octotricies. De v2.82.0 à v2.86.0 (en production depuis le 2026-11-13)
+
+| Fonction | Ce qui change |
+|---|---|
+| Plage de ports TCP (v2.86.0) | `tcp_ports[].port_range` « A-B » (256 ports au plus, au-dessus de 1023, chacun au même numéro, sans `target_port` ni `route`) s'ouvre en un seul accord de l'opérateur, sur une adresse privée propre à l'app (le pool de l'installation, `PAAS_TCP_PRIVATE_POOL`), qui garde l'adresse du client (relais TURN) ; l'app lit cette adresse dans `{{app.tcp_address}}` (`PAAS_APP_TCP_ADDRESS`). Une entrée sans `port` ni `port_range` est refusée au plan |
+| Téléchargements d'un Dockerfile (v2.86.0) | La plateforme lit le Dockerfile sans l'exécuter et télécharge elle-même, hors du pod de build, ce qu'il va chercher : base d'une distribution nommée par étiquette (figée à son empreinte), paquets apt, fichiers HTTPS (`curl`, `wget`, `ADD https://`), épinglés par leur SHA-256 au premier passage ; le build les sert sans Internet. Un téléchargement qu'elle ne sait pas lire est refusé, ligne nommée (`ENV_DOCKERFILE_DOWNLOAD_UNSERVED`) |
+| PHP 8.5 (v2.85.0, catalogue `2026.11.13.php.31`) | `php-8.5.12-apache-alpine-v1` (PHP, Apache et les modules de toute la ligne : gd, mbstring, curl, dom, openssl, zip…) et `php-8.5.12-apache-alpine-full-v2` (les extensions de la variante full ; OPcache est intégré à PHP 8.5) |
+| Node 26 avec pnpm (v2.85.0, catalogue `2026.11.13.node26.1`) | `engines.node` 26 : la recette `node-26.13.0-pnpm-workspace-v5`, construite et servie par Node 26.13.0 (pnpm 10 à 12) |
+| Recette Go avec frontal Yarn et cgo (v2.84.0, catalogue `2026.11.12.go.14`) | `go-1.27.3-node24-yarn-cgo-v13` ; un frontal Yarn classique avec ses espaces de travail se déclare par `build.node.workspaces`, tels que son `package.json` les écrit |
+| Go : module du même dépôt et verrous Buf (v2.84.0) | Un `replace` vers un module du même dépôt (`./pkg/…`, avec son `go.mod`) est admis ; les verrous Buf v1 (condensé B4) sont vérifiés auprès du registre ; après les montées déclarées, la ligne de `go.sum` d'un module nouveau est prise à la base de sommes de Go |
+| Montées de dépendances (v2.83.0, v2.85.0) | npm : un dépendant monté dans la même liste se lit à sa version déclarée ; pnpm : un paquet partagé passe à la version qu'une montée exige ; Gradle : `build.jvm.dependency_updates`, forcées par un script d'init ; Python : `build.python.dependency_updates` sans liste exacte dans l'arbre ; Yarn classique servi : produites après le push |
+| Python : listes de dépendances nommées (v2.85.0) | `build.python.requirements_files` : les fichiers `.txt` d'où un projet aux dépendances dynamiques (`project.dynamic`) tire les siennes, 8 au plus |
+| Arbre Node (v2.83.0) | Une dépendance npm `file:` vers un dossier de l'arbre est liée comme un espace de travail ; un `node_modules` que l'arbre versionne comme son code se déclare par `source.vendored_node_modules` ; la recette pnpm servie lit un projet placé sous la racine (`build.node.root`) |
+| Sonde qui lit la réponse (v2.82.0) | `healthcheck.expect_body` : un texte que la réponse doit contenir ; la sonde lit le corps (une page d'erreur rendue en 200 n'est plus prête) ; avec `lifecycle.http_checks`, la sonde de démarrage attend leur passage |
+| Journal du cycle de vie (v2.82.0) | Chaque commande qui réussit (code, fin de sa sortie) et chaque étape HTTP qui passe sont écrites au journal, secrets masqués ; `failure.json` nomme la dernière étape réussie |
+| Composer (v2.82.0) | `ext-Zend-OPcache` est servi par l'OPcache de la recette ; les montées (`build.php.composer_updates`) d'un verrou au content-hash périmé passent, et les extensions des seules dépendances de développement ne les arrêtent plus |
+| Publiés le 2026-11-13, après le déploiement | La liste C `c.6` (libvips) et la ligne Go `go.15` (libvips, libtensorflow, ONNX Runtime) ; SSH et borg dans une image servie (`packages.8` : `openssh-server` et la roue `borgbackup==1.4.5` que la plateforme construit) |
+| Publiée plus tard | La ligne Meteor (`build.runtime` meteor, `build.meteor`) attend que l'outil de Meteor 3.6 soit révisé (failles CRITICAL de ses dépendances npm) |
 
 ## 6. Prévu
 

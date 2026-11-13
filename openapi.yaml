@@ -3,7 +3,7 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.81.76.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.86.0.
 
     Il couvre les 444 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.81.76
+  x-paas-api-version-tested: 2.86.0
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -16794,6 +16794,17 @@ components:
           items:
             type: string
           nullable: true
+        expect_body:
+          type: string
+          nullable: true
+        after_http_checks:
+          type: boolean
+          nullable: true
+        probe_program:
+          type: array
+          items:
+            type: string
+          nullable: true
     HostContract:
       type: object
       properties:
@@ -19671,6 +19682,13 @@ components:
           type: string
           nullable: true
         process:
+          type: string
+          nullable: true
+        port_end:
+          type: integer
+          format: int32
+          nullable: true
+        address:
           type: string
           nullable: true
       required:

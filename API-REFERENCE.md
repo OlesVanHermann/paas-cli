@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-444 opérations, vérifiées contre l'API 2.81.76. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+444 opérations, vérifiées contre l'API 2.86.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -9705,6 +9705,9 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `http_headers` | tableau de [`HttpHeaderSpec`](#type-httpheaderspec) | non |
 | `port` | integer | non |
 | `command` | tableau de string | non |
+| `expect_body` | string | non |
+| `after_http_checks` | boolean | non |
+| `probe_program` | tableau de string | non |
 
 ### Type `HostContract`
 
@@ -11643,6 +11646,8 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 | `private` | boolean | non |
 | `route` | string | non |
 | `process` | string | non |
+| `port_end` | integer | non |
+| `address` | string | non |
 
 ### Type `TeamMember`
 
