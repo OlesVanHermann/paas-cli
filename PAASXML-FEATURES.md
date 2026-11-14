@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-13 : plateforme v2.87.0, CLI 2.87.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-14 : plateforme v2.88.0, CLI 2.88.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -799,6 +799,18 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Variables d'une image (v2.87.0) | Les variables qu'une image lit pour sa base ne se déduisent plus du nom de l'image : elles se déclarent depuis les champs du service (`services.*.env`, gabarits `{{services.<n>.…}}`) ; le langage de l'instrumentation OpenTelemetry se déclare quand l'image ne le dit pas. |
 | Publié le 2026-11-13 : PHP (catalogue `2026.11.13.php.32`) | Les six images PHP 8.4 qui chargent `pgsql` passent à libpq 18.7 (les 38 failles HIGH de libpq 18.6 refusaient leurs builds au scan), les deux images PHP 8.5 à zlib 1.4 ; les recettes gardent leurs identifiants, les plans figés gardent leur catalogue. |
 
+## 5 quadragies. v2.88.0 (en production depuis le 2026-11-14)
+
+| Fonction | Ce qui change |
+|---|---|
+| Repli d'une application monopage (v2.88.0) | `build.static.fallback` nomme le document que le serveur HTTP de la plateforme rend à un chemin qui ne désigne aucun fichier du site publié (les routes de l'application, un lien profond), au lieu d'une réponse 404. |
+| Mises à jour npm à côté des archives Git (v2.88.0) | `build.node.dependency_updates` s'applique quand le verrou tient des archives Git que le build fournit (`build.node.git_archives`) ; ces archives restent à leur commit. |
+| Mises à jour Composer et vendor livré (v2.88.0) | `build.php.composer_updates` s'applique à côté de `build.php.composer_rebuild_committed_vendor` : le dossier `vendor` livré est reconstruit depuis le verrou révisé. |
+| Verrous Yarn incomplets (v2.88.0) | Une dépendance qu'aucune entrée du `yarn.lock` ne verrouille (les variantes d'un autre système) est réparée une fois par la plateforme au lieu d'être refusée ; le verrou de l'arbre reste tel quel. |
+| Python (v2.88.0) | Un paquet qu'un `uv.lock` ou un `poetry.lock` prend à l'index PyTorch des builds pour processeur est acquis par l'empreinte que le verrou épingle ; une mise à jour de `build.python.dependency_updates` remplace l'épinglage exact de son paquet dans les listes de l'app. |
+| Données de dépendances publiées (v2.88.0, N1.DATA) | Les correctifs de verrou (npm, Composer), de manifestes et de dépendances JVM, et les instantanés du registre npm, sont des documents publiés au magasin des catalogues, que le `paas.xml` désigne par leur empreinte : un correctif nouveau se publie sans nouvelle version de la plateforme. Un instantané vaut pour le verrou dont il est tiré : la préparation le reconstruit depuis le registre officiel et ne l'admet qu'à son empreinte (`ENV_NPM_REGISTRY_SNAPSHOT_SCOPE` au plan pour un instantané tiré d'un autre verrou). |
+| Erreurs nommées (v2.88.0) | Une extension PostgreSQL que la base refuse de créer est nommée, avec la clé `services.<nom>.extensions` qui la déclare ; un Prisma qui ne trouve pas OpenSSL 3 dans les images de la plateforme (avant 4.13.0) est refusé au plan, la voie de sortie nommée ; une résolution Maven au-delà de son budget dit la phase où elle s'est arrêtée ; une préparation des tests en échec propose `<test><tree>built</tree></test>`. |
+
 ## 6. Prévu
 
 Chaque capacité est développée comme une option générique : aucune app n'est codée dans la plateforme, l'app
@@ -808,7 +820,6 @@ qui en a besoin la déclare dans son `paas.xml`. L'ordre suit la feuille de rout
 |---|---|
 | EX-02, T-05.4 | Modules natifs Node (liaisons précompilées publiées, ou compilation en bac à sable hors réseau) et correctifs `patch-package` de l'amont appliqués hors réseau : Wiki.js (extract-files), cusdis (moteurs Prisma) ; ressources déclarées et scripts d'installation en npm et Yarn. Disponibles depuis v2.72.0 : ressources déclarées servies hors réseau en pnpm et PHP, scripts d'installation déclarés en pnpm, refus au plan des paquets au binaire posé par leur script (section 5 novodecies) |
 | N0.NET | Liens déclarés entre apps : disponibles depuis v2.30.0 (section 5 ter). Règles de sortie, IPv6 : prévus |
-| N1.DATA | Correctifs de verrou et instantanés de registre publiés comme données, sans recompiler la plateforme |
 | N2.BRUBY, N2.BPY | Combinaisons runtime × service manquantes (Ruby avec MySQL ou MariaDB). Disponibles depuis v2.62.0 : Python avec MySQL (section 5 septdecies) ; depuis v2.52.0 (section 5 nonies) : PHP avec PostgreSQL et Redis, Node et Go avec Redis et MariaDB, plusieurs services par app (N2.BPHP, N2.BNG, N2.MULTI) |
 | N2.PGEXT, N2.OPTIONS | PostgreSQL 17 ; réplicas, sauvegarde et PITR. Disponibles depuis v2.52.0 : les extensions de l'image publiée, les bases nommées et le droit de créer des bases ; PostGIS depuis v2.59.0 |
 | N0.PROC | Job (commande ponctuelle) ; processus séparés à côté d'un cycle de vie. Disponibles depuis v2.56.0 : worker, cron et release séparés en Node, PHP et Go (section 4) |

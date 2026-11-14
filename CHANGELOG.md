@@ -3,6 +3,15 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.88.0 — 2026-11-14
+
+- **CLI `paas-apps` 2.88.0**, vérifiée contre l’API client **2.88.0** : mêmes commandes et même contrat public
+  que 2.87.0 ; le contrat `openapi.yaml` nomme l’API contre laquelle il est vérifié (2.88.0).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.88.0 : `build.static.fallback` (le repli d’une
+  application monopage) ; mises à jour npm à côté des archives Git, mises à jour Composer avec un `vendor` livré
+  reconstruit ; verrous Yarn incomplets réparés par la plateforme ; index PyTorch des builds pour processeur ;
+  correctifs de verrou et instantanés du registre publiés comme données, désignés par leur empreinte.
+
 ## v2.87.0 — 2026-11-13
 
 - **CLI `paas-apps` 2.87.0**, vérifiée contre l’API client **2.87.0** : mêmes commandes et même contrat public
