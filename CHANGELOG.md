@@ -3,6 +3,17 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.90.0 — 2026-11-14
+
+- **CLI `paas-apps` 2.90.0**, vérifiée contre l’API client **2.90.0** : mêmes commandes et même contrat public
+  que 2.88.0.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.90.0 : `build.python.wheel_origins` (les origines
+  des roues qu’un `uv.lock` épingle par leur adresse) ; PHP 8.5 servi par Apache, la configuration lue par le
+  build ; montées Composer d’un projet en sous-dossier et à côté d’un dépôt `package` ; paquets Composer sans
+  archive pris sur leur forge ; montées Python écrites comme l’index les publie, et à côté de l’index de PyTorch ;
+  verrou Yarn d’un projet à espaces de travail produit par la plateforme ; Meteor (serveur du bundle sans réseau,
+  Dockerfile déclaré, services liés).
+
 ## v2.88.0 — 2026-11-14
 
 - **CLI `paas-apps` 2.88.0**, vérifiée contre l’API client **2.88.0** : mêmes commandes et même contrat public

@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-14 : plateforme v2.88.0, CLI 2.88.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-14 : plateforme v2.90.0, CLI 2.90.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -810,6 +810,25 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Python (v2.88.0) | Un paquet qu'un `uv.lock` ou un `poetry.lock` prend à l'index PyTorch des builds pour processeur est acquis par l'empreinte que le verrou épingle ; une mise à jour de `build.python.dependency_updates` remplace l'épinglage exact de son paquet dans les listes de l'app. |
 | Données de dépendances publiées (v2.88.0, N1.DATA) | Les correctifs de verrou (npm, Composer), de manifestes et de dépendances JVM, et les instantanés du registre npm, sont des documents publiés au magasin des catalogues, que le `paas.xml` désigne par leur empreinte : un correctif nouveau se publie sans nouvelle version de la plateforme. Un instantané vaut pour le verrou dont il est tiré : la préparation le reconstruit depuis le registre officiel et ne l'admet qu'à son empreinte (`ENV_NPM_REGISTRY_SNAPSHOT_SCOPE` au plan pour un instantané tiré d'un autre verrou). |
 | Erreurs nommées (v2.88.0) | Une extension PostgreSQL que la base refuse de créer est nommée, avec la clé `services.<nom>.extensions` qui la déclare ; un Prisma qui ne trouve pas OpenSSL 3 dans les images de la plateforme (avant 4.13.0) est refusé au plan, la voie de sortie nommée ; une résolution Maven au-delà de son budget dit la phase où elle s'est arrêtée ; une préparation des tests en échec propose `<test><tree>built</tree></test>`. |
+
+## 5 unquadragies. v2.89.0 (en production depuis le 2026-11-14)
+
+| Fonction | Ce qui change |
+|---|---|
+| PHP 8.5 servi par Apache (v2.89.0) | La configuration Apache que la plateforme rend charge le module de la ligne PHP de la recette (`mod_php85.so` pour 8.5) ; le build la lit avec Apache (`httpd -t`) et échoue, en la nommant, si la recette ne peut pas la servir, au lieu de chaque démarrage. |
+| Montées Composer d'un projet en sous-dossier (v2.89.0) | Avec `build.php.composer_project`, les montées déclarées (`build.php.composer_updates`) sont produites et installées pour le verrou du projet (`paas/dependencies/<projet>/composer.lock`), au lieu d'être ignorées. |
+| Montées Composer et dépôts déclarés (v2.89.0) | Une montée se fait à côté d'un dépôt `package` écrit dans le `composer.json` (ses paquets restent tels que le verrou les tient) ; un dépôt encore refusé est nommé, par son adresse ou ses paquets. Un paquet que le verrou installe depuis sa source Git seule s'acquiert par l'archive de son commit sur sa forge (GitHub, Codeberg, gitlab.com, framagit.org). |
+| Roues Python épinglées par leur adresse (v2.89.0) | `build.python.wheel_origins` déclare les origines https (un préfixe exact qui finit par `/`, par exemple les publications d'un dépôt GitHub) d'où un `uv.lock` épingle des roues par leur adresse avec leur empreinte : la plateforme les acquiert hors du build, vérifiées par cette empreinte, et ne suit les redirections de GitHub que vers les hôtes de ses fichiers ; une adresse hors de ces origines est refusée, nommée. |
+
+## 5 duoquadragies. v2.90.0 (en production depuis le 2026-11-14)
+
+| Fonction | Ce qui change |
+|---|---|
+| Montées Python à côté de l'index de PyTorch (v2.90.0) | Les montées déclarées (`build.python.dependency_updates`) révisent un `uv.lock` ou un `poetry.lock` qui prend un paquet sur un index que sert la plateforme (`torch` `+cpu`, l'index de PyTorch) : la résolution reste complète, ce paquet garde sa version et l'empreinte du verrou, et le profil `pytorch-cpu` admet la liste révisée ; une montée de ce paquet-là se change dans la liste de l'app (`ENV_PYTHON_DEPENDENCY_UPDATE_INDEX`). |
+| Montées Python écrites comme l'index (v2.90.0) | Une montée s'écrit comme le registre écrit la version : `nom@X.Y`, `nom@X.Y.Z` ou `nom@X.Y.Z.postN` ; une pré-version, une version de développement ou locale et une plage sont refusées, le refus nommant les formes admises. |
+| Verrou Yarn d'un projet à espaces de travail (v2.90.0) | La plateforme produit le verrou d'un projet Yarn classique à espaces de travail (`build.node.workspaces`) : les manifestes des membres sont lus avec celui du projet, une entrée hors de sa plage depuis un membre se répare comme une autre, et la liste produite est périmée dès qu'un manifeste de membre change. |
+| Meteor (v2.90.0) | Le serveur du bundle s'installe sans réseau ; un arbre Meteor garde le Dockerfile qu'il déclare (`build.source_dockerfile`) ; ses services déclarés, MongoDB compris, sont réservés et liés. |
+| Recettes publiées après les producteurs (v2.90.0) | Les producteurs admettent une recette par sa chaîne d'outils (famille, capacité, gestionnaire de paquets), non par une liste d'identifiants : une recette publiée après eux (Node 26 avec npm) n'est plus refusée à la préparation. |
 
 ## 6. Prévu
 
