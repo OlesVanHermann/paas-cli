@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-14 : plateforme v2.90.0, CLI 2.90.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-15 : plateforme v2.91.3, CLI 2.91.3, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -829,6 +829,46 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Verrou Yarn d'un projet à espaces de travail (v2.90.0) | La plateforme produit le verrou d'un projet Yarn classique à espaces de travail (`build.node.workspaces`) : les manifestes des membres sont lus avec celui du projet, une entrée hors de sa plage depuis un membre se répare comme une autre, et la liste produite est périmée dès qu'un manifeste de membre change. |
 | Meteor (v2.90.0) | Le serveur du bundle s'installe sans réseau ; un arbre Meteor garde le Dockerfile qu'il déclare (`build.source_dockerfile`) ; ses services déclarés, MongoDB compris, sont réservés et liés. |
 | Recettes publiées après les producteurs (v2.90.0) | Les producteurs admettent une recette par sa chaîne d'outils (famille, capacité, gestionnaire de paquets), non par une liste d'identifiants : une recette publiée après eux (Node 26 avec npm) n'est plus refusée à la préparation. |
+
+## 5 tresquadragies. v2.91.0 (en production depuis le 2026-11-14)
+
+| Fonction | Ce qui change |
+|---|---|
+| Yarn classique : dépendance Git du verrou (v2.91.0) | Une entrée du verrou résolue par un dépôt Git (`git+https://…#<commit>`) s'installe hors réseau depuis l'archive que le `paas.xml` déclare (`build.node.git_archives` : l'adresse `resolved` du verrou et le sha256 de l'archive), en Yarn classique et pour le frontend Yarn d'un build Go ; un `integrity` qui porte deux empreintes est admis quand l'une d'elles est celle de l'archive. |
+| Yarn classique : `engines` des dépendances (v2.91.0) | `build.node.ignore_engines` (booléen) installe sans le contrôle `engines.node` des dépendances (`--ignore-engines`), au build, dans l'image servie, aux tests et quand la plateforme produit le verrou ; Yarn classique et frontend Yarn d'un build Go. Un frontend que Yarn berry construit refuse les clés de Yarn classique (`ENV_YARN_BERRY_KEY_UNSUPPORTED`). |
+| Go avec un frontend Node : paquets écrits par le frontend (v2.91.0) | Un paquet du module Go que le frontend Node écrit sous ses sorties (`build.node.outputs`, par exemple un paquet qui embarque les fichiers construits) n'est plus refusé à la préparation (`ENV_GO_PACKAGE_UNRESOLVED`) : il est vendu sans lui et le frontend l'écrit au build. |
+| Composer : montées et vendor reconstruit (v2.91.0) | Une montée déclarée (`build.php.composer_updates`) révise le verrou et ne s'installe qu'en `composer-install-lock-v1` ; un autre mode est refusé au plan (`ENV_COMPOSER_DEPENDENCY_UPDATE_MODE`). Un vendor commité reconstruit admet un paquet sans commit, identifié par son archive https et son empreinte. |
+| Go : bibliothèques signées et pkg-config (v2.91.0) | Les bibliothèques déclarées (`build.go.libraries`) s'installent hors réseau sur la base de la chaîne, avec `pkg-config` (catalogue `go.16`, miroir `c-libraries-wolfi-v5`) ; une fermeture qui ne s'installe pas arrête le build par `ENV_GO_LIBRARY_INSTALL`, nommé, au lieu d'une erreur d'apk. |
+
+## 5 quaterquadragies. v2.91.1 (en production depuis le 2026-11-15)
+
+| Fonction | Ce qui change |
+|---|---|
+| Dockerfile : script de démarrage posé par un COPY (v2.91.1) | Un script de démarrage (`ENTRYPOINT`, `CMD`) lancé par son chemin, qu'un `COPY` du même étage pose depuis le contexte, est lu dans le contexte et jugé par la règle de démarrage (rien n'y récupère, ne clone ni ne génère l'application) ; un script ou une instruction que la lecture ne relie à rien est refusé en nommant l'instruction, le programme et la ligne. |
+| Maven : dépôts muets écartés (v2.91.1) | La production de la liste des dépendances sonde les dépôts que nomment les POM (8 s, 16 au plus) ; un dépôt qui ne répond pas est bloqué pour toute la résolution et retiré de la liste ; git-commit-id est sauté (`maven.gitcommitid.skip`). Une production hors budget nomme ces dépôts et les modules qui restaient à construire. |
+| Services : révision services.4 et extension bloom (v2.91.1) | La révision `2026.11.14.services.4` révise huit images (0 HIGH, 0 CRITICAL) ; l'extension PostgreSQL `bloom` est servie sur PostgreSQL 16 et 17, avec et sans PostGIS. |
+| Yarn classique avec OpenSSL 3 (v2.91.1) | `build.node.runtime_libraries` = `openssl3` avec la recette `node-24.20.0-yarn-classic-v2` (ligne `node-yarn-24-libraries`, catalogue `2026.11.15.node-yarn-libraries.1`) : l'image servie est Node 24.20.0 sur Wolfi, avec OpenSSL 3 et zlib ; la recette v1 avec `openssl3` est refusée en nommant la v2. |
+| Prisma de 3.13 à 4.12 avec OpenSSL 3 (v2.91.1) | Sur cette recette, la plateforme nomme à Prisma ses moteurs `debian-openssl-3.0.x` (le commit que le verrou épingle), au build, aux tests et dans l'image servie ; `@prisma/engines` se déclare dans `build.node.install_scripts` et les douze adresses de ses moteurs dans `assets` ; une adresse manquante est refusée par son nom (`ENV_NODE_PRISMA_ENGINES_UNDECLARED`). |
+| Mises à jour de sécurité des paquets système (v2.91.1) | Quand une liste `runtime-packages` plus récente publie, pour un paquet de `runtime.packages`, une version qui corrige une faille HIGH ou CRITICAL du scan de l'image servie, l'alerte des mises à jour de sécurité le dit ; en mode automatique, la plateforme inscrit la mise à jour dans `paas/security-updates.json`, construit ce commit et le sert. Un paquet déclaré avec sa version est seulement alerté. |
+
+## 5 quinquadragies. v2.91.2 (en production depuis le 2026-11-15)
+
+| Fonction | Ce qui change |
+|---|---|
+| Prisma : le client à son emplacement par défaut, en Yarn classique (v2.91.2) | Avec les moteurs que la plateforme nomme à Prisma, le client que `prisma generate` écrit à son emplacement par défaut (`node_modules/.prisma`) passe dans l'image servie, dont l'installation de production reconstruit `node_modules` ; un client généré ailleurs se déclare comme sortie (`build.node.outputs`). |
+| Prisma : les moteurs en npm, pnpm et Yarn classique (v2.91.2) | La plateforme écrit, depuis leurs gzips déclarés dans `assets`, les moteurs que le script de `@prisma/engines` de la version verrouillée télécharge (de 3.13 à 7.x), puis les nomme à Prisma au build, aux tests et dans l'image servie ; `@prisma/engines` n'a plus à être dans `build.node.install_scripts`. À partir de 7.0, le moteur de schéma statique (`linux-static-x64`). Une adresse absente est refusée par son nom (`ENV_NODE_PRISMA_ENGINES_UNDECLARED`). |
+| Réanalyse quotidienne de l'image servie (v2.91.2) | Chaque jour (03:30 UTC), la plateforme réanalyse le SBOM du build que sert chaque app avec la base de failles du jour, sans retirer l'image ; l'alerte des mises à jour de sécurité lit cette réanalyse avant le scan du build, et `paas apps info` la montre (« Served image rescan »). |
+| Capacités Linux non accordées : refus nommé (v2.91.2) | Un build dont le paas.xml ajoute des capacités (`runtime.security.capabilities_add`) que l'opérateur n'a pas accordées à l'app est refusé dès son lancement en les nommant (`PLAN_CAPABILITY_NOT_GRANTED`, au client : les demander à l'opérateur, une par une avec sa raison, ou les retirer) ; jusque-là, une indisponibilité présumée de la plateforme. |
+| Go : des montées de modules qui se contredisent (v2.91.2) | Un `go get` refusé des montées déclarées (`build.go.module_updates`) donne la raison de Go : une liste qui se contredit (une version déclarée en requiert une plus haute d'un autre module de la liste) est refusée avec la version à déclarer (`ENV_GO_MODULE_UPDATE_CONFLICT`), un module ou une version que le proxy de modules ne sert pas aussi (`ENV_GO_MODULE_UPDATE_UNKNOWN`). Déclarer d'abord les modules du haut du graphe : la sélection minimale monte leurs dépendances. |
+
+## 5 sexquadragies. v2.91.3 (en production depuis le 2026-11-15)
+
+| Fonction | Ce qui change |
+|---|---|
+| Yarn classique : une montée vise sa ligne (v2.91.3) | `build.node.dependency_updates` monte la ligne majeure de la version déclarée (la majeure, `0.y` d'une version 0.y.z) : une instance d'une autre ligne que sa plage refuse garde sa ligne, résolue de nouveau dans sa plage (postcss 8 monté à côté du postcss 6 d'un greffon plus ancien) ; une instance de la même ligne qui la refuse reste refusée, nommée. |
+| Yarn classique : les dépendances de développement chargées au lancement (v2.91.3) | `build.node.runtime_dependencies`, comme en npm et pnpm : le CLI que lance le cycle de vie (`prisma migrate deploy`) passe dans l'image servie avec ce qu'il requiert, copié de l'installation complète hors ligne là où l'installation de production laisse son chemin libre ; une autre version au même chemin est refusée, nommée. |
+| esbuild avant 0.13 : son binaire écrit par la plateforme (v2.91.3) | esbuild avant 0.13 (vite 2.0 à 2.5) n'a son binaire que par son script d'installation : la plateforme l'écrit au build et aux tests depuis l'archive de `esbuild-linux-64` de la même version, déclarée dans `assets` (`https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-<version>.tgz`, sa SHA-256) ; sans elle, le plan nomme l'adresse (`ENV_NODE_ESBUILD_BINARY_UNDECLARED`). |
+| Build Node : des échecs nommés (v2.91.3) | Un sous-chemin qu'un paquet installé n'exporte pas (`ERR_PACKAGE_PATH_NOT_EXPORTED`, une correspondance de dossier que Node ne lit plus depuis 17) est refusé par son nom, au client (`ENV_NODE_PACKAGE_SUBPATH_NOT_EXPORTED`) ; la ligne d'erreur citée est celle du programme, plus la ligne de fin de Yarn ou de npm ; une adresse que le miroir du build refuse pendant un script déclaré nomme la copie du paquet qui l'a demandée ; un échec sans sortie de commande n'est plus imputé à un code recopié d'une autre étape. |
 
 ## 6. Prévu
 

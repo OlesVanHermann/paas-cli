@@ -23,7 +23,7 @@ les agents IA (Claude Code…).
 | [`CHANGELOG.md`](CHANGELOG.md) | Contenu de la version publiée |
 | [`LICENSE`](LICENSE) | Licence MIT |
 
-**État** : CLI **2.90.0**, vérifiée contre l'API **2.90.0** : les 444 opérations
+**État** : CLI **2.91.3**, vérifiée contre l'API **2.91.3** : les 444 opérations
 du contrat répondent sur le serveur en service. La version de la CLI est celle
 de la plateforme qu'elle sert.
 - `paas-apps api` donne accès à **toutes les opérations** de l'API, sauf les
@@ -32,7 +32,7 @@ de la plateforme qu'elle sert.
   builds et des releases, les mises à jour de sécurité d'une application
   (`apps security-updates` : une alerte, ou une mise à jour faite par la
   plateforme, quand elle publie une révision corrigée de la base de son
-  image), les bases admises d'un Dockerfile avec le dernier rescan de chaque
+  image ou de ses paquets système), les bases admises d'un Dockerfile avec le dernier rescan de chaque
   image publiée (`builds bases`), et le **diagnostic complet d'un échec** :
   étape, cause, **qui doit agir** (`Cust` : le `paas.xml` ou le dépôt se
   corrige ; `Paas` : la plateforme ne sait pas encore le faire, et nomme ce

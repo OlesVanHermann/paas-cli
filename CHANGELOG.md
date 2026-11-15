@@ -3,6 +3,42 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.91.3 — 2026-11-15
+
+- **CLI `paas-apps` 2.91.3**, vérifiée contre l’API client **2.91.3** : mêmes commandes et même contrat public
+  que 2.91.2.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.91.3 : en Yarn classique, une montée de dépendance
+  vise la ligne majeure de sa version et `build.node.runtime_dependencies` est raccordé ; le binaire d’esbuild
+  avant 0.13 écrit par la plateforme depuis son archive déclarée dans `assets` ; des échecs de build Node nommés
+  (sous-chemin qu’un paquet n’exporte pas, adresse refusée pendant un script d’installation).
+
+## v2.91.2 — 2026-11-15
+
+- **CLI `paas-apps` 2.91.2**, vérifiée contre l’API client **2.91.2** : mêmes commandes et même contrat public
+  que 2.91.1 ; `apps security-updates` montre aussi la dernière réanalyse quotidienne de l’image servie.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.91.2 : client et moteurs de Prisma en npm, pnpm et
+  Yarn classique (`assets`) ; réanalyse quotidienne de l’image servie ; refus nommé des capacités Linux non
+  accordées ; montées de modules Go qui se contredisent nommées.
+
+## v2.91.1 — 2026-11-15
+
+- **CLI `paas-apps` 2.91.1**, vérifiée contre l’API client **2.91.1** : mêmes commandes et même contrat public
+  que 2.91.0 ; `apps security-updates` montre aussi les alertes des paquets système (`runtime.packages`) qu’une
+  liste plus récente corrige.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.91.1 : script de démarrage d’un Dockerfile posé par
+  un `COPY` ; dépôts Maven qui ne répondent pas écartés de la production de la liste ; révision des services avec
+  l’extension PostgreSQL `bloom` ; Yarn classique avec OpenSSL 3 (`build.node.runtime_libraries`) et moteurs de
+  Prisma déclarés dans `assets` ; mises à jour de sécurité des paquets système.
+
+## v2.91.0 — 2026-11-14
+
+- **CLI `paas-apps` 2.91.0**, vérifiée contre l’API client **2.91.0** : mêmes commandes et même contrat public
+  que 2.90.0.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.91.0 : dépendances Git d’un verrou Yarn classique
+  installées depuis leur archive déclarée (`build.node.git_archives`) ; `build.node.ignore_engines` (installer
+  sans le contrôle `engines` des dépendances) ; paquets Go écrits par le frontend Node d’un build Go ; montées
+  Composer réservées à `composer-install-lock-v1` ; bibliothèques Go signées installées avec `pkg-config`.
+
 ## v2.90.0 — 2026-11-14
 
 - **CLI `paas-apps` 2.90.0**, vérifiée contre l’API client **2.90.0** : mêmes commandes et même contrat public
