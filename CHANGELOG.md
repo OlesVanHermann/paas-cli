@@ -3,6 +3,26 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.92.1 — 2026-11-16
+
+- **CLI `paas-apps` 2.92.1**, vérifiée contre l’API client **2.92.1** : mêmes commandes et même contrat public
+  que 2.92.0.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.92.1 : une variable `OTEL_*` que l’`env` du `paas.xml`
+  déclare reste celle de l’app ; avec son point d’arrivée OTLP/HTTP, la plateforme pose
+  `OTEL_EXPORTER_OTLP_PROTOCOL` = `http/protobuf` ; le résumé d’un build qu’un refus documenté arrête commence par
+  ce refus et son détail ; la réanalyse quotidienne lit l’image telle qu’elle est servie.
+
+## v2.92.0 — 2026-11-16
+
+- **CLI `paas-apps` 2.92.0**, vérifiée contre l’API client **2.92.0** : mêmes commandes et même contrat public
+  que 2.91.3.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.92.0 : `build.php.composer_vendor_exclude` retire de
+  l’image servie des fichiers du vendor que l’app n’exécute pas ; les binaires précompilés que l’app ou ses
+  dépendances livrent sont nommés au client dans un refus du scan ; un fichier que Node 22 et plus charge comme un
+  module ES par `require` est refusé par son nom, avec la voie ; chaque sortie déclarée est vérifiée là où elle est
+  copiée ; une variable `OTEL_*` posée par `paas config set` reste celle de l’app (celles de l’`env` du
+  `paas.xml` pas encore).
+
 ## v2.91.3 — 2026-11-15
 
 - **CLI `paas-apps` 2.91.3**, vérifiée contre l’API client **2.91.3** : mêmes commandes et même contrat public

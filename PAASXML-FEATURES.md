@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-15 : plateforme v2.91.3, CLI 2.91.3, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-16 : plateforme v2.92.1, CLI 2.92.1, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -869,6 +869,26 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Yarn classique : les dépendances de développement chargées au lancement (v2.91.3) | `build.node.runtime_dependencies`, comme en npm et pnpm : le CLI que lance le cycle de vie (`prisma migrate deploy`) passe dans l'image servie avec ce qu'il requiert, copié de l'installation complète hors ligne là où l'installation de production laisse son chemin libre ; une autre version au même chemin est refusée, nommée. |
 | esbuild avant 0.13 : son binaire écrit par la plateforme (v2.91.3) | esbuild avant 0.13 (vite 2.0 à 2.5) n'a son binaire que par son script d'installation : la plateforme l'écrit au build et aux tests depuis l'archive de `esbuild-linux-64` de la même version, déclarée dans `assets` (`https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-<version>.tgz`, sa SHA-256) ; sans elle, le plan nomme l'adresse (`ENV_NODE_ESBUILD_BINARY_UNDECLARED`). |
 | Build Node : des échecs nommés (v2.91.3) | Un sous-chemin qu'un paquet installé n'exporte pas (`ERR_PACKAGE_PATH_NOT_EXPORTED`, une correspondance de dossier que Node ne lit plus depuis 17) est refusé par son nom, au client (`ENV_NODE_PACKAGE_SUBPATH_NOT_EXPORTED`) ; la ligne d'erreur citée est celle du programme, plus la ligne de fin de Yarn ou de npm ; une adresse que le miroir du build refuse pendant un script déclaré nomme la copie du paquet qui l'a demandée ; un échec sans sortie de commande n'est plus imputé à un code recopié d'une autre étape. |
+
+## 5 septquadragies. v2.92.0 (en production depuis le 2026-11-16)
+
+| Fonction | Ce qui change |
+|---|---|
+| PHP : retirer du vendor ce que l'app n'exécute pas (v2.92.0) | `build.php.composer_vendor_exclude` (avec `composer-install-lock-v1`) : jusqu'à 32 chemins du vendor que l'installation Composer écrit (`vendor/…`, ni `autoload.php` ni `composer/`, aucun dans un autre), retirés de l'image servie après l'installation et sa vérification ; un chemin absent après l'installation est refusé (`ENV_COMPOSER_VENDOR_EXCLUDE_MISSING`), un chemin hors du vendor aussi (`ENV_COMPOSER_VENDOR_EXCLUDE_INVALID`) ; l'image garde la liste retirée avec l'empreinte de chaque fichier (`/opt/paas-dependencies/composer.excluded.json`). Pour des binaires précompilés qu'un paquet livre pour d'autres usages, que le scan lit. |
+| Scan : les binaires précompilés de l'app ou de ses dépendances (v2.92.0) | La bibliothèque standard de Go d'un exécutable que l'arbre ou le vendor apporte tout construit est au client, pas à la plateforme ; le refus du scan nomme ces binaires (`details.prebuilt_binaries` : chemin, version de Go, CRITICAL et HIGH). Remèdes : monter la dépendance qui le livre, l'accepter par `cve_exceptions`, ou le retirer de l'image servie. |
+| Node 22 et plus : `require(esm)` nommé (v2.92.0) | Un fichier chargé par `require` qui a une syntaxe de module est chargé comme un module ES, où `module`, `exports`, `require`, `__dirname` et `__filename` n'existent pas : le build est refusé par son nom, au client (`ENV_NODE_REQUIRE_ESM_LOADED`, avec le fichier) ; la voie : `NODE_OPTIONS` à `--no-experimental-require-module` dans `build.env`, ou monter le paquet. |
+| Build Node : chaque sortie déclarée vérifiée là où elle est copiée (v2.92.0) | Chaque chemin de `build.node.outputs` est vérifié par l'étape même qui le copie, que BuildKit ne peut devancer en calculant les empreintes de ses copies : une sortie que le build ne produit pas est refusée par son nom, au client (`ENV_NODE_BUILD_OUTPUTS_EMPTY`). |
+| Télémétrie : les variables posées par `paas config set` restent celles de l'app (v2.92.0) | Une variable `OTEL_*` posée dans la configuration de l'app (`paas config set`) n'est plus écrasée par celles de la plateforme, qui ne pose que les variables de télémétrie que l'app ne déclare pas. Une variable `OTEL_*` déclarée dans l'`env` du `paas.xml` est encore écrasée (correction prévue dans la version suivante). |
+
+## 5 octoquadragies. v2.92.1 (en production depuis le 2026-11-16)
+
+| Fonction | Ce qui change |
+|---|---|
+| Télémétrie : l'`env` du paas.xml aussi (v2.92.1) | Une variable `OTEL_*` que l'`env` du paas.xml déclare reste celle de l'app, comme celle de sa configuration (`paas config set`) depuis v2.92.0 : la plateforme n'y écrit plus ses propres valeurs. |
+| Télémétrie : le protocole du point d'arrivée injecté (v2.92.1) | Avec son point d'arrivée OTLP/HTTP (le collecteur, port 4318), la plateforme pose `OTEL_EXPORTER_OTLP_PROTOCOL` = `http/protobuf` : un SDK dont l'exportateur par défaut est gRPC exporte par HTTP. Une app qui déclare son propre point d'arrivée ne reçoit ni l'un ni l'autre (son protocole est le sien) ; un protocole qu'elle déclare reste le sien. |
+| Build refusé : le résumé commence par le refus (v2.92.1) | Quand un refus documenté arrête une commande du build de l'image, le résumé de l'erreur commence par son code et son détail, puis l'étape et le code de sortie : « Le build s'est arrêté sur CODE : détail (étape [vertex] du build de l'image, code de sortie N) », ce que `paas builds list` montre ; jusque-là, il citait d'abord la commande. |
+| Refus : le détail lu sur la ligne qui le lève (v2.92.1) | Le détail d'un refus (`details.refusal.detail`) est lu sur la ligne qui le lève, jamais dans le source d'un programme que Node répète avant elle (un contrôle `node -e` de la plateforme). |
+| Réanalyse de l'image servie : l'image telle qu'elle est servie (v2.92.1) | La réanalyse quotidienne lit l'image telle qu'elle est servie, et non toutes les couches de son build : une version qu'une couche supérieure recouvre (une base apk réécrite par chaque couche qui installe) ne compte plus, et une image propre n'y montre plus de faille. Un SBOM dont l'ordre des couches manque est réanalysé avec sa cause. |
 
 ## 6. Prévu
 
