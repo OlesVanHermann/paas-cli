@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-16 : plateforme v2.92.1, CLI 2.92.1, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-18 : plateforme v2.99.2, CLI 2.99.2, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -889,6 +889,129 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Build refusé : le résumé commence par le refus (v2.92.1) | Quand un refus documenté arrête une commande du build de l'image, le résumé de l'erreur commence par son code et son détail, puis l'étape et le code de sortie : « Le build s'est arrêté sur CODE : détail (étape [vertex] du build de l'image, code de sortie N) », ce que `paas builds list` montre ; jusque-là, il citait d'abord la commande. |
 | Refus : le détail lu sur la ligne qui le lève (v2.92.1) | Le détail d'un refus (`details.refusal.detail`) est lu sur la ligne qui le lève, jamais dans le source d'un programme que Node répète avant elle (un contrôle `node -e` de la plateforme). |
 | Réanalyse de l'image servie : l'image telle qu'elle est servie (v2.92.1) | La réanalyse quotidienne lit l'image telle qu'elle est servie, et non toutes les couches de son build : une version qu'une couche supérieure recouvre (une base apk réécrite par chaque couche qui installe) ne compte plus, et une image propre n'y montre plus de faille. Un SBOM dont l'ordre des couches manque est réanalysé avec sa cause. |
+
+## 5 novoquadragies. v2.93.0 (en production depuis le 2026-11-16)
+
+| Fonction | Ce qui change |
+|---|---|
+| `build.node.dependency_overrides` (v2.93.0) | Des versions forcées (nom@X.Y.Z, 64 au plus) au-delà des plages qui les refusent (épinglage exact, ligne fermée) : chaque instance du paquet à cette version, le plan nomme chaque plage quittée, la copie de build porte la décision dans son package.json (npm : overrides, Yarn classique : resolutions), l'arbre reste intact ; npm servi ou frontend npm, Yarn classique servi ; refusée par son nom ailleurs. |
+| `build.node.dependency_updates` et `build.node.dependency_overrides` sur un arbre npm sans package-lock.json (v2.93.0) | npm écrit, depuis package.json, le verrou que la plateforme produit ; chaque instance y atteint la version déclarée, sinon la plage qui l'en empêche est nommée. |
+| npm, corrigé (v2.93.0) | Une montée déclarée à côté d'une archive Git que le build fournit (`build.node.git_archives`) n'est plus refusée à la production : la dépendance prise sur Git que le verrou épingle reste à son commit, comme le plan l'admet. |
+| Yarn classique, corrigé (v2.93.0) | Une montée déclarée avec celle du paquet qui la demande est lue à la version montée de ce paquet, comme en npm depuis 2.83.0 ; elle était refusée par la plage de la version d'avant. |
+| .NET, corrigé (v2.93.0) | Le plantage connu au démarrage d'une étape (« Internal CLR error. (0x80131506) ») est relancé, trois essais au plus, quel que soit son code de sortie ; seul le code 139 l'était. |
+| Erreurs, corrigé (v2.93.0) | Le remède d'un scan bloqué propose une montée par paquet Node, sur sa ligne installée, et la version forcée (`build.node.dependency_overrides`) quand la correction n'existe que sur une autre ligne. |
+| Build pnpm, corrigé (v2.93.0) | Le plan voyage compressé dans la PipelineRun, et un plan qu'une PipelineRun ne peut pas porter est refusé par sa taille (`ENV_PLAN_LIMIT`) ; un gros espace de travail laissait une PipelineRun qui ne finissait jamais. |
+
+## 5 quinquagies. v2.93.1 (en production depuis le 2026-11-16)
+
+| Fonction | Ce qui change |
+|---|---|
+| Versions forcées (npm), corrigé (v2.93.1) | La référence $nom qu'une app écrit à toute profondeur de ses overrides (sous un autre paquet) est admise à côté de la version forcée de ce paquet, comme npm la lit ; seule celle du premier niveau l'était. |
+| Listes produites (npm), corrigé (v2.93.1) | Une liste qui garde à son commit une dépendance prise sur Git (`build.node.git_archives`), sous des montées ou des versions forcées, est acceptée à sa livraison ; elle était refusée (`ENV_NPM_GIT_ARCHIVE_NOT_DECLARED`). |
+| Montées et versions forcées (npm), corrigé (v2.93.1) | Une instance que l'archive d'un autre paquet groupe (inBundle) est refusée au plan par son nom, avec ce paquet ; monter ou forcer ce paquet apporte ce que groupe sa nouvelle version, comme npm l'écrit. Le plan admettait la montée, que la production refusait. |
+| Versions forcées (Yarn classique), corrigé (v2.93.1) | Une dépendance directe forcée prend aussi la version pour spécification ; Yarn 1 ne lui applique pas la résolution, et son verrou ne s'installait pas figé. |
+| Paquets système, corrigé (v2.93.1) | La liste runtime-packages (packages.10) publie sqlite-libs, la bibliothèque partagée libsqlite3.so.0 que chargent les apps .NET ; le paquet sqlite n'apporte que le programme sqlite3. |
+| Refus et remède, corrigé (v2.93.1) | Une montée refusée par une plage nomme la version forcée (`build.node.dependency_overrides`) comme issue, en npm et en Yarn classique ; le remède d'un scan bloqué dit quoi faire de ce refus et d'une instance groupée. |
+
+## 5 unquinquagies. v2.93.2 (en production depuis le 2026-11-16)
+
+| Fonction | Ce qui change |
+|---|---|
+| Versions forcées (npm), corrigé (v2.93.2) | Sous des versions forcées, le contrôle des dépendances de pairs lit le package.json que porte la copie de build, comme npm ci : une référence $nom de l'app suit la version forcée de nom ; il lisait celui de l'arbre et refusait le pair que le verrou produit place. |
+| Refus d'une production de liste, corrigé (v2.93.2) | La règle et le chemin de `ENV_DEPENDENCY_RESOLUTION_FAILED` et de `ENV_DEPENDENCY_RESOLUTION_UNSUPPORTED` valent pour tous les gestionnaires (npm, Yarn, pnpm, Bun, Bundler, Composer, Maven, NuGet), pas pour pip seul. |
+| Mises à jour et versions forcées (npm), corrigé (v2.93.2) | La liste produite porte les dépendances optionnelles d'une version montée ou forcée et de ce qu'elle ajoute (les binaires de chaque plateforme), optionnelles, comme npm les écrit ; npm ci refusait la liste sans elles (Missing: … from lock file). La plateforme les contrôle avant le build. |
+
+## 5 duoquinquagies. v2.93.3 (en production depuis le 2026-11-16)
+
+| Fonction | Ce qui change |
+|---|---|
+| Yarn classique servi, à parité avec npm (servi comme lui, `build.node.projects` depuis 2.50.0), corrigé (v2.93.3) | Les autres projets Yarn classique de l'arbre que le build installe (un client web et son yarn.lock), chacun installé hors ligne depuis son verrou, construit par une étape dans son dossier, jamais servi : ce qu'il construit rejoint l'image par outputs, son node_modules jamais. La projection refusait la clé pour une app servie par Yarn. |
+| Liste npm produite, corrigé (v2.93.3) | Une dépendance optionnelle qu'une liste écrite avant 2.93.2 n'a pas, ou tient hors de sa plage, se refuse en disant de produire la liste à nouveau (paas dependencies produce), et non de déclarer sa mise à jour. |
+
+## 5 tresquinquagies. v2.94.0 (en production depuis le 2026-11-17)
+
+| Fonction | Ce qui change |
+|---|---|
+| `web.front` en recette Python et Ruby (v2.94.0) | paas-entry sert le frontal à côté de l'entrée de la recette, qui lance toujours ses processus ; une route mène au processus web ou à un dossier de l'image ou d'un volume (root), comme le nginx amont d'une app Django sert /static/ et /images/. Un processus qui déclare une attente d'arrêt de plus de 25 secondes est refusé avec le frontal. |
+| `services.<nom>.trust` = system (v2.94.0) | L'autorité d'un service que la plateforme décrit rejoint la confiance système de chaque conteneur de l'app qui reçoit ses variables, un processus dans son propre pod compris (fichier sous /etc/paas/services-ca, nommé par SSL_CERT_DIR avant les dossiers du système), pour un programme Go qui joint le service lui-même. |
+| Entrées Python et Ruby, corrigé (v2.94.0) | Un contrôle `lifecycle.checks` ou `lifecycle.file_checks` en échec s'écrit avec sa clé, sa requête, la valeur obtenue et l'attendue (un fichier : son état et le texte déclaré), sans aucune valeur secrète, comme dans l'entrée PHP : l'échec est imputé au fichier du client, et non plus présumé de la plateforme. |
+| Correctif (v2.94.0) | Hors PHP, `web.aliases` et `web.static_paths` sont refusées à leur propre clé, par un message qui nomme la voie d'un dossier servi (`web.front.routes`[].root), et non plus avec tout le bloc web. |
+| Réanalyse quotidienne des images servies, corrigé (v2.94.0) | Un build remplacé pendant le relevé est compté à part (« plus servi ») et le relevé finit sans échec ; un autre refus le fait toujours échouer. |
+| Console, corrigé (v2.94.0) | Le badge Cust / Paas d'une app et son filtre suivent la lecture du jour d'un échec reclassé, l'infobulle dit le verdict enregistré. |
+
+## 5 quaterquinquagies. v2.95.0 (en production depuis le 2026-11-17)
+
+| Fonction | Ce qui change |
+|---|---|
+| pnpm (v2.95.0) | Le réglage supportedArchitectures de pnpm-workspace.yaml est admis. La préparation acquiert aussi, depuis le verrou et avec leur SHA-512, les paquets des plateformes déclarées (current = linux, x64, glibc), champ par champ comme pnpm les installe ; son reçu les nomme (architectures). Un autre champ, un mot ou une liste vide restent refusés. |
+| Build par Dockerfile avec des téléchargements déclarés, corrigé (v2.95.0) | Le dossier des preuves que crée la préparation est ouvert à l'étape de build (et collant) ; jusqu'ici le build s'arrêtait avant de commencer (Permission denied). |
+| Go, corrigé (v2.95.0) | Après `build.go.module_updates`, la complétion du go.sum lit aussi l'arbre vendor (tous les tags de build) et exécute la commande que Go nomme, à la version sélectionnée ; un paquet importé par un fichier d'une autre plateforme n'est plus refusé faute de ligne (`ENV_GO_MODULE_CHECKSUM_MISMATCH`). |
+| Installateur, corrigé (v2.95.0) | Le correctif du Redis d'Argo CD épingle l'image de la version installée (8.10.1), et le plan nomme les champs qu'un autre gestionnaire possède et montre ce que l'écriture forcée changerait. |
+
+## 5 quinquinquagies. v2.96.0 (en production depuis le 2026-11-17)
+
+| Fonction | Ce qui change |
+|---|---|
+| Go (v2.96.0) | `build.go.experiments` pose les expériences du compilateur Go du build (GOEXPERIMENT, pour go build et les tests de l'étape) : une liste fermée, nojsonv2 d'abord (Go 1.27 implémente encoding/json sur json/v2 par défaut), chaque nom une fois ; un autre nom est refusé avec la liste (`ENV_GO_EXPERIMENT_INVALID`). |
+| Go (v2.96.0) | `build.go.archives` fait l'archive zip d'un dossier que le build a produit (la sortie du frontal), à un chemin .zip de l'arbre, après les étapes et avant go build, pour un programme qui l'embarque : entrées nommées depuis la racine de l'arbre, dates et modes fixés, déterministe ; son SHA-256 au journal du build. |
+| Node 26 (v2.96.0) | La révision node26.2 de la ligne pnpm (recette node-26.13.1-pnpm-workspace-v5) sert Node 26.13.1 (CVE-2026-123863 de 26.13.0, HIGH) ; elle est nommée en correction d'un build de node26.1 refusé au scan pour son Node. |
+| Build par Dockerfile avec des téléchargements déclarés, corrigé (v2.96.0) | La clé du miroir local est lisible par l'étape de build ; jusqu'ici le build s'arrêtait sur MIRROR_KEY_INVALID. |
+| Un build sans réseau dont Turbopack (next/font/google) n'a pas pu joindre un hôte nomme cet hôte, corrigé (v2.96.0) | `ENV_ASSET_HOST_UNDECLARED` dans une recette qui sert les ressources déclarées (assets), au lieu d'une cause présumée de la plateforme. |
+
+## 5 sexquinquagies. v2.97.0 (en production depuis le 2026-11-17)
+
+| Fonction | Ce qui change |
+|---|---|
+| PHP (v2.97.0) | `build.php.composer_overrides` force la version d'un paquet du composer.lock au-delà de l'exigence du composer.json racine qui le retient (vendeur/nom@X.Y.Z ; une exigence de require ou require-dev) : la plateforme révise le verrou de l'arbre sous cette exigence, la copie de build la porte, l'arbre est inchangé et le reçu la nomme (forced) ; en composer-install-lock-v1. |
+| Go (v2.97.0) | `build.go.module_updates` admet une pseudo-version canonique (vX.0.0-AAAAMMJJhhmmss-abcdef123456 et ses deux autres formes), plus récente que l'exigence du go.mod dans l'ordre des versions de Go : un module sans version étiquetée se monte. |
+| Un push dont le webhook Forgejo dépasse 8 Mio (un historique importé) démarre son build, corrigé (v2.97.0) | La route lit jusqu'à 64 Mio ; au-delà, le refus est nommé, au journal du plan de contrôle et dans la réponse que Forgejo garde. |
+| pnpm, corrigé (v2.97.0) | La révision du verrou (`build.node.dependency_updates`) d'un espace de travail qui corrige des paquets (patchedDependencies) reçoit les correctifs du dossier patches/ ; un correctif cité absent de l'arbre est nommé (`ENV_PNPM_PATCH_MISSING`). |
+| Yarn classique, corrigé (v2.97.0) | La grammaire du verrou lit le champ name que Yarn 1 écrit sous une entrée en alias (<alias>@npm:<paquet>@<plage>) ; un tel verrou était refusé à cette ligne (`ENV_YARN_LOCK_SYNTAX`). |
+
+## 5 septquinquagies. v2.98.0 (en production depuis le 2026-11-18)
+
+| Fonction | Ce qui change |
+|---|---|
+| Go (v2.98.0) | `build.go.local_modules` prend un module requis dans un dossier de l'arbre du module (relatif à `build.go.module_root`, 8 au plus) : la plateforme le remplace par ce dossier dans la copie de build (replace, comme un go.work), l'arbre inchangé. |
+| pnpm (v2.98.0) | `build.node.projects` installe les autres projets pnpm de l'arbre, chacun depuis son propre verrou, hors ligne et avant le build, dépendances de développement comprises, comme npm et Yarn. |
+| Paquets système (v2.98.0) | Un processus Python peut lancer par son nom le programme d'un paquet déclaré dans `runtime.packages` (sshd d'openssh-server). |
+| CLI (v2.98.0) | `paas db credentials` lit l'addon de base de données de l'app (`--addon` quand elle en a plusieurs) et `paas addons:credentials` l'identifiant que `paas addons` affiche ; `--output` écrit les identifiants dans un fichier en 0600. |
+| Yarn classique, corrigé (v2.98.0) | Une entrée résolue en archive codeload de GitHub, sans integrity, se déclare dans `build.node.git_archives` (son resolved, le SHA-256 de l'archive) et se pose dans le miroir comme Yarn la lit ; elle était refusée comme entrée incomplète. |
+| Correctif (v2.98.0) | `runtime.python_packages` était refusé par la projection de chaque recette (une clé non exécutée) ; l'étape de finition met aussi /usr/sbin et /sbin sur le chemin quand elle installe des paquets système. |
+
+## 5 octoquinquagies. v2.99.0 (en production depuis le 2026-11-18)
+
+| Fonction | Ce qui change |
+|---|---|
+| Une base PostgreSQL réservée gagne les extensions publiées que son application ajoute (`services.<nom>.extensions`) (v2.99.0) | La plateforme les crée dans la base, à leur version publiée, et l'app attend qu'elles le soient ; une extension non créée est nommée. Une version antérieure de l'app qui en demande moins garde la base telle quelle. La première extension d'une base qui n'en a aucune change de profil : refusée, chaque clé qui change nommée. |
+| pnpm, corrigé (v2.99.0) | `build.node.dependency_updates` monte la ligne de la version déclarée (sa majeure), une montée par ligne ; la production ne résout plus que les instances remplacées (pnpm update résolvait de nouveau les dépendances des pairs installés : Babel, bson, une préversion). Le remède d'un scan bloqué propose une montée par ligne pour pnpm, jamais une préversion. |
+| pnpm, corrigé (v2.99.0) | Un autre projet de `build.node.projects` sans `pnpm-workspace.yaml` à lui est installé depuis son propre verrou (`--ignore-workspace`) ; pnpm l'installait avec l'espace de travail au-dessus de lui, et souvent n'installait rien, sans erreur. Sous un espace de travail de l'arbre, pnpm 12.3.4, qui lit encore le verrou de cet espace, est refusé, nommé. |
+| pnpm, corrigé (v2.99.0) | Une étape pnpm dans le dossier d'un autre projet tourne sans le contrôle des dépendances, que pnpm 11 refusait quand l'espace de travail racine écrit `pnpmfile: []`. |
+| Un programme que l'entrée ne peut pas lancer est nommé avec sa cause, corrigé (v2.99.0) | Absent de l'image (introuvable dans le PATH), interpréteur de sa première ligne absent, exécution refusée ou non exécutable ; jusqu'ici, l'erreur du système seule. |
+| Référence du paas.xml, corrigé (v2.99.0) | `runtime.python_packages` a sa ligne mesurée (utilisable avec python3 dans `runtime.packages`, refusée par les deux recettes Python de la matrice) ; le fichier des statuts est de nouveau généré. |
+| Portée de la production pnpm (v2.99.0) | Mesurée sous pnpm 10.34.6 : seules les instances remplacées bougent. Sous pnpm 11 et 12, la production peut encore toucher d'autres paquets ; le contrôle refuse alors la liste, en nommant chaque paquet (PR-1862). |
+
+## 5 novoquinquagies. v2.99.1 (en production depuis le 2026-11-18)
+
+| Fonction | Ce qui change |
+|---|---|
+| npm, corrigé (v2.99.1) | `build.node.dependency_updates` monte la ligne de la version déclarée (sa majeure, 0.y ou 0.0.z), une montée par ligne, comme pnpm et Yarn classique, avec le verrou de l'arbre comme sans lui ; une instance d'une autre ligne n'est plus montée. Le remède d'un scan bloqué propose encore une montée par paquet en npm. |
+| pnpm, corrigé (v2.99.1) | Les correctifs que cite `patchedDependencies`, sources de la liste produite, sont admis par le contrôle de `paas/dependencies.json` avec les signes que pnpm met dans leur nom (@ d'un scope et d'une version, + d'un build, ~) ; la liste était refusée à sa livraison. Chaque condition d'une source refusée est nommée par ses mots. |
+| Releases, corrigé (v2.99.1) | Une release dont l'image tourne sous le dépôt d'une autre app au même condensé (une app recréée avec la même image) est servie, avec ses répliques, quand le gabarit appliqué nomme son image ; elle se disait indisponible, 0 réplique. |
+| Identifiants initiaux, corrigé (v2.99.1) | Le refus 409 nomme sa cause par un code : `N3_CREDENTIALS_NOT_PROMOTED` (aucun build promu), `N3_CREDENTIALS_NONE_EXPOSED` (la configuration n'expose rien), sinon le code de la lecture échouée (`N3_CREDENTIALS_UNREADABLE` à défaut) ; jamais une valeur. |
+| Stockage, corrigé (v2.99.1) | La cause d'un échec de préparation des volumes que `STORAGE_PREPARATION_UNAVAILABLE` masque est journalisée par la plateforme ; le code rendu ne change pas. |
+
+## 5 sexagies. v2.99.2 (en production depuis le 2026-11-18)
+
+| Fonction | Ce qui change |
+|---|---|
+| Dépendances, corrigé (v2.99.2) | Une production de liste refusée ne gardait que son message ; elle garde sa livraison (la liste candidate, son outil, son nombre de paquets, ses sources), lisible par le client : GET /v1/apps/{app}/dependency-lists/{id}/delivery, `paas dependencies delivery` ID [-o FICHIER] ; les 5 dernières d'une app, 4 Mio compressée au plus. |
+| Détection, corrigé (v2.99.2) | 128 manifestes et verrous au plus, sans recours, refusaient un monorepo ; `source.limits.input_files` porte ce nombre jusqu'à 1 024, et le refus nomme ce budget. |
+| Installateur, corrigé (v2.99.2) | Une variable d'environnement posée à la main sur un objet, que son manifeste ne déclare pas, ne se voyait pas et aucune écriture ne la retirait ; le plan la nomme, avec le gestionnaire qui l'a écrite. |
+| Dépendances, corrigé (v2.99.2) | Les listes que la plateforme produit (paas/dependencies/ et leur provenance) ne comptent plus dans le budget d'entrée du client, qu'elles faisaient dépasser au commit de la liste (`ENV_AUTO_INPUT_LIMIT`) ; elles ont leur budget à elles, la borne de leur production. |
+| Cycle de vie, corrigé (v2.99.2) | Un compte déclaré (`lifecycle.accounts`) que l'instance ne détient pas est créé à toute transition (installation, mise à jour, redémarrage) ; il ne l'était qu'à l'installation. Un journal écrit avant garde les comptes déclarés, présumés créés. |
+| Remise à neuf, corrigé (v2.99.2) | `reset-state` met de côté le journal d'installation par l'entrée de la plateforme, sans shell, quand elle mène le cycle de vie ; une image sans shell la refusait. |
+| Recettes, corrigé (v2.99.2) | L'archive d'onnxruntime 1.29.1, que son éditeur ne sert plus, s'approvisionne depuis un miroir qui sert la même archive, au même SHA-256. |
 
 ## 6. Prévu
 

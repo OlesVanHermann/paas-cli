@@ -189,12 +189,13 @@ Options de `api call` :
 | `-d, --data JSON\|@FICHIER\|-` | Corps JSON : littéral, depuis un fichier, ou depuis l'entrée standard |
 | `--idempotency-key CLÉ` | En-tête `Idempotency-Key` (honoré seulement par les opérations qui le déclarent) |
 | `--yes` | Envoie une écriture sans demander confirmation |
-| `-o, --output FICHIER` | Écrit la réponse dans un fichier (obligatoire pour une réponse binaire dans un terminal) |
+| `-o, --output FICHIER` | Écrit la réponse dans un fichier (obligatoire pour une réponse binaire dans un terminal). Depuis 2.98.0, le fichier est en 0600 : seul son propriétaire le lit, même s'il existait déjà ; une réponse peut porter des identifiants |
 
 ```bash
 paas-apps api list --tag addons
 paas-apps api show create_addon_generic
 paas-apps --app mon-app api call list_app_addons
+paas-apps api call get_addon_credentials_by_id mon-app <addon> -o identifiants.json   # fichier en 0600, rien d'affiché
 paas-apps api call create_addon_generic mon-app -d '{"type":"postgres","plan":"standard"}' --yes
 paas-apps api call get_invoice_pdf <id> -o facture.pdf
 ```

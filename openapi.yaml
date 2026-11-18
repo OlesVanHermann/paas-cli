@@ -3,9 +3,9 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.92.1.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.99.2.
 
-    Il couvre les 444 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
+    Il couvre les 445 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
     Enveloppes des réponses (`x-paas-envelope`) :
     - `data` : `{ "data": T }`
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.92.1
+  x-paas-api-version-tested: 2.99.2
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -3317,6 +3317,36 @@ paths:
       tags:
       - apps
       summary: Intègre une liste proposée à la branche de l'application, par avance rapide (mode manual)
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      - name: list_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data: {}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/apps/{app_id}/dependency-lists/{list_id}/delivery:
+    get:
+      operationId: get_delivery
+      tags:
+      - apps
+      summary: 'Consulte : delivery (application)'
       x-paas-envelope: data
       x-paas-app-ref: name-or-id
       parameters:

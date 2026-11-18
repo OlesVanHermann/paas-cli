@@ -3,6 +3,37 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.99.2 — 2026-11-18
+
+- **CLI `paas-apps` 2.99.2**, vérifiée contre l’API client **2.99.2** : une opération de plus au contrat public, la
+  livraison qu’une production de liste refusée garde (la liste candidate, son outil, ses sources) :
+  `GET /v1/apps/{app_id}/dependency-lists/{list_id}/delivery`, méthode `get_delivery` du SDK, et
+  `paas-apps api call`.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.99.2 : `source.limits.input_files` (les manifestes et
+  les verrous que la détection lit, pour un monorepo), les listes que la plateforme produit hors du budget d’entrée,
+  les comptes déclarés après l’installation, la remise à neuf sans shell.
+
+## v2.99.1 — 2026-11-18
+
+- **CLI `paas-apps` 2.99.1**, vérifiée contre l’API client **2.99.1** : mêmes commandes et même contrat public que
+  2.98.0.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.99.1 : extensions publiées qu’une app ajoute à sa base
+  PostgreSQL réservée (`services.<nom>.extensions`), montées déclarées par ligne en npm et en pnpm
+  (`build.node.dependency_updates`), autres projets pnpm sans espace de travail à eux (`build.node.projects`),
+  correctifs pnpm (`patchedDependencies`) dans la liste produite, cause d’un refus 409 des identifiants initiaux.
+
+## v2.98.0 — 2026-11-18
+
+- **CLI `paas-apps` 2.98.0**, vérifiée contre l’API client **2.98.0** : mêmes commandes et même contrat public que
+  2.92.1. `api call … -o FICHIER` écrit le fichier en 0600 : seul son propriétaire le lit, même s’il existait déjà ;
+  une réponse peut porter des identifiants (`get_addon_credentials_by_id` : ceux de la base d’une app), comme
+  `paas db credentials --output` de la CLI de la plateforme.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.98.0 : versions forcées au-delà des plages (npm, Yarn
+  classique, Composer : `build.node.dependency_overrides`, `build.php.composer_overrides`), modules Go pris dans
+  l’arbre (`build.go.local_modules`) et pseudo-versions des montées Go, autres projets pnpm (`build.node.projects`),
+  frontal des recettes Python et Ruby (`web.front`), confiance d’un service (`services.<nom>.trust`), paquets Python
+  et programmes des paquets système (`runtime.python_packages`), archives codeload de Yarn classique.
+
 ## v2.92.1 — 2026-11-16
 
 - **CLI `paas-apps` 2.92.1**, vérifiée contre l’API client **2.92.1** : mêmes commandes et même contrat public

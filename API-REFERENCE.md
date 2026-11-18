@@ -2,13 +2,13 @@
 
 # Référence de l'API tenant
 
-444 opérations, vérifiées contre l'API 2.92.1. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+445 opérations, vérifiées contre l'API 2.99.2. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
 | [`addons`](#domaine-addons) | Services managés attachés aux applications (bases de données, caches, files…) et leurs sauvegardes | 42 |
 | [`ai`](#domaine-ai) | Agents IA, points de terminaison IA, GPU, fine-tuning et bases vectorielles | 45 |
-| [`apps`](#domaine-apps) | Applications du tenant, cycle de vie, restauration, environnements de prévisualisation | 72 |
+| [`apps`](#domaine-apps) | Applications du tenant, cycle de vie, restauration, environnements de prévisualisation | 73 |
 | [`auth`](#domaine-auth) | Sessions, connexion (mot de passe, OAuth, MFA), jetons, clés API et clés SSH | 40 |
 | [`billing`](#domaine-billing) | Offres, consommation, factures, moyens de paiement et alertes de dépense | 39 |
 | [`builds`](#domaine-builds) | Constructions d'images, preuves (scan, SBOM, signature), cache et pipelines | 23 |
@@ -1491,6 +1491,7 @@ Applications du tenant, cycle de vie, restauration, environnements de prévisual
 | [`produce_dependency_list`](#produce_dependency_list) | `POST /v1/apps/{app_id}/dependency-lists` | Demande une nouvelle production de la liste de dépendances depuis la tête de la branche de l'application |
 | [`set_dependency_lists_mode`](#set_dependency_lists_mode) | `PUT /v1/apps/{app_id}/dependency-lists` | Choisit comment une liste produite rejoint la branche de l'application : automatic (avance rapide) ou manual (proposée) |
 | [`accept_dependency_list`](#accept_dependency_list) | `POST /v1/apps/{app_id}/dependency-lists/{list_id}/accept` | Intègre une liste proposée à la branche de l'application, par avance rapide (mode manual) |
+| [`get_delivery`](#get_delivery) | `GET /v1/apps/{app_id}/dependency-lists/{list_id}/delivery` | Consulte : delivery (application) |
 | [`get_app_healthcheck`](#get_app_healthcheck) | `GET /v1/apps/{app_id}/healthcheck` | Contrôle de santé d'une application |
 | [`patch_app_healthcheck`](#patch_app_healthcheck) | `PATCH /v1/apps/{app_id}/healthcheck` | Modifie le contrôle de santé d'une application |
 | [`disable_ipv6`](#disable_ipv6) | `POST /v1/apps/{app_id}/ipv6/disable` | Désactive l'IPv6 d'une application |
@@ -1831,6 +1832,23 @@ Réponse : JSON libre
 
 ```bash
 paas-apps api call accept_dependency_list <app_id> <list_id> --yes
+```
+
+### `get_delivery`
+
+Consulte : delivery (application)
+
+`GET /v1/apps/{app_id}/dependency-lists/{list_id}/delivery` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+| `list_id` | chemin | string | oui |
+
+Réponse : JSON libre
+
+```bash
+paas-apps api call get_delivery <app_id> <list_id>
 ```
 
 ### `get_app_healthcheck`

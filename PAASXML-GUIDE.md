@@ -1,6 +1,6 @@
 # Guide : écrire, vérifier et pousser un paas.xml
 
-État au 2026-11-16, plateforme v2.92.1, CLI 2.92.1. Chaque commande et chaque code d'erreur cités ici ont été
+État au 2026-11-18, plateforme v2.99.2, CLI 2.99.2. Chaque commande et chaque code d'erreur cités ici ont été
 mesurés, à la version qu'ils nomment.
 
 ## 1. Partir d'un exemple ou d'un squelette
