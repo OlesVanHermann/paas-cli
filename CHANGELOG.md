@@ -3,6 +3,15 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.99.3 — 2026-11-18
+
+- **CLI `paas-apps` 2.99.3**, vérifiée contre l’API client **2.99.3** : le contrat public est inchangé (445
+  opérations).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.99.3 : le journal d’une app ne cite plus la réponse d’une
+  étape HTTP qui passe, et masque celle d’une étape refusée ; les clés d’hôte d’un serveur SSH ne restent plus dans
+  l’image ; un lien d’une app Go est jugé sur l’image servie, et la racine d’un volume n’est pas une destination de
+  copie.
+
 ## v2.99.2 — 2026-11-18
 
 - **CLI `paas-apps` 2.99.2**, vérifiée contre l’API client **2.99.2** : une opération de plus au contrat public, la

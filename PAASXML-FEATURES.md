@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-18 : plateforme v2.99.2, CLI 2.99.2, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-18 : plateforme v2.99.3, CLI 2.99.3, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -1012,6 +1012,16 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Cycle de vie, corrigé (v2.99.2) | Un compte déclaré (`lifecycle.accounts`) que l'instance ne détient pas est créé à toute transition (installation, mise à jour, redémarrage) ; il ne l'était qu'à l'installation. Un journal écrit avant garde les comptes déclarés, présumés créés. |
 | Remise à neuf, corrigé (v2.99.2) | `reset-state` met de côté le journal d'installation par l'entrée de la plateforme, sans shell, quand elle mène le cycle de vie ; une image sans shell la refusait. |
 | Recettes, corrigé (v2.99.2) | L'archive d'onnxruntime 1.29.1, que son éditeur ne sert plus, s'approvisionne depuis un miroir qui sert la même archive, au même SHA-256. |
+
+## 5 unsexagies. v2.99.3 (en production depuis le 2026-11-18)
+
+| Fonction | Ce qui change |
+|---|---|
+| Sécurité, cycle de vie, corrigé (v2.99.3) | Une étape HTTP qui passe (installation, comptes, contrôles) n'écrit plus le début de sa réponse au journal de l'app, seulement son statut, sa longueur et son type : une réponse de compte y portait le jeton de session du compte créé. Une étape refusée cite sa réponse masquée (membres sensibles d'un JSON, même imbriqués ; valeur d'un nom sensible ; valeur après Bearer ; mot en forme de jeton). Les quatre moteurs de cycle de vie ; effectif au prochain build de l'app. |
+| Sécurité, paquets système, corrigé (v2.99.3) | Les clés d'hôte que génère la post-installation d'un serveur SSH ne restent plus dans une couche de l'image : le document des paquets dit ce qu'une installation écrit et qu'aucune image ne garde (removes), retiré dans la couche même de l'installation (document `packages.11`). |
+| Remise à neuf, corrigé (v2.99.3) | `reset-state` d'une app dont l'image précède 2.99.2 met de côté son journal par le shell, comme avant 2.99.2 ; l'entrée de ces images ne connaît pas la commande journal, et la remise à neuf s'arrêtait à cette étape (`STATE_RESET_JOURNAL_RUN`), rien vidé, l'app redémarrée. |
+| Budget d'entrée, corrigé (v2.99.3) | Le plan des runtimes sans rendu propre (Python, JVM, statique) compte les listes que la plateforme produit dans leur budget à elles, plus dans celui du client, comme la détection depuis 2.99.2. |
+| Liens et copies, corrigé (v2.99.3) | Un lien (`storage.links`) d'une app Go est jugé sur l'image servie (ses binaires et ses sorties gardées), plus sur l'arbre ; la racine d'un volume n'est plus admise comme destination d'une copie (`storage.seeds`), avec ou sans barre finale : le démarrage ne savait pas l'y faire. |
 
 ## 6. Prévu
 
