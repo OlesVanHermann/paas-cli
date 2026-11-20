@@ -3,6 +3,15 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.100.0 — 2026-11-19
+
+- **CLI `paas-apps` 2.100.0**, vérifiée contre l’API client **2.100.0** : le contrat public est inchangé (445
+  opérations).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.100.0 : une app Go pose une sortie de son build à une
+  cible sous `/app`, à côté de son binaire (`build.go.outputs`) ; un processus Python lance le programme d’un paquet
+  système déclaré par son chemin absolu ; le relais local d’un service porte les gros envois ; le journal d’une app
+  masque aussi la sortie d’une commande citée.
+
 ## v2.99.3 — 2026-11-18
 
 - **CLI `paas-apps` 2.99.3**, vérifiée contre l’API client **2.99.3** : le contrat public est inchangé (445

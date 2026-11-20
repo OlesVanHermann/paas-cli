@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-18 : plateforme v2.99.3, CLI 2.99.3, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-19 : plateforme v2.100.0, CLI 2.100.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -1022,6 +1022,17 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Remise à neuf, corrigé (v2.99.3) | `reset-state` d'une app dont l'image précède 2.99.2 met de côté son journal par le shell, comme avant 2.99.2 ; l'entrée de ces images ne connaît pas la commande journal, et la remise à neuf s'arrêtait à cette étape (`STATE_RESET_JOURNAL_RUN`), rien vidé, l'app redémarrée. |
 | Budget d'entrée, corrigé (v2.99.3) | Le plan des runtimes sans rendu propre (Python, JVM, statique) compte les listes que la plateforme produit dans leur budget à elles, plus dans celui du client, comme la détection depuis 2.99.2. |
 | Liens et copies, corrigé (v2.99.3) | Un lien (`storage.links`) d'une app Go est jugé sur l'image servie (ses binaires et ses sorties gardées), plus sur l'arbre ; la racine d'un volume n'est plus admise comme destination d'une copie (`storage.seeds`), avec ou sans barre finale : le démarrage ne savait pas l'y faire. |
+
+## 5 duosexagies. v2.100.0 (en production depuis le 2026-11-19)
+
+| Fonction | Ce qui change |
+|---|---|
+| Ajout (v2.100.0) | Une app Go pose une sortie de son build à une cible sous /app (`build.go.outputs` : path dans l'arbre de la copie de build, target sous /app) : les dossiers qu'un serveur cherche à côté de son binaire (i18n, templates, fonts), l'interface construite d'un frontal (webapp/channels/dist → client). 32 au plus ; une cible qui recouvre un binaire, une sortie gardée à son chemin ou une autre cible est refusée et nommée ; aucune pour un site WebAssembly. Sans l'option, le plan est celui d'avant. |
+| Processus, corrigé (v2.100.0) | Le programme d'un paquet système déclaré (sshd d'openssh-server) qu'un processus Python lance par son nom part par son chemin absolu, trouvé sur le chemin de la commande : OpenSSH 10 refuse un nom nu et la release bouclait (`TECHNICAL_REQUIRED_PROCESS_EXITED_0`). Effectif au prochain build de l'app. |
+| Relais local d'un service (`local_endpoint`), corrigé (v2.100.0) | Une requête plus grosse que ce que TLS prend d'un coup échouait (`RELAY_WRITE`) ; le relais attend que TLS la prenne, et un client parti pendant cette attente ferme la session au lieu de la faire tourner. Effectif au prochain build de l'app. |
+| Sécurité, cycle de vie, corrigé (v2.100.0) | La sortie d'une commande citée au journal de l'app (passée ou en échec) est masquée comme une réponse (2.99.3) ; une valeur objet ou liste sous un nom sensible est masquée entière, même dans un JSON coupé. Les entrées Python, PHP et Ruby ; effectif au prochain build de l'app. |
+| Budget d'entrée, corrigé (v2.100.0) | Les listes sous `paas/dependencies/` ne gardent leur budget propre qu'avec une provenance que la plateforme a écrite pour l'app, confirmée en base à son admission ; sinon elles comptent dans le budget du client. |
+| Liens d'une app Go, corrigé (v2.100.0) | Un lien est jugé sur l'arbre quand l'image peut servir plus que ses binaires (un site WebAssembly, une étape qui écrit sous /out), et sur les cibles posées par `build.go.outputs`. |
 
 ## 6. Prévu
 
