@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-445 opérations, vérifiées contre l'API 2.100.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+446 opérations, vérifiées contre l'API 2.102.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -22,7 +22,7 @@
 | [`observability`](#domaine-observability) | Journaux, métriques, traces, erreurs, alertes et pages de statut | 29 |
 | [`team`](#domaine-team) | Membres, invitations et espaces de travail | 10 |
 | [`tenant`](#domaine-tenant) | Réglages du tenant (SSO, fournisseurs d'identité, SMTP, réseau, conformité RGPD) | 36 |
-| [`volumes`](#domaine-volumes) | Volumes persistants et instantanés | 9 |
+| [`volumes`](#domaine-volumes) | Volumes persistants et instantanés | 10 |
 
 ## Domaine `addons`
 
@@ -7278,6 +7278,7 @@ Volumes persistants et instantanés
 | [`attach_volume`](#attach_volume) | `POST /v1/apps/{app_id}/volumes/attach` | Attache un volume à une application |
 | [`resize_volume`](#resize_volume) | `PUT /v1/apps/{app_id}/volumes/{name}` | Agrandit un volume |
 | [`delete_volume`](#delete_volume) | `DELETE /v1/apps/{app_id}/volumes/{name}` | Supprime un volume |
+| [`release_volume`](#release_volume) | `POST /v1/apps/{app_id}/volumes/{name}/release` | Libère un volume réservé (storage.volumes), confirmé par le nom de l'application : retiré de ses processus et de sa réservation, ses données restent dans le volume |
 | [`list_volume_snapshots`](#list_volume_snapshots) | `GET /v1/apps/{app_id}/volumes/{name}/snapshots` | Instantanés d'un volume |
 | [`post_volume_snapshot`](#post_volume_snapshot) | `POST /v1/apps/{app_id}/volumes/{name}/snapshots` | Crée un instantané d'un volume |
 | [`get_volume_snapshot`](#get_volume_snapshot) | `GET /v1/apps/{app_id}/volumes/{name}/snapshots/{snapshot_id}` | Détail d'un instantané |
@@ -7366,6 +7367,23 @@ Réponse : aucun contenu
 
 ```bash
 paas-apps api call delete_volume <app_id> <name> --yes
+```
+
+### `release_volume`
+
+Libère un volume réservé (storage.volumes), confirmé par le nom de l'application : retiré de ses processus et de sa réservation, ses données restent dans le volume
+
+`POST /v1/apps/{app_id}/volumes/{name}/release` · authentifiée (session ou jeton) · réponse `{"data": …}`
+
+| Paramètre | Où | Type | Obligatoire |
+|---|---|---|---|
+| `app_id` | chemin | nom ou UUID d'application | oui |
+| `name` | chemin | string | oui |
+
+Réponse : [`ReleaseVolumeResponse`](#type-releasevolumeresponse)
+
+```bash
+paas-apps api call release_volume <app_id> <name> --yes
 ```
 
 ### `list_volume_snapshots`
@@ -11041,6 +11059,20 @@ API 2.48.0 : la valeur d'un nom que le paas.xml déclare fournie par le locatair
 | `failure_kind` | string | non |
 | `error` | [`PaasError`](#type-paaserror) | non |
 
+### Type `ReleaseVolumeResponse`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `app_id` | JSON libre | non |
+| `volume` | JSON libre | non |
+| `pvc_name` | JSON libre | non |
+| `mount` | JSON libre | non |
+| `size_gi` | JSON libre | non |
+| `builds_unlinked` | JSON libre | non |
+| `released` | JSON libre | non |
+| `unmounted_from` | JSON libre | non |
+| `next` | JSON libre | non |
+
 ### Type `Remediation`
 
 Une étape de la marche à suivre
@@ -11666,6 +11698,8 @@ Qui doit agir sur un échec (API 2.31.0). `Cust` : le paas.xml ou le dépôt de 
 | `process` | string | non |
 | `port_end` | integer | non |
 | `address` | string | non |
+| `tunnel` | string | non |
+| `tunnel_request` | string | non |
 
 ### Type `TeamMember`
 

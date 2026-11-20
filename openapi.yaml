@@ -3,9 +3,9 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.100.0.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.102.0.
 
-    Il couvre les 445 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
+    Il couvre les 446 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
     Enveloppes des réponses (`x-paas-envelope`) :
     - `data` : `{ "data": T }`
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.100.0
+  x-paas-api-version-tested: 2.102.0
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -7678,6 +7678,55 @@ paths:
       responses:
         '204':
           description: Succès, sans contenu
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/apps/{app_id}/volumes/{name}/release:
+    post:
+      operationId: release_volume
+      tags:
+      - volumes
+      summary: 'Libère un volume réservé (storage.volumes), confirmé par le nom de l''application : retiré de ses processus et de sa réservation, ses données restent dans le volume'
+      x-paas-envelope: data
+      x-paas-app-ref: name-or-id
+      parameters:
+      - $ref: '#/components/parameters/AppRef'
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Succès
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      app_id: {}
+                      volume: {}
+                      pvc_name: {}
+                      mount: {}
+                      size_gi: {}
+                      builds_unlinked: {}
+                      released: {}
+                      unmounted_from: {}
+                      next: {}
+                    additionalProperties: true
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -19719,6 +19768,12 @@ components:
           format: int32
           nullable: true
         address:
+          type: string
+          nullable: true
+        tunnel:
+          type: string
+          nullable: true
+        tunnel_request:
           type: string
           nullable: true
       required:

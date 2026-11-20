@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-19 : plateforme v2.100.0, CLI 2.100.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-20 : plateforme v2.102.0, CLI 2.102.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -1033,6 +1033,42 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Sécurité, cycle de vie, corrigé (v2.100.0) | La sortie d'une commande citée au journal de l'app (passée ou en échec) est masquée comme une réponse (2.99.3) ; une valeur objet ou liste sous un nom sensible est masquée entière, même dans un JSON coupé. Les entrées Python, PHP et Ruby ; effectif au prochain build de l'app. |
 | Budget d'entrée, corrigé (v2.100.0) | Les listes sous `paas/dependencies/` ne gardent leur budget propre qu'avec une provenance que la plateforme a écrite pour l'app, confirmée en base à son admission ; sinon elles comptent dans le budget du client. |
 | Liens d'une app Go, corrigé (v2.100.0) | Un lien est jugé sur l'arbre quand l'image peut servir plus que ses binaires (un site WebAssembly, une étape qui écrit sous /out), et sur les cibles posées par `build.go.outputs`. |
+
+## 5 tresexagies. v2.101.0 (en production depuis le 2026-11-20)
+
+| Fonction | Ce qui change |
+|---|---|
+| Volumes (v2.101.0) | Un volume réservé se libère à la demande de son app (`paas volumes:release` <nom> `--app` <app> `--confirm` <app>) : retiré de ses processus, qui redémarrent sans lui, sa réservation retirée et journalisée, le paas.xml peut ne plus le déclarer ; ses données restent dans le volume, avec son nom et son point de montage, jusqu'à sa suppression ; les releases construites avec lui ne se redéploient plus. Le refus `ENV_STORAGE_RESERVED_VOLUME_CHANGED` nomme ce remède. |
+| pnpm (v2.101.0) | Un projet de `build.node.projects` s'installe juste après une étape nommée (`build.node.projects_after`), dans le build et dans les tests : un dossier file: que son verrou recopie est alors construit ; les autres projets s'installent avant les étapes, comme avant. |
+| Ports (v2.101.0) | Le tunnel de la plateforme publie un port d'une app sur une adresse publique (partagée, une app par port, ou propre, `PAAS_TUNNEL_PUBLIC_POOL`) vers son adresse privée et le même port, sans changer la source : l'app voit l'adresse réelle de son client ; TCP et UDP, un port ou une plage ; l'accord de l'opérateur (`--public`, `--dedicated`) l'ouvre ; un agent sur chaque nœud applique les règles. |
+| Ports (v2.101.0) | Tout port de 1 à 65535 se déclare (`tcp_ports[].port`), SSH 22 compris ; jusqu'ici, au-dessous de 1024, une liste fixe seule. |
+| pnpm, corrigé (v2.101.0) | Un dossier file: d'un verrou peut être à côté de son projet dans le dépôt (../sdk), jamais hors du dépôt ni par un lien ; la préparation refusait tout .. (`PNPM_LOCAL_PATH_INVALID`). |
+| Plan hors ligne, corrigé (v2.101.0) | `paas config plan` lit les fichiers des projets pnpm que la configuration nomme, à tout niveau, comme le plan de la plateforme (`ENV_AUTO_INPUT_INCOMPLETE` sur un verrou à deux niveaux). |
+| Go et Yarn, corrigé (v2.101.0) | Une étape du frontal peut poser la version de son projet (yarn version `--new-version` <version> `--no-git-tag-version`), comme l'amont avant son build ; elle était refusée (`ENV_YARN_STEP_SCRIPT`). |
+| Catalogues de sécurité, corrigé (v2.101.0) | Nginx 1.30.7, Go 1.27.4 (avec la bibliothèque acl pour cgo), PHP 8.4.28 et 8.5.13 (l'iconv de GNU libiconv conservé), leurs images scannées sans faille HIGH ni CRITICAL. |
+
+## 5 quattuorsexagies. v2.101.1 (en production depuis le 2026-11-20)
+
+| Fonction | Ce qui change |
+|---|---|
+| Ports, corrigé (v2.101.1) | Le tunnel de la plateforme passe sur le nœud des adresses publiques : kube-proxy y jetait chaque connexion traduite vers l'adresse privée d'une app sans pod sur ce nœud ; l'agent du tunnel l'y accepte avant, et l'app reçoit ses clients, leur adresse réelle conservée (mesuré en UDP et en TCP). |
+
+## 5 quinquesexagies. v2.101.2 (en production depuis le 2026-11-20)
+
+| Fonction | Ce qui change |
+|---|---|
+| Documentation, corrigé (v2.101.2) | Le schéma du paas.xml décrit `tcp_ports[].port` tel qu'il est depuis 2.101.0, de 1 à 65535, SSH 22 compris, ouvert sur l'adresse privée de l'app ou publié par le tunnel ; il citait encore la liste d'avant. |
+
+## 5 sexsexagies. v2.102.0 (en production depuis le 2026-11-20)
+
+| Fonction | Ce qui change |
+|---|---|
+| Composants (v2.102.0) | Un service `tunnel` dans les `services` du paas.xml (`services.<nom>.type` `tunnel`, ses `ports`, `address` `shared` ou `dedicated`) demande la publication de ports de l'app par le tunnel de la plateforme, comme on déclare mysql ou pgsql ; la demande s'inscrit avec chaque port au déploiement, l'exploitant l'accorde (`tcp-port-approve --public` ou `--dedicated`) et `paas apps info` la montre ; rien ne s'ouvre sans son accord. |
+| Go (v2.102.0) | `build.node.install_scripts` s'applique au frontal npm ou pnpm d'un build Go : les scripts d'installation déclarés tournent après l'installation hors ligne et avant le build, comme pour une app npm ou pnpm ; un frontal Yarn ou Bun le refuse par son nom. |
+| Installation (v2.102.0) | Sur chaque nœud, le kubelet et les ports de santé de kube-proxy n'écoutent que sur l'adresse privée (`bind-address`, `nodeport-addresses`), et Cilium n'ouvre plus Hubble ni les métriques de son opérateur et de son Envoy ; l'étape 2 lit l'adresse de chaque kubelet ; `scripts/host/sync-k3s-listen.sh` les pose sur une installation en service. |
+| pnpm, corrigé (v2.102.0) | Les correctifs que cite `patchedDependencies` se lisent là où l'arbre les range, comme pnpm, vérifiés contre leur blob Git et comptés dans les budgets ; seul le dossier `patches/` était lu, et une montée déclarée était refusée (`ENV_PNPM_PATCH_UNREAD`). |
+| Installation, corrigé (v2.102.0) | Les nœuds de travail déclaraient l'adresse de leur kubelet par un `kubelet-arg`, ce qui coupait la lecture des journaux de leurs pods et l'exécution d'une commande dans leurs conteneurs (le tunnel de k3s compose le kubelet à son `bind-address`) ; chaque nœud déclare `bind-address`. |
+| Catalogues de sécurité, corrigé (v2.102.0) | PHP `php.34` (libxml2 2.13.9-r3) et Java `java.2` (OpenJDK 17.0.21.1, 21.0.13.1 et 25.0.5.1, Gradle 9.8.2 reconstruit) ; les recettes gardent leur nom, leurs images scannées sans faille HIGH ni CRITICAL. |
 
 ## 6. Prévu
 

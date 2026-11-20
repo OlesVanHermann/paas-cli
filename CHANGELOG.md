@@ -3,6 +3,34 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.102.0 — 2026-11-20
+
+- **CLI `paas-apps` 2.102.0**, vérifiée contre l’API client **2.102.0** : le contrat public garde ses 446
+  opérations ; un port déclaré (`TcpPortSpec`) peut porter la publication que demande un tunnel
+  (`tunnel_request`, facultatif).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.102.0 : le service `tunnel` dans les `services`
+  (ses `ports`, `address` `shared` ou `dedicated`) publie des ports de l’app après l’accord de l’exploitant ;
+  `build.node.install_scripts` s’applique au frontal npm ou pnpm d’un build Go ; les correctifs pnpm que cite
+  `patchedDependencies` se lisent là où l’arbre les range.
+
+## v2.101.2 — 2026-11-20
+
+- **CLI `paas-apps` 2.101.2**, vérifiée contre l’API client **2.101.2** : le contrat public est inchangé (446
+  opérations).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.101.2 : `tcp_ports[].port` y est décrit tel qu’il est,
+  de 1 à 65535, SSH 22 compris.
+
+## v2.101.1 — 2026-11-20
+
+- **CLI `paas-apps` 2.101.1**, vérifiée contre l’API client **2.101.1** : `paas-apps volumes release <nom> --app
+  <app> --confirm <app>` libère un volume réservé (`storage.volumes`) : il quitte les processus de l’app, qui
+  redémarrent sans lui, sa réservation est retirée, ses données restent dans le volume jusqu’à sa suppression ; le
+  contrat public passe à 446 opérations.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.101.1 : tout port se déclare dans `tcp_ports`, de 1 à
+  65535, SSH 22 compris ; l’accord de l’opérateur l’ouvre sur l’adresse privée de l’app ou le publie par le tunnel
+  de la plateforme, qui lui passe ses clients avec leur adresse réelle ; pnpm installe un projet juste après une
+  étape nommée (`build.node.projects_after`) ; le frontal Yarn d’un build Go peut poser sa version.
+
 ## v2.100.0 — 2026-11-19
 
 - **CLI `paas-apps` 2.100.0**, vérifiée contre l’API client **2.100.0** : le contrat public est inchangé (445

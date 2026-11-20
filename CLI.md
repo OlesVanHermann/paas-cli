@@ -72,6 +72,7 @@ Variables d'environnement supplémentaires :
 | `dependencies produce` | Nouvelle production depuis la tête de la branche de l'application : la liste n'est résolue à nouveau que sur cette demande ; elle revient comme un commit de sa branche, intégré ou proposé selon le mode |
 | `dependencies accept ID` | Intègre une liste proposée à la branche de l'application, par avance rapide (mode `manual`) |
 | `dependencies mode automatic\|manual` | Comment une liste produite rejoint la branche : `automatic` (avance rapide ; recommitée sur la nouvelle tête si vous avez poussé entre-temps) ou `manual` (proposée sur sa branche) |
+| `volumes release NOM --confirm APP` | Libère un volume réservé de `--app` (`storage.volumes`, API 2.101.0) : il est retiré de ses processus, qui redémarrent sans lui, et sa réservation est retirée ; le `paas.xml` peut ensuite ne plus le déclarer ; ses données restent dans le volume, que les déploiements suivants ne montent plus, son nom et son point de montage avec elles, jusqu'à sa suppression ; les releases construites avec lui ne se redéploient plus. `--confirm` prend le nom de l'application ; sans lui, rien n'est envoyé |
 
 Le mot de passe se lit **uniquement** sur l'entrée standard
 (`--password-stdin`), ou se saisit au clavier. Il n'existe pas d'option
