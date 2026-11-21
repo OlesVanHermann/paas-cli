@@ -3,6 +3,24 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.104.0 — 2026-11-21
+
+- **CLI `paas-apps` 2.104.0**, vérifiée contre l’API client **2.104.0** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.104.0 : `build.node.archive_profile`
+  (`large-browser-assets-v1`) vaut aussi pour le frontal npm d’un build Go ; la révision d’un verrou Composer passe
+  outre la borne haute de PHP sous `build.php.composer_ignore_php_upper_bound` ; un générateur `go run` d’un module
+  que `build.go.module_updates` monte se lance à la version montée ; `/favicon.ico` va à l’app.
+
+## v2.103.0 — 2026-11-21
+
+- **CLI `paas-apps` 2.103.0**, vérifiée contre l’API client **2.103.0** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.103.0 : `build.node.toolchain_pins` (`served`) sert
+  par la recette les épingles d’outils d’un projet npm (`packageManager`, `engines`) ; la plateforme complète un
+  `package-lock.json` à espaces de travail ; un pair que `npm ci` garde hors de sa plage n’exige plus
+  `--legacy-peer-deps` ; le plan d’un build Go avec son frontal a 256 Kio.
+
 ## v2.102.0 — 2026-11-20
 
 - **CLI `paas-apps` 2.102.0**, vérifiée contre l’API client **2.102.0** : le contrat public garde ses 446

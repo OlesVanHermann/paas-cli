@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-20 : plateforme v2.102.0, CLI 2.102.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-21 : plateforme v2.104.0, CLI 2.104.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -1069,6 +1069,26 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | pnpm, corrigé (v2.102.0) | Les correctifs que cite `patchedDependencies` se lisent là où l'arbre les range, comme pnpm, vérifiés contre leur blob Git et comptés dans les budgets ; seul le dossier `patches/` était lu, et une montée déclarée était refusée (`ENV_PNPM_PATCH_UNREAD`). |
 | Installation, corrigé (v2.102.0) | Les nœuds de travail déclaraient l'adresse de leur kubelet par un `kubelet-arg`, ce qui coupait la lecture des journaux de leurs pods et l'exécution d'une commande dans leurs conteneurs (le tunnel de k3s compose le kubelet à son `bind-address`) ; chaque nœud déclare `bind-address`. |
 | Catalogues de sécurité, corrigé (v2.102.0) | PHP `php.34` (libxml2 2.13.9-r3) et Java `java.2` (OpenJDK 17.0.21.1, 21.0.13.1 et 25.0.5.1, Gradle 9.8.2 reconstruit) ; les recettes gardent leur nom, leurs images scannées sans faille HIGH ni CRITICAL. |
+
+## 5 septemsexagies. v2.103.0 (en production depuis le 2026-11-21)
+
+| Fonction | Ce qui change |
+|---|---|
+| npm (v2.103.0) | `build.node.toolchain_pins` = `served` sert par la recette les épingles d'outils d'un projet (`packageManager` de npm, `engines.node` et `engines.npm` de son package.json) qu'aucune recette ne sert : la copie de build les porte au Node et au npm de la recette, `engine-strict` reste actif, et le plan montre chacune, déclarée et servie ; l'arbre ne change pas. Pour une app npm et le frontal npm d'un build Go. |
+| npm, corrigé (v2.103.0) | La plateforme complète un package-lock.json livré à espaces de travail ; ses espaces de travail, ses liens et ses archives Git restent ceux de l'arbre, seules les entrées sans `resolved` ni `integrity` reçoivent l'adresse et l'intégrité du registre, contrôlées à la livraison, et le plan la lit avec les déclarations de l'app ; un instantané du registre ne compte plus un espace de travail comme un paquet du registre. |
+| npm, corrigé (v2.103.0) | Un pair que le verrou place hors de sa plage au fond du graphe, et que npm ne peut placer ailleurs, est gardé comme `npm ci` le garde dans son mode par défaut ; le plan n'exige plus `--legacy-peer-deps` pour lui (`ENV_NPM_LOCK_PEER_MISSING`). |
+| Go, corrigé (v2.103.0) | Le plan d'un build Go qui porte le plan de son frontal a 256 Kio, comme ceux de .NET, Java et Mix ; il en avait 128 (`ENV_PLAN_LIMIT`). |
+| Installation, corrigé (v2.103.0) | Les métriques du répartiteur d'adresses MetalLB, que sa version 0.16.2 lie à toutes les adresses du nœud, sont coupées par l'installateur, qui corrige le rendu de son chart ; son plan vérifie le réglage en service. |
+
+## 5 octosexagies. v2.104.0 (en production depuis le 2026-11-21)
+
+| Fonction | Ce qui change |
+|---|---|
+| Go (v2.104.0) | `build.node.archive_profile` = `large-browser-assets-v1` borne l'acquisition du frontend npm d'un build Go comme celle d'une app npm : 256 Mio par archive et 1 Gio au total, au lieu de 64 Mio et 512 Mio ; le frontend d'un autre gestionnaire (pnpm, Yarn, Bun) la refuse par son nom. Un refus d'acquisition nomme l'archive, la borne franchie et, tant qu'il n'est pas déclaré, ce profil : il revient alors à l'app. |
+| Listes de dépendances, corrigé (v2.104.0) | Après une mise à niveau, la plateforme produit de nouveau, une fois, une liste qu'une version antérieure a refusée pour la même demande ; elle ne retient plus un push que sous la version qui a refusé, et nomme la production, sa date et sa version. Le diagnostic d'une admission refusée mène par le fichier de l'app et sa cause. `paas dependencies show` donne la version qui a fait chaque production. |
+| Frontale, corrigé (v2.104.0) | `/favicon.ico` va à l'app dans les blocs qui la servent (son hôte, ses points d'entrée, ses domaines) : la frontale le rendait 204 avant tout contrôle, et le favicon d'une app n'était jamais servi. |
+| Composer, corrigé (v2.104.0) | La révision d'un verrou (`composer_updates`, `composer_overrides`) passe outre la borne haute de PHP quand `build.php.composer_ignore_php_upper_bound` est déclaré, comme l'installation (`--ignore-platform-req=php+`) ; le refus de Composer nomme les paquets que leur PHP retient. |
+| Go, corrigé (v2.104.0) | Un générateur (`go run <module>/<paquet>@<version>`) ou un outil (`go install`) d'un module que `build.go.module_updates` monte se lance à la version montée, que le go.mod du build requiert (`ENV_GO_STEP_UNRESOLVED`). |
 
 ## 6. Prévu
 
