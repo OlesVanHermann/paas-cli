@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-21 : plateforme v2.104.0, CLI 2.104.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-21 : plateforme v2.105.0, CLI 2.105.0, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -1090,6 +1090,17 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Composer, corrigé (v2.104.0) | La révision d'un verrou (`composer_updates`, `composer_overrides`) passe outre la borne haute de PHP quand `build.php.composer_ignore_php_upper_bound` est déclaré, comme l'installation (`--ignore-platform-req=php+`) ; le refus de Composer nomme les paquets que leur PHP retient. |
 | Go, corrigé (v2.104.0) | Un générateur (`go run <module>/<paquet>@<version>`) ou un outil (`go install`) d'un module que `build.go.module_updates` monte se lance à la version montée, que le go.mod du build requiert (`ENV_GO_STEP_UNRESOLVED`). |
 
+## 5 novemsexagies. v2.105.0 (en production depuis le 2026-11-21)
+
+| Fonction | Ce qui change |
+|---|---|
+| Python (v2.105.0) | Catalogues `2026.11.21.python.4` (3.12) et `2026.11.21.python.2` (3.14) : les images d'exécution portent la base des fuseaux horaires (`tzdata`), et une app qui lit un fuseau (`zoneinfo`) n'a plus à déclarer le paquet `tzdata` ; les images sont aux versions de sécurité du jour (libxslt, interpréteur 3.14, npm 11.21.3). |
+| Réseau (v2.105.0) | Les Services des apps sont en IPv4 seule (`ipFamilyPolicy` `SingleStack`) ; un Service créé en double pile y revient à son déploiement suivant, en gardant son adresse IPv4. Une app qui écoute sur `[::]` reçoit toujours l'IPv4. |
+| Python, corrigé (v2.105.0) | Les images de construction de ces deux catalogues sont mesurées (étiquettes de roues identiques à celles de leur version) : le plan refusait toute app sur eux (`ENV_PYTHON_TARGET_UNMEASURED`). |
+| Tests, corrigé (v2.105.0) | La préparation et la commande des tests écrivent leurs fichiers temporaires (`TMPDIR`) dans `.paas-tests-tmp`, sur le système de fichiers de l'arbre, comme le build : un outil qui renommait un fichier temporaire dans l'arbre (le cache d'un bundler) échouait en `EXDEV`. La première ligne de la preuve (`paas builds test <build>`) dit quel `TMPDIR` a servi. |
+| Tests, corrigé (v2.105.0) | Le refus d'une préparation des tests lit les lignes étiquetées d'un lanceur parallèle (`[shared] npm error …`) et nomme l'étape, l'espace de travail npm et l'erreur système qui l'a arrêtée ; une image de test sans `/bin/sh` est nommée (`tests_image_unusable`). |
+| Composer, corrigé (v2.105.0) | La demande de production lit une liste Composer aussi à jour que le plan : une liste produite avant la v2.104.0 n'appelle plus une production que le plan ne refuse pas. |
+
 ## 6. Prévu
 
 Chaque capacité est développée comme une option générique : aucune app n'est codée dans la plateforme, l'app
@@ -1098,7 +1109,7 @@ qui en a besoin la déclare dans son `paas.xml`. L'ordre suit la feuille de rout
 | Identifiant | Contenu |
 |---|---|
 | EX-02, T-05.4 | Modules natifs Node (liaisons précompilées publiées, ou compilation en bac à sable hors réseau) et correctifs `patch-package` de l'amont appliqués hors réseau : Wiki.js (extract-files), cusdis (moteurs Prisma) ; ressources déclarées et scripts d'installation en npm et Yarn. Disponibles depuis v2.72.0 : ressources déclarées servies hors réseau en pnpm et PHP, scripts d'installation déclarés en pnpm, refus au plan des paquets au binaire posé par leur script (section 5 novodecies) |
-| N0.NET | Liens déclarés entre apps : disponibles depuis v2.30.0 (section 5 ter). Règles de sortie, IPv6 : prévus |
+| N0.NET | Liens déclarés entre apps : disponibles depuis v2.30.0 (section 5 ter). Règles de sortie : prévues. IPv6 : les pods et les Services des apps sont en IPv4 seule depuis v2.105.0 (décision du 2026-11-21) |
 | N2.BRUBY, N2.BPY | Combinaisons runtime × service manquantes (Ruby avec MySQL ou MariaDB). Disponibles depuis v2.62.0 : Python avec MySQL (section 5 septdecies) ; depuis v2.52.0 (section 5 nonies) : PHP avec PostgreSQL et Redis, Node et Go avec Redis et MariaDB, plusieurs services par app (N2.BPHP, N2.BNG, N2.MULTI) |
 | N2.PGEXT, N2.OPTIONS | PostgreSQL 17 ; réplicas, sauvegarde et PITR. Disponibles depuis v2.52.0 : les extensions de l'image publiée, les bases nommées et le droit de créer des bases ; PostGIS depuis v2.59.0 |
 | N0.PROC | Job (commande ponctuelle) ; processus séparés à côté d'un cycle de vie. Disponibles depuis v2.56.0 : worker, cron et release séparés en Node, PHP et Go (section 4) |

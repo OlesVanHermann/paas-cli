@@ -3,6 +3,15 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.105.0 — 2026-11-21
+
+- **CLI `paas-apps` 2.105.0**, vérifiée contre l’API client **2.105.0** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.105.0 : catalogues Python `2026.11.21.python.4` et
+  `2026.11.21.python.2` (base des fuseaux horaires dans les images d’exécution, images de construction mesurées) ;
+  les Services des apps en IPv4 seule ; les tests écrivent leurs fichiers temporaires sur le système de fichiers de
+  l’arbre, et le refus d’une préparation des tests nomme l’étape, l’espace de travail npm et l’erreur système.
+
 ## v2.104.0 — 2026-11-21
 
 - **CLI `paas-apps` 2.104.0**, vérifiée contre l’API client **2.104.0** : le contrat public garde ses 446
