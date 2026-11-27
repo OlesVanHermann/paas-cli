@@ -11,7 +11,7 @@ les agents IA (Claude Code…).
 | [`SHA256SUMS`](SHA256SUMS) | Sommes de contrôle des exécutables |
 | [`CLI.md`](CLI.md) | Guide de la CLI : commandes, options, variables d'environnement, codes de sortie |
 | [`API.md`](API.md) | Guide de l'API : authentification, enveloppes, erreurs, pagination |
-| [`API-REFERENCE.md`](API-REFERENCE.md) | **Référence de l'API** : les 437 opérations de l'API client, par domaine, avec leurs paramètres, leurs types et leur appel CLI |
+| [`API-REFERENCE.md`](API-REFERENCE.md) | **Référence de l'API** : les 446 opérations de l'API client, par domaine, avec leurs paramètres, leurs types et leur appel CLI |
 | [`openapi.yaml`](openapi.yaml) | **Contrat de l'API** (OpenAPI 3.0.3), qui fait foi. Il permet aussi de générer un client dans votre langage |
 | [`SKILL-paas-cli.md`](SKILL-paas-cli.md) | Skill pour agents IA : utiliser la CLI |
 | [`SKILL-paas-api.md`](SKILL-paas-api.md) | Skill pour agents IA : appeler l'API en HTTP (curl) |
@@ -23,7 +23,7 @@ les agents IA (Claude Code…).
 | [`CHANGELOG.md`](CHANGELOG.md) | Contenu de la version publiée |
 | [`LICENSE`](LICENSE) | Licence MIT |
 
-**État** : CLI **2.105.0**, vérifiée contre l'API **2.105.0** : les 444 opérations
+**État** : CLI **2.110.1**, vérifiée contre l'API **2.110.1** : les 446 opérations
 du contrat répondent sur le serveur en service. La version de la CLI est celle
 de la plateforme qu'elle sert.
 - `paas-apps api` donne accès à **toutes les opérations** de l'API, sauf les

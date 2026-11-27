@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-21 : plateforme v2.105.0, CLI 2.105.0, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-27 : plateforme v2.110.1, CLI 2.110.1, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -1100,6 +1100,188 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | Tests, corrigé (v2.105.0) | La préparation et la commande des tests écrivent leurs fichiers temporaires (`TMPDIR`) dans `.paas-tests-tmp`, sur le système de fichiers de l'arbre, comme le build : un outil qui renommait un fichier temporaire dans l'arbre (le cache d'un bundler) échouait en `EXDEV`. La première ligne de la preuve (`paas builds test <build>`) dit quel `TMPDIR` a servi. |
 | Tests, corrigé (v2.105.0) | Le refus d'une préparation des tests lit les lignes étiquetées d'un lanceur parallèle (`[shared] npm error …`) et nomme l'étape, l'espace de travail npm et l'erreur système qui l'a arrêtée ; une image de test sans `/bin/sh` est nommée (`tests_image_unusable`). |
 | Composer, corrigé (v2.105.0) | La demande de production lit une liste Composer aussi à jour que le plan : une liste produite avant la v2.104.0 n'appelle plus une production que le plan ne refuse pas. |
+
+## 5 septuagies. v2.106.0 (en production depuis le 2026-11-22)
+
+| Fonction | Ce qui change |
+|---|---|
+| Sites publiés (v2.106.0) | `web.extensionless` = `html` (recette statique, et le dossier d'un build npm, pnpm, Yarn ou Bun avec `build.static`) : une adresse sans extension (`/about`) est servie par le fichier `about.html`, avant le dossier et avant le repli (`web.fallback`) ; une autre valeur est refusée (`ENV_STATIC_EXTENSIONLESS_INVALID`). |
+| Healthcheck (v2.106.0) | `healthcheck.startup_failure_threshold` est raccordé pour toutes les recettes jusqu'au déploiement : une installation longue se déclare là, sans ralentir la sonde ; le plan refuse un budget (seuil × `period_seconds`, 10 s par défaut) au-delà des 600 s qu'un déploiement a pour être prêt. |
+| pnpm (v2.106.0) | `pnpm-workspace.yaml` peut déclarer `minimumReleaseAgeStrict` (`true` ou `false`), à côté de `minimumReleaseAge`. |
+| Plateforme, corrigé (v2.106.0) | Chaque image des workloads qu'applique l'installateur est épinglée par son empreinte. |
+| PHP, corrigé (v2.106.0) | Un en-tête qu'une étape HTTP de l'installation déclare (`Host`, `X-Forwarded-Proto`…) remplace celui de même nom que pose l'entrée, quelle que soit sa casse : il était envoyé deux fois, et PHP joignait les deux valeurs. |
+| CLI, corrigé (v2.106.0) | `paas apps delete` dit le délai de la corbeille avant sa confirmation, puis la date limite et `paas apps restore <uuid>` ; avec `--json`, il écrit un objet ; il prévient quand l'app ne sert aucun build. |
+| Corbeille, corrigé (v2.106.0) | Une restauration juge la release que l'app servait comme un retour arrière (son scan vérifié à son build) : elle était refusée dès que ce scan avait plus de 24 heures (`admission_scan_expired`). |
+| Secrets, corrigé (v2.106.0) | Un objet de compte de service Google (`gcp-service-account`) n'est relevé que s'il porte sa clé privée : un texte indicatif ou un commentaire qui cite le champ ne bloque plus le build, et son exception devient inutile. |
+| source.ignore, corrigé (v2.106.0) | Un lien symbolique se déclare par la SHA-256 de son blob, le chemin qu'il vise (`printf %s CIBLE | sha256sum`) : ne le changez pas en fichier. Le refus nomme ce que l'arbre porte et sa SHA-256. |
+| Plan, corrigé (v2.106.0) | Une liste de dépendances à produire ne masque plus le refus d'un Dockerfile déclaré qui a changé : `paas config plan` le nomme d'abord, la liste à côté, et rend le code 1 comme le push. |
+| Déploiement, corrigé (v2.106.0) | Une lecture de la forge qui échoue un moment est refaite (3 essais) ; le refus final nomme l'appel et dit de relancer le déploiement, sans reconstruire. |
+| Disque, corrigé (v2.106.0) | Les pods de la plateforme ont une classe de priorité et une requête de stockage local : un nœud à court de disque expulse d'abord les builds et les apps. |
+
+## 5 unseptuagies. v2.106.1 (en production depuis le 2026-11-23)
+
+| Fonction | Ce qui change |
+|---|---|
+| Plan, corrigé (v2.106.1) | Une configuration qui ne valide pas est nommée par `paas config plan` (son code, et le code de sortie 1), comme après un envoi : un lien symbolique que `source.ignore` déclare ne la cache plus derrière un refus « dépôt Git illisible » (code 2). |
+| pnpm, corrigé (v2.106.1) | `source.limits.archive_files` atteint la préparation pnpm : un paquet de plus de 20 000 fichiers était refusé (`PNPM_UNPACKED_LIMIT`) malgré la limite déclarée. Le refus d'un paquet au-delà nomme la clé qui la relève (100 000 au plus). |
+| Go, corrigé (v2.106.1) | La montée déclarée (`build.go.module_updates`) d'un module que le `go.mod` de l'amont remplace par lui-même reçoit ses lignes `go.sum` avant la lecture de la liste de build : elle échouait (`ENV_GO_MODULE_UPDATE_FAILED`, `go list -m all`). |
+
+## 5 duoseptuagies. v2.106.2 (en production depuis le 2026-11-23)
+
+| Fonction | Ce qui change |
+|---|---|
+| Plan, corrigé (v2.106.2) | À côté d'une liste de dépendances à produire, `paas config plan` joue les contrôles de `source.ignore` et `source.ignore_directories` : une empreinte fausse d'un fichier ou d'un lien est refusée d'abord (`ENV_SOURCE_IGNORED_CHANGED`, code de sortie 1), la liste à côté. Le plan sortait avec le code 3 de la liste seule. |
+| Go, corrigé (v2.106.2) | La montée déclarée (`build.go.module_updates`) d'un module que le `go.mod` de l'amont remplace par lui-même relève le remplacement avant `go get` : les modules que sa nouvelle version fait monter reçoivent leurs lignes `go.sum`. Ils les manquaient (`ENV_GO_MODULE_UPDATE_FAILED`, `go list -m all`). |
+| Python, corrigé (v2.106.2) | Un projet dont le `pyproject.toml` construit sa propre extension native (maturin avec son crate dans l'arbre, setuptools-rust avec `[tool.setuptools-rust]`) est refusé au plan, nommé (`ENV_PYTHON_NATIVE_EXTENSION_UNBUILT`) : la recette ne construit pas encore cette extension, et la release tombait au démarrage. |
+| Yarn Berry, corrigé (v2.106.2) | Le correctif intégré de Yarn sur un paquet dont la source est un alias (`typescript` résolu en `@typescript/typescript6`) est lu hors ligne : le paquet de l'alias est téléchargé. Il était refusé (`ENV_YARN_BERRY_LOCK_PROTOCOL`). |
+| PHP, corrigé (v2.106.2) | `build.php.composer_version` déclare la version de Composer que lance la plateforme (2.10.3), dans tous les modes : une autre est refusée, le refus nommant les deux (`ENV_COMPOSER_VERSION_UNPUBLISHED`). Hors de `composer-install-lock-v1`, elle était acceptée sans un mot. |
+
+## 5 tresseptuagies. v2.107.0 (en production depuis le 2026-11-23)
+
+| Fonction | Ce qui change |
+|---|---|
+| pnpm (v2.107.0) | `pnpm-workspace.yaml` peut déclarer `ignoreWorkspaceCycles` (`true` ou `false`), qui tait l'avertissement d'un cycle entre espaces de travail. Mesuré sans effet sur le verrou ni sur les paquets installés, sous pnpm 10.34.6, 11.28.2 et 12.11.2. |
+| Secrets (v2.107.0) | `secrets.<NOM>.generate` = `base64url` tire `bytes` octets écrits en base64 URL-safe sans remplissage (43 caractères de `A-Za-z0-9-_` pour 32 octets) : la forme qu'attend une clé privée VAPID ou un jeton de lien. `base64` reste le base64 standard, avec `+`, `/` et `=`. |
+| Comptes (v2.107.0) | Un compte déclaré par une commande (`accounts[].create`) peut déclarer `after_create`, la commande qui lui donne son rôle (argv absolu). paas-entry la lance une fois `create` réussie, une seule fois par compte : elle reprend après une interruption entre les deux, rien n'est rejoué au redémarrage, et un compte créé avant la déclaration la reçoit une fois. Refusée pour les entrées PHP, Python et Ruby. |
+| PHP (v2.107.0) | `build.php.test_manifests` déclare un `package.json` d'outils de test (navigateur, accessibilité) que la recette n'installe ni n'exécute jamais, ses `dependencies` comprises. Il reste refusé s'il construit un frontal (un script `build`). |
+| PHP (v2.107.0) | En `composer-locked-git-v1` et `-v2`, un `vendor/` commité sans `installed.json` est servi d'après son `installed.php`, lu comme une donnée (jamais exécuté) et comparé au `composer.lock` ; `ENV_PHP_VENDOR_LOCK_MISMATCH` nomme le fichier lu et le premier paquet qui diffère. |
+| npm (v2.107.0) | La recette npm exécute `storage.writable` et `storage.removable`, comme PHP, y compris sous le `node_modules` installé : un dossier qu'un paquet supprime puis recrée se déclare dans `storage.removable`. Chaque chemin est vérifié dans l'image, à sa construction. Une erreur `EACCES` d'une app npm nomme désormais ces clés. |
+| npm (v2.107.0) | `build.node.dependency_updates` et `build.node.dependency_overrides` valent aussi pour un verrou à espaces de travail : chaque instance est révisée où que le verrou la tienne, les espaces de travail et leurs liens restent tels quels ; une montée ou une version forcée qui vise un espace de travail est refusée, nommée. |
+| Go, corrigé (v2.107.0) | Les tests lisent les modules vérifiés depuis leur proxy de fichiers ; la plateforme ne copie plus son `vendor/` dans l'arbre de l'app, où un test qui parcourt le module depuis son `go.mod` le lisait comme le code de l'app. Au-delà des bornes du proxy, la copie reste. |
+| pnpm, corrigé (v2.107.0) | Avec `build.node.runtime_dependencies`, le verrou que lit l'installation de production est vérifié dès l'acquisition : pnpm 11 et 12 le revérifiaient hors ligne au build et échouaient (`ERR_PNPM_NO_OFFLINE_META`). |
+
+## 5 quattuorseptuagies. v2.107.1 (en production depuis le 2026-11-23)
+
+| Fonction | Ce qui change |
+|---|---|
+| Référence, corrigé (v2.107.1) | `build.php.test_manifests` (v2.107.0) a ses lignes mesurées pour les douze recettes, comme `build.php.development_manifests` : utilisable pour PHP, sans objet ailleurs. Seul le schéma la documentait. |
+| Yarn Berry, corrigé (v2.107.1) | La montée d'un paquet (`build.node.dependency_updates`) dans un monorepo lit le `package.json` de chaque espace de travail, à toute profondeur (ni `node_modules`, ni `.yarn`, ni `paas`). Au-delà de deux dossiers, Yarn échouait (« Workspace not found »). |
+| Déploiement, corrigé (v2.107.1) | Une release d'une autre image remet les réplicas déclarés d'un Deployment que la plateforme avait laissé à 0 sans raison de l'y garder (la quarantaine d'une première release) : l'app restait arrêtée, jugée prête. Un zéro voulu (client, suspension, maintenance, mise en veille, quota) reste. Audité (`app.zero_lifted`). |
+| Réanalyse des images servies, corrigé (v2.107.1) | Une faille d'un composant que seul un SBOM embarqué dans l'image déclare (le `pkg_resources` de setuptools 70.3.0 que pip embarque) n'est plus comptée au client ni dans ses correctifs. Elle est montrée à part, avec le fichier qui la déclare, sa couche et son remède : la republication de la recette. `paas apps security-updates` la dit sur sa ligne. |
+| Yarn Berry sur Node 22, corrigé (v2.107.1) | Le catalogue `2026.11.23.node-yarn-berry-22.2` publie Yarn 4.18.0, à côté de 4.17.1 et 4.18.1, dans la recette `node-22.23.4-yarn-berry-v2`. Un projet qui l'épingle (`packageManager`) était refusé (`ENV_YARN_BERRY_VERSION_UNPUBLISHED`) ; il déclare ce catalogue et `package_manager_version` 4.18.0. |
+
+## 5 quinseptuagies. v2.107.2 (en production depuis le 2026-11-24)
+
+| Fonction | Ce qui change |
+|---|---|
+| Restauration, corrigé (v2.107.2) | Une restauration refusée une première fois (un pod encore en démarrage) laisse l'app restaurable avec la même clé : `paas apps restore` repart. Elle restait en `illegal_recovery_transition` jusqu'à la fin de la rétention. Les charges reprises sont jugées sur deux observations des mêmes pods ; un refus les arrête de nouveau ; la purge attend une restauration en cours. `paas apps inspect-deleted` montre la dernière restauration et son code. |
+| Yarn Berry, corrigé (v2.107.2) | La montée d'un paquet (`build.node.dependency_updates`) produit sa liste quand le verrou applique des correctifs (`patch:` et `.yarn/patches/`) : le producteur ne les recevait pas (`ENOENT`). Le plan hors ligne (`paas config plan`) lit les manifestes des espaces de travail comme la plateforme, à toute profondeur : il refusait ce qu'elle admet (`ENV_AUTO_INPUT_INCOMPLETE`). |
+| Node 24, corrigé (v2.107.2) | Les six recettes Node 24 servies (npm, pnpm et pnpm libraries, Yarn classique, Yarn libraries, Yarn Berry) passent de Node 24.20.0 à 24.22.3, catalogues du 2026-11-24 ; la ligne pnpm libraries sert l'image Wolfi avec OpenSSL 3. La version mineure reste exacte : une app qui déclare 24.20.0 sur ces lignes se redéclare en 24.22.3 (`build.runtime_version`, `build.node.version`, la recette et le catalogue) ; la mise à jour de sécurité réécrit désormais aussi `build.node.version`. |
+| Yarn Berry sur Node 24, corrigé (v2.107.2) | La recette `node-24.22.3-yarn-berry-v1` (catalogue `2026.11.24.node-yarn.4`) publie Yarn 4.18.0. Un projet dont `engines.node` n'admet sur Node 24 que 24.22.3 ou plus (« >=24.22.3 <25 ») n'avait aucune recette Yarn Berry. |
+| Bun, corrigé (v2.107.2) | La recette `bun-1.4.4-v1` (catalogue `2026.11.24.bun.3`) sert ses images sur le Node 24.22.3 de Wolfi. Elle portait `nodejs-24` 24.22.2, une faille HIGH corrigée en 24.22.3. Ses images sont à 0 CRITICAL et 0 HIGH. |
+
+## 5 sexseptuagies. v2.107.3 (en production depuis le 2026-11-24)
+
+| Fonction | Ce qui change |
+|---|---|
+| Tests du locataire (Go à frontal pnpm), corrigé (v2.107.3) | La préparation du frontal tourne dans un shell à part, comme son étage du build : son `PATH` n'atteint plus la partie Go, dont `go list` s'arrêtait sur « env: can't execute 'go' ». Une app Go à frontal pnpm qui déclare des tests (`build.test.command`) était refusée au stage test (`tests_unavailable`). |
+| Tests du locataire, corrigé (v2.107.3) | Le `/tmp` du pod de test a le bit collant (1777), et le `HOME` et les caches du locataire sont à lui (0700). Un module natif qui vérifie son dossier de cache (`@swc/core` 1.16) refusait le 0777 d'avant, et la préparation des tests échouait (`tests_unavailable`). |
+| Corbeille, corrigé (v2.107.3) | La purge d'une app supprimée juste après son build reprend après deux minutes, et non une heure, quand elle n'a trouvé que des objets encore en cours de suppression (le TaskRun et les pods du build). |
+| Listes de dépendances produites, corrigé (v2.107.3) | Forgejo Actions est coupé : la plateforme construit et teste avec son propre pipeline. Sa lecture des workflows GitHub d'un dépôt paniquait à l'intégration d'une liste (erreur 500 sur la création de la PR), et la liste restait proposée (`paas dependencies list`). |
+| Node, corrigé (v2.107.3) | Un Node que sa ligne ne sert pas est refusé en nommant la recette, son catalogue et le Node qu'elle publie : la version à déclarer (`ENV_NODE_BASE_PARAMETERS_INVALID`). Un frontal pnpm en Node 24.20.0 ne retombe plus sur la ligne Node 22, dont le refus sur ses versions de pnpm (`ENV_PNPM_MANAGER_PIN_REQUIRED`) trompait. |
+| Restauration, corrigé (v2.107.3) | Une requête refusée après la fin de la restauration qu'elle continuait n'écrit plus son code sur l'opération réussie : `paas apps inspect-deleted` montrait `last_restore` « succeeded » avec ce code. |
+
+## 5 septemseptuagies. v2.107.4 (en production depuis le 2026-11-24)
+
+| Fonction | Ce qui change |
+|---|---|
+| Node 24, ligne npm, corrigé (v2.107.4) | La recette `node-24.22.3-npm-source-v2` construit et teste sur la chaîne v10 (catalogue `2026.11.24.node-npm.7`), qui porte `make` et npm à son chemin habituel. Un frontal dont le script de build (`build.node.build_script`) appelle `make`, et le frontal d'une recette Ruby, échouaient au build sur la chaîne v9. |
+| Frontal PHP construit après Composer, corrigé (v2.107.4) | Avec `build.frontend.after_composer`, Node et sa bibliothèque C viennent du runtime Debian minimal de la recette npm, npm de sa chaîne. Sur une image PHP Alpine, le build échouait sur des chemins Debian que la chaîne Wolfi n'a pas (`/usr/lib/x86_64-linux-gnu`, `ldd`, npm). |
+| Go à frontal Node, corrigé (v2.107.4) | Les catalogues `2026.11.24.go.18` (Go 1.27) et `2026.11.24.go126.5` (Go 1.26) préparent et testent le frontal sur Node 24.22.3, celui de sa recette Node. Un frontal npm qui exigeait Node 24.22.3 échouait à ses tests sur Node 24.20.0 (`EBADENGINE`) : déclarer `build.catalogue` `2026.11.24.go.18` (ou `go126.5`). |
+| Go 1.26, recettes git, corrigé (v2.107.4) | Les trois recettes git du catalogue `2026.11.24.go126.5` servent le runtime git `bash-v4` (libexpat1 2.10.0), celui de Go 1.27 ; `bash-v3` portait deux HIGH de libexpat1. |
+| Yarn, classique et berry, corrigé (v2.107.4) | Le plan d'un monorepo a l'enveloppe élargie (128 Kio), comme celui de pnpm. Une fois sa liste produite, le plan d'un monorepo Yarn berry était refusé `ENV_PLAN_LIMIT`. |
+| Corbeille, corrigé (v2.107.4) | Toute étape de la purge laissée sans erreur sur des objets encore en cours de suppression (un volume) reprend après deux minutes, cinq fois au plus, puis toutes les heures. Une app restait listée une heure après son délai. |
+
+## 5 octoseptuagies. v2.107.5 (en production depuis le 2026-11-24)
+
+| Fonction | Ce qui change |
+|---|---|
+| Node à côté d'une liste à produire, corrigé (v2.107.5) | Quand la plateforme doit produire la liste de dépendances d'une app (verrou absent ou à réviser) et que la ligne npm ne sert plus le Node déclaré (`build.node.version`), le plan nomme d'abord le Node à déclarer (`ENV_NODE_BASE_PARAMETERS_INVALID`), puis la liste. La liste était produite, puis le plan refusé sur le Node. Une app pnpm ou Yarn reste lue sur sa propre ligne. |
+| Correction de sécurité d'une app Go à frontal Node, corrigé (v2.107.5) | Quand le catalogue de la correction prépare et teste le frontal sur un autre Node de la même version majeure, la correction déclare aussi ce Node dans le paas.xml (`build.node.version`). Le plan corrigé était refusé sur un Node que ce catalogue ne sert plus. |
+| Ruby 4.0, corrigé (v2.107.5) | La recette `ruby40-bundler-offline-v1` passe sur une ligne à elle, `ruby-bundler-4.0` (catalogue `2026.11.24.ruby40.1`), avec des images révisées sur libxslt 1.1.45-r8 (0 CRITICAL, 0 HIGH). Une app Ruby 4.0 était refusée au scan par libxslt 1.1.45-r5 (CVE-2026-125350) : déclarer `build.catalogue` `2026.11.24.ruby40.1`. Le catalogue `2026.11.05.ruby.11` reste servi tel quel. |
+| npm à instantané publié, corrigé (v2.107.5) | Le refus `ENV_NPM_REGISTRY_SNAPSHOT_MISSING_VERSION` nomme l'entrée du verrou et l'identité qui manque à l'instantané (`build.node.registry_snapshot_sha256`). Il ne donnait que son code. |
+| Exemples sur Node 24.22.3 (v2.107.5) | filebrowser, ghost, etherpad, cryptpad, nightscout et le squelette Node sont redéclarés sur Node 24.22.3 (catalogues `2026.11.24.go.18`, `2026.11.24.node.12` et `2026.11.24.node-npm.7`) : leur plan, leur build et leurs tests passent. filebrowser est en service (scan 0/0, avec deux `build.go.module_updates`). ghost, etherpad, cryptpad et nightscout sont refusés au scan par des failles de leurs propres dépendances : il faut une version majeure de l'app, ou une exception CVE. Pour cryptpad et nightscout, les correctifs de la même version majeure sont refusés à côté d'un instantané publié (`ENV_NPM_DEPENDENCY_UPDATE_COMBINED`). |
+
+## 5 novemseptuagies. v2.108.0 (en production depuis le 2026-11-25)
+
+| Fonction | Ce qui change |
+|---|---|
+| npm à instantané et correctif publiés (v2.108.0) | `build.node.dependency_updates` et `dependency_overrides` valent aussi à côté d'un instantané du registre (`build.node.registry_snapshot_sha256`) et d'un correctif de verrou publiés (`build.node.lock_patch_sha256`) : la révision part du verrou qu'ils complètent et corrigent, et la build installe la liste produite telle quelle. La liste nomme ce verrou par son empreinte : après un autre instantané ou un autre correctif, elle est produite de nouveau. Jusqu'en v2.107.5, ces montées étaient refusées (`ENV_NPM_DEPENDENCY_UPDATE_COMBINED`). |
+| Versions forcées en Bun (v2.108.0) | `build.bun.dependency_overrides` (`nom@X.Y.Z`, 64 au plus, un par paquet), comme en npm : chaque instance du paquet passe à cette version, dépendance directe comprise, et le plan montre chaque plage qu'elle quitte. La copie de build la déclare là où Bun 1.4.4 lit les overrides : `overrides` du package.json, ou `resolutions` quand l'app n'a que lui (Bun lit l'un des deux, jamais les deux). Un paquet que l'app fixe déjà, ou qu'elle monte, est refusé, nommé. Pour corriger une instance dans sa ligne : une montée. |
+| Versions forcées en pnpm (v2.108.0) | `build.node.dependency_overrides` vaut aussi pour une recette pnpm servie. La copie de build déclare chaque version là où son pnpm lit les overrides : pnpm 11 et 12, `overrides` de pnpm-workspace.yaml (créé au besoin, le reste du fichier intact) ; pnpm 10, `pnpm.overrides` de package.json, ou pnpm-workspace.yaml quand lui seul en déclare. Un `overrides` écrit en flux dans pnpm-workspace.yaml est refusé : l'écrire en bloc. Chaque instance, de toute ligne, passe à la version : pour corriger une instance dans sa ligne, une montée. |
+| PHP à frontal Node, corrigé (v2.108.0) | Le plan porte l'étage du frontal une seule fois, dans le Dockerfile, nommé par son empreinte ; il le portait deux fois et dépassait ce qu'une exécution transporte. `ENV_PLAN_LIMIT` dit comment le plan voyage (en clair ou compressé) et ce qui y pèse le plus. |
+| Listes Bun produites, corrigé (v2.108.0) | La provenance d'une liste produite (`paas/dependencies.json`) est une entrée de la recette Bun : le plan la refusait (`ENV_AUTO_INPUT_INCOMPLETE`), et aucune liste Bun, montées comprises, n'atteignait le build. |
+| pnpm 10 et ses overrides, corrigé (v2.108.0) | pnpm 10 lit les overrides de package.json (`resolutions`, puis `pnpm.overrides`) quand il en déclare, et ceux de pnpm-workspace.yaml seulement sinon (mesuré avec pnpm 10.34.6). Le plan tenait l'inverse et refusait un verrou juste (`ENV_PNPM_LOCK_OVERRIDES_MISMATCH`). |
+
+## 5 octogies. v2.108.1 (en production depuis le 2026-11-25)
+
+| Fonction | Ce qui change |
+|---|---|
+| PHP à frontal Node, corrigé (v2.108.1) | Le plan, l'image et le lancement portent une seule identité : la détection telle que le plan la porte, l'étage du frontal nommé par son empreinte. Depuis la v2.108.0, chaque build d'une telle app était refusé à son lancement (`ENV_AUTO_PLAN_CHANGED`). Un plan qui les séparerait est refusé au plan (`ENV_PLAN_IDENTITY_SPLIT`, un défaut de la plateforme). |
+| Listes Bun produites, corrigé (v2.108.1) | La production ne retire plus d'entrée du verrou de l'arbre : Bun 1.4.4 le résolvait alors tout entier de nouveau et en changeait le format, et le plan refusait la liste. Une montée prend l'entrée de sa version ; les versions forcées passent par les overrides ; seuls les paquets déclarés changent. Une dépendance qu'un override de l'app tient hors de sa plage est nommée avec cet override. |
+| Archives d'étiquette GitHub en npm, corrigé (v2.108.1) | La production garde une dépendance qu'une archive d'étiquette GitHub fournit (`build.node.git_archives`), comme le plan la lit ; elle la refusait (`ENV_DEPENDENCY_REQUIREMENT_INVALID`). |
+| Versions forcées pnpm et correctifs, corrigé (v2.108.1) | Une production de versions forcées seules porte les correctifs du verrou ; elle était refusée sans détail (`ENV_DEPENDENCY_REQUEST_INVALID`). Chaque refus de la demande nomme ce qu'il refuse. |
+| Révision pnpm, corrigé (v2.108.1) | pnpm 12 révise le verrou tel qu'il est : son `--fix-lockfile` dédupliquait tout l'arbre, et le plan refusait la liste. pnpm 10 et 11 gardent leur méthode ; chaque liste révisée est vérifiée à jour pour les fichiers du build avant d'être livrée. |
+| Tas du résolveur pnpm, corrigé (v2.108.1) | Le résolveur pnpm a un tas à la mesure de la mémoire de son étape ; un monorepo de 4 011 paquets en manquait vers 1,9 Go, quoi que l'app déclare (`build.resources.node_heap_mb` reste celui de son build). |
+| Montée npm d'un paquet que l'app fixe, corrigé (v2.108.1) | Une montée d'un paquet que les overrides de l'app fixent à une version ou une plage que la version déclarée quitte est refusée au plan (`ENV_NPM_DEPENDENCY_UPDATE_OVERRIDDEN`), l'override nommé : `npm ci` refusait le verrou au build. |
+
+## 5 unoctogies. v2.108.2 (en production depuis le 2026-11-25)
+
+| Fonction | Ce qui change |
+|---|---|
+| Listes pnpm 12 livrées, corrigé (v2.108.2) | Le producteur compte les paquets du verrou comme le plan, sans le document d'environnement que pnpm 12 écrit en tête : la livraison d'une liste pnpm 12 était refusée (nombre de paquets annoncé différent de la liste). |
+| Installation PHP rejouée, corrigé (v2.108.2) | Une étape de l'installation propre de l'app (`lifecycle.install_http` ou commande PHP) en échec reste à faire : au démarrage suivant, l'installation est rejouée, et les contrôles `ready` ne valent plus preuve de cette installation. L'app n'est plus servie à moitié installée ; tant que l'étape échoue, son erreur la nomme. |
+| Release adoptée après un refus, corrigé (v2.108.2) | Une release que la porte de stabilité a refusée (`crashloop`) et qu'un rapprochement adopte ensuite (conteneurs web prêts, sans redémarrage pendant la fenêtre de stabilité) le dit : `release.rehabilitated` dans la piste de l'app, `current_release.adopted` dans sa fiche (heure, raison, preuve, erreur levée), une ligne `adopted` dans `paas apps info`. Elle passait en service sans rien dire, son erreur effacée. |
+| Montées pnpm 12 face à des overrides en flux, corrigé (v2.108.2) | Sous pnpm 12, des montées seules, quand `pnpm-workspace.yaml` écrit ses `overrides` en flux et que la révision y épinglerait d'autres instances, sont refusées dès la demande de production, en nommant ces instances (`ENV_PNPM_DEPENDENCY_UPDATE_COMBINED`) : écrire les `overrides` en bloc, une entrée par ligne. Le plan les admettait et la production les refusait. |
+
+## 5 duooctogies. v2.109.0 (en production depuis le 2026-11-26)
+
+| Fonction | Ce qui change |
+|---|---|
+| Versions forcées limitées à un parent (v2.109.0) | `build.node.dependency_overrides` lit aussi `parent>nom@X.Y.Z` : seules les instances dont dépend une instance du parent passent à la version, les autres instances du paquet restent (npm : un override imbriqué sous le parent ; pnpm : le sélecteur `parent>nom`). En npm, `.>nom@X.Y.Z` limite la version à la dépendance du projet lui-même. Une instance qu'un autre paquet partage change aussi pour lui si sa plage l'accepte, sinon le refus le nomme (`ENV_NPM_DEPENDENCY_OVERRIDE_SHARED`) ; Yarn et Bun refusent cette forme, nommée. |
+| Plan d'un gros build, corrigé (v2.109.0) | Le plan voyage une fois, dans une ConfigMap du run, au lieu de 34 copies dans le PipelineRun : au-delà d'environ 1,5 Mio, l'état du run ne s'écrivait plus et le build restait en cours pour toujours, ses étapes suivantes `pending`. Les étapes se lisent sur toutes les TaskRuns ; un run figé au-delà de son délai conclut sur sa tâche en échec. |
+| Borne du plan, corrigé (v2.109.0) | Un plan est borné par ce qui le limite vraiment : la variable que lit son producteur (131 054 octets) et, compressé, ce que lisent les producteurs (64 Kio) ; le refus dit comment il voyage et ce qui pèse le plus. Jusqu'ici 45 056 octets. |
+| Sortie d'un processus qui sert de nouveau, corrigé (v2.109.0) | Un processus déclaré qui sort en erreur puis, relancé, répond de nouveau prêt est la piste du client (son journal, `paas logs`), et non plus une capacité de l'entrée de la plateforme présumée manquante. |
+
+## 5 tresoctogies. v2.109.1 (en production depuis le 2026-11-26)
+
+| Fonction | Ce qui change |
+|---|---|
+| Versions forcées limitées à un parent, corrigé (v2.109.1) | La liste produite pour `parent>nom@X.Y.Z` (npm, pnpm ; `.>nom@X.Y.Z` en npm) est livrée puis relue par le plan : la v2.109.0 la refusait à la livraison (`ENV_DEPENDENCY_LIST_INVALID: paas/dependencies.json : lists[0].target`), le refus imputé au client. Une provenance que la plateforme compose et ne peut relire est son propre refus (`ENV_DEPENDENCY_DELIVERY_INVALID`). |
+| Pair forcé en pnpm, corrigé (v2.109.1) | Forcer la version d'un paquet que d'autres ont pour pair (typescript) garde ces dépendants à leur version, une étiquette `next` comprise, et ce dont ils dépendent ; seul leur suffixe de pair change. Jusqu'ici pnpm les résolvait de nouveau, et la liste était refusée (`ENV_PNPM_DEPENDENCY_UPDATE_REVISION`). |
+| Archive locale d'un projet pnpm, corrigé (v2.109.1) | Un projet dont un manifeste nomme une archive de l'arbre (`file:<chemin>.tgz`) est refusé avant toute production de liste, l'archive nommée par son chemin dans l'arbre (`ENV_PNPM_LOCAL_ARCHIVE_UNSUPPORTED`, côté plateforme) ; la production échouait, nommée par un dossier de travail. La production de ces listes viendra avec une version mineure. |
+| Extension native Python, corrigé (v2.109.1) | Un backend de l'arbre qui appelle maturin (`build-system.requires`, `[tool.maturin]`, son crate dans l'arbre) est refusé au plan comme `build-backend = "maturin"` (`ENV_PYTHON_NATIVE_EXTENSION_UNBUILT`) ; il passait le plan, et la release tombait au démarrage. |
+
+## 5 quattuoroctogies. v2.109.2 (en production depuis le 2026-11-26)
+
+| Fonction | Ce qui change |
+|---|---|
+| Montées pnpm à côté de versions forcées, corrigé (v2.109.2) | Une montée déclarée d'un paquet qui a plusieurs releases dans le verrou monte de nouveau à côté de versions forcées. La v2.109.1 épinglait ce paquet pour la révision : sa montée ne bougeait pas, et la liste était refusée (`ENV_PNPM_DEPENDENCY_UPDATE_RANGE`). |
+| Montée pnpm restée en dessous, corrigé (v2.109.2) | Une instance restée sous la version déclarée, qu'un projet tient et dont le spécificateur admet cette version, est un refus de la révision, imputé à la plateforme (`ENV_PNPM_DEPENDENCY_UPDATE_REVISION`). Celle que des paquets tiennent est refusée sans affirmer leur plage, que le verrou de pnpm ne porte pas (`ENV_PNPM_DEPENDENCY_UPDATE_RANGE`). Le refus affirmait une plage non lue et imputait la liste au client. |
+| Montée Bun restée en dessous, corrigé (v2.109.2) | Le même contrôle lit la plage que chaque détenteur donne au paquet, que le verrou de Bun enregistre. Une plage qui admet la version déclarée est un refus de la révision, imputé à la plateforme (`ENV_BUN_DEPENDENCY_UPDATE_REVISION`) ; une plage qui la refuse reste du client, et elle est nommée (`ENV_BUN_DEPENDENCY_UPDATE_RANGE`). |
+| Archive d'approvisionnement en parties, corrigé (v2.109.2) | L'archive d'approvisionnement de la release vient en parties de moins de 2 Gio chacune (`supply-vX.Y.Z.partN.tar`), la taille qu'admet un fichier joint à une release GitHub. L'installateur nomme sa première partie pour un chart que son dépôt ne sert plus. Sans effet sur un `paas.xml`. |
+
+## 5 quinoctogies. v2.110.0 (en production depuis le 2026-11-26)
+
+| Fonction | Ce qui change |
+|---|---|
+| Vendor livré sans verrou (v2.110.0) | `build.php.composer_lock_from_vendor` = `true`, en `composer-install-lock-v1`, monte un vendor livré sans composer.json ni composer.lock (l'archive d'une release). La plateforme dérive de `vendor/composer/installed.json` le verrou qui l'a installé et un composer.json de la racine, révise ce verrou pour `build.php.composer_updates` et reconstruit le vendor (`composer_rebuild_committed_vendor`), l'autoload de la racine lu dans les cartes livrées. Une montée que Composer ne peut faire seule nomme le paquet à monter avec elle. La provenance nomme l'inventaire : la liste produite est périmée s'il change. |
+| Archives d'un projet pnpm (v2.110.0) | Les archives de l'arbre que nomment les manifestes et le verrou pnpm (`file:<chemin>.tgz`) voyagent jusqu'au résolveur, lues au commit admis : une liste se produit pour un projet qui en a (conversion, montées, versions forcées). Elle était refusée avant toute production. |
+| `build.env` en Rust (v2.110.0) | La recette Rust exécute `build.env` pour toutes les compilations de son build et pour ses tests : `CFLAGS`, `CXXFLAGS`, que lisent le C et le C++ des crates (un crate `-sys` dont le C ne compile pas en C23, la norme par défaut de son GCC). 16 variables au plus ; un nom que la recette, le chargeur ou la plateforme posent, ou une valeur hors de la règle, est refusé (`V2_VALUE_INVALID` sur `build.env.<nom>`). |
+| Formulaire relu, envoyé après une pause (v2.110.0) | Une étape HTTP qui relit un formulaire l'envoie 2 s après l'avoir lu, comme une personne, sans prendre la dernière seconde du budget de sa séquence (entrées PHP, Ruby et paas-entry). Un envoi reçu par un 200 au corps vide est nommé par le refus qui suit. Le minuteur anti-robot d'une app répondait à un envoi plus rapide par une page vide, que l'étape prenait pour sa réussite. |
+| Enveloppe d'un plan pnpm, corrigé (v2.110.0) | Un plan pnpm a l'enveloppe de 256 Kio des plans à frontal, au plan et au producteur ; le refus de l'enveloppe dit la taille, la borne, le transport et ce qui pèse. Jusqu'ici 128 Kio, et le refus ne disait que son code (`ENV_PLAN_LIMIT`). |
+| Pair facultatif forcé en pnpm, corrigé (v2.110.0) | Une version forcée d'un paquet que seuls des pairs facultatifs demandaient peut le retirer du verrou ; la révision le dit (« X → aucune ») au lieu de refuser toute la liste. |
+| Frontal PHP d'une feuille de style, corrigé (v2.110.0) | Un frontal construit (`build-node-v1`) qui ne produit qu'une feuille de style (postcss, Tailwind) passe la vérification de ses sorties : au moins un script ou un style construit, une sortie vide toujours refusée. Un script et un style étaient exigés. |
+
+## 5 sexoctogies. v2.110.1 (en production depuis le 2026-11-27)
+
+| Fonction | Ce qui change |
+|---|---|
+| Vendor livré sans verrou : ce que la racine remplace, corrigé (v2.110.1) | Avec `build.php.composer_lock_from_vendor`, le `replace` de la racine qu'`installed.php` inscrit passe dans le composer.json dérivé : Composer n'ajoute plus les paquets que la racine remplace, et la révision ne refuse plus la liste. Une liste produite d'une autre dérivation est à reproduire (`ENV_DEPENDENCY_LIST_TO_PRODUCE`), jamais refusée. |
+| Chart de mysql-operator, corrigé (v2.110.1) | L'installateur lit le chart de mysql-operator 2.3.1, que son dépôt ne sert plus, dans l'archive d'approvisionnement qui le porte (`archive_member`) : l'installation hors ligne ne le télécharge plus. |
+| `build.php.composer_lock_from_vendor` mesurée (v2.110.1) | La référence mesure l'option : utilisable en PHP, sans objet ailleurs. |
+| Verrou Ruby d'un arbre de modules, corrigé (v2.110.1) | Le verrou que la plateforme produit part de 128 fichiers au plus : chaque `Gemfile`, les parties qu'il évalue (`Gemfile.<nom>`, par exemple `Gemfile.modules`, sauf un verrou), les gemspecs. Une gem prise sur GitHub à un commit se résout. Un refus de Bundler (`ENV_DEPENDENCY_RESOLUTION_FAILED`) cite son erreur et la ligne du `Gemfile`, plus sa pile. |
+| `install.py test` au fil des tests, corrigé (v2.110.1) | La commande dit chaque test à sa fin, sur la sortie d'erreur : une commande coupée par une limite de temps laisse ses tests terminés. |
 
 ## 6. Prévu
 

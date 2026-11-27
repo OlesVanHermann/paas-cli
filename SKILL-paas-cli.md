@@ -5,13 +5,13 @@ description: Utilise la CLI `paas-apps` du PaaS di2amp pour agir sur le PaaS dep
 
 # CLI `paas-apps` du PaaS di2amp
 
-`paas-apps` (2.48.0, API 2.48.0) pilote l'API tenant du PaaS di2amp ; sa
+`paas-apps` (2.110.1, API 2.110.1) pilote l'API tenant du PaaS di2amp ; sa
 version suit celle de la plateforme. Elle offre deux niveaux :
 - des **commandes métier** lisibles : session, applications, builds,
   releases, processus (`ps`), valeurs à fournir (`secrets`), diagnostic des
   échecs, mises à jour de sécurité, bases admises d'un Dockerfile, santé,
   régions ;
-- **`paas-apps api`**, qui donne accès aux **437 opérations** de l'API client,
+- **`paas-apps api`**, qui donne accès aux **446 opérations** de l'API client,
   chacune par son identifiant (`operationId`).
 
 ## 1. Vérifier l'outil et la session

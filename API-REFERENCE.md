@@ -2,7 +2,7 @@
 
 # Référence de l'API tenant
 
-446 opérations, vérifiées contre l'API 2.105.0. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
+446 opérations, vérifiées contre l'API 2.110.1. Base : `https://console.di2amp.com/api`. Contrat complet : [`openapi.yaml`](openapi.yaml). Authentification, enveloppes, erreurs et pagination : [`API.md`](API.md). Les types sont décrits à la fin : [Types](#types).
 
 | Domaine | Contenu | Opérations |
 |---|---|---|
@@ -7791,6 +7791,7 @@ L'échec du dernier déploiement d'une application, dans la liste (`last_failure
 | `deploy_count` | integer | oui |
 | `audit_event_count` | integer | oui |
 | `edge_suspended` | boolean | oui |
+| `last_restore` | [`LastRestore`](#type-lastrestore) | non |
 
 ### Type `AppSecret`
 
@@ -8631,6 +8632,7 @@ API 2.48.0 : la release qu'une application sert, dans `get_app` : son identifian
 | `replicas` | [`ReplicaStatus`](#type-replicastatus) | non |
 | `image` | string | non |
 | `created_at` | string | non |
+| `adopted` | [`ReleaseAdoption`](#type-releaseadoption) | non |
 
 ### Type `CurrentUser`
 
@@ -8745,6 +8747,7 @@ API 2.48.0 : la release qu'une application sert, dans `get_app` : son identifian
 | `retention_until` | JSON libre | non |
 | `recoverable` | JSON libre | non |
 | `recovery_generation` | JSON libre | non |
+| `terms` | JSON libre | non |
 
 ### Type `DeleteAppSecretResponse`
 
@@ -9925,6 +9928,15 @@ Un déploiement (release). Dans `list_deploys`, il porte en plus son état coura
 | `env_vars` | objet (valeurs : string) | oui |
 | `created_at` | string | oui |
 
+### Type `LastRestore`
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `generation` | integer | oui |
+| `state` | `OperationState` | oui |
+| `error_code` | string | non |
+| `at` | string | oui |
+
 ### Type `LaunchJobRequest`
 
 | Champ | Type | Obligatoire |
@@ -11047,6 +11059,19 @@ API 2.48.0 : la valeur d'un nom que le paas.xml déclare fournie par le locatair
 | `limit` | integer | non |
 | `remaining` | integer | non |
 | `allowed_regions` | tableau de string | oui |
+
+### Type `ReleaseAdoption`
+
+API 2.108.2 : l'adoption d'une release que la porte de stabilité avait refusée, dans `get_app` (`current_release.adopted`) : quand (`at`), pourquoi (`reason`, `proof`, `origin`), le verdict renversé (`reversed_verdict`) et l'erreur que l'adoption a levée (`lifted_error`, `paas.error.v1`, telle que `last_error` la donnait pendant le refus). La release sert : `last_error` est alors `null`, et cette erreur reste lisible ici.
+
+| Champ | Type | Obligatoire |
+|---|---|---|
+| `at` | string | oui |
+| `reason` | string | non |
+| `proof` | string | non |
+| `origin` | string | non |
+| `reversed_verdict` | string | non |
+| `lifted_error` | [`PaasError`](#type-paaserror) | non |
 
 ### Type `ReleaseLink`
 

@@ -3,7 +3,7 @@ info:
   title: PaaS di2amp — API tenant
   version: 0.1.0
   description: |
-    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.105.0.
+    Contrat de l'API tenant du PaaS di2amp, vérifié contre l'API 2.110.1.
 
     Il couvre les 446 opérations accessibles aux clients et fait foi pour le SDK `paas-sdk` et la CLI `paas-apps` de ce dépôt.
 
@@ -32,7 +32,7 @@ info:
     l'en-tête `Idempotency-Key` : rejouer la même requête avec la même clé ne
     l'exécute qu'une fois. Les autres écritures ne doivent jamais être rejouées
     automatiquement.
-  x-paas-api-version-tested: 2.105.0
+  x-paas-api-version-tested: 2.110.1
 servers:
 - url: https://console.di2amp.com/api
   description: Production (préfixe `/api` devant `/v1/...`)
@@ -905,6 +905,7 @@ paths:
                       retention_until: {}
                       recoverable: {}
                       recovery_generation: {}
+                      terms: {}
                     additionalProperties: true
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -14242,6 +14243,10 @@ components:
           format: int64
         edge_suspended:
           type: boolean
+        last_restore:
+          allOf:
+          - $ref: '#/components/schemas/LastRestore'
+          nullable: true
       required:
       - app_id
       - name
@@ -15841,6 +15846,15 @@ components:
           type: string
           format: date-time
           nullable: true
+        adopted:
+          allOf:
+          - $ref: '#/components/schemas/ReleaseAdoption'
+          nullable: true
+          description: |
+            API 2.108.2 : présent quand la porte de stabilité a refusé cette
+            release (verdict `crashloop`) et qu'un rapprochement l'a ensuite
+            adoptée, ses conteneurs web prêts sans redémarrage pendant la
+            fenêtre de stabilité ; absent sinon.
     CurrentUser:
       type: object
       required:
@@ -17210,6 +17224,24 @@ components:
       - base_url
       - env_vars
       - created_at
+    LastRestore:
+      type: object
+      properties:
+        generation:
+          type: integer
+          format: int64
+        state:
+          $ref: '#/components/schemas/OperationState'
+        error_code:
+          type: string
+          nullable: true
+        at:
+          type: string
+          format: date-time
+      required:
+      - generation
+      - state
+      - at
     LaunchJobRequest:
       type: object
       properties:
@@ -17784,6 +17816,13 @@ components:
       - collector_endpoints
       - retention_days
       - sample_rate
+    OperationState:
+      type: string
+      enum:
+      - requested
+      - in_progress
+      - succeeded
+      - failed
     PaasError:
       type: object
       description: |
@@ -18837,6 +18876,38 @@ components:
       required:
       - used
       - allowed_regions
+    ReleaseAdoption:
+      type: object
+      description: |
+        API 2.108.2 : l'adoption d'une release que la porte de stabilité avait
+        refusée, dans `get_app` (`current_release.adopted`) : quand (`at`),
+        pourquoi (`reason`, `proof`, `origin`), le verdict renversé
+        (`reversed_verdict`) et l'erreur que l'adoption a levée
+        (`lifted_error`, `paas.error.v1`, telle que `last_error` la donnait
+        pendant le refus). La release sert : `last_error` est alors `null`, et
+        cette erreur reste lisible ici.
+      required:
+      - at
+      properties:
+        at:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          nullable: true
+        proof:
+          type: string
+          nullable: true
+        origin:
+          type: string
+          nullable: true
+        reversed_verdict:
+          type: string
+          nullable: true
+        lifted_error:
+          allOf:
+          - $ref: '#/components/schemas/PaasError'
+          nullable: true
     ReleaseLink:
       type: object
       required:

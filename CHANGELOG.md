@@ -3,6 +3,180 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.110.1 — 2026-11-27
+
+- **CLI `paas-apps` 2.110.1**, vérifiée contre l’API client **2.110.1** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.110.1 : un vendor livré sans verrou garde ce que sa
+  racine remplace ; `build.php.composer_lock_from_vendor` mesurée, utilisable en PHP ; le verrou Ruby d’un arbre de
+  modules se produit (les parties qu’un Gemfile évalue, les gems prises sur GitHub, un refus de Bundler qui cite son
+  erreur) ; corrections de l’installateur (le chart de mysql-operator lu de l’archive, `install.py test` au fil des
+  tests).
+
+## v2.110.0 — 2026-11-26
+
+- **CLI `paas-apps` 2.110.0**, vérifiée contre l’API client **2.110.0** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.110.0 : un vendor livré sans composer.json ni
+  composer.lock se monte (`build.php.composer_lock_from_vendor`), son verrou dérivé de l’inventaire et révisé pour les
+  montées ; les archives de l’arbre que nomment un projet pnpm voyagent jusqu’au résolveur ; la recette Rust exécute
+  `build.env` ; une étape HTTP envoie un formulaire relu après une pause de 2 s ; corrections de l’enveloppe d’un plan
+  pnpm, du paquet forcé que seuls des pairs facultatifs demandaient et du frontal PHP d’une feuille de style.
+
+## v2.109.2 — 2026-11-26
+
+- **CLI `paas-apps` 2.109.2**, vérifiée contre l’API client **2.109.2** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.109.2 et de ses quatre corrections : à côté de versions
+  forcées, une montée déclarée en pnpm d’un paquet qui a plusieurs releases dans le verrou monte de nouveau ; le refus
+  d’une instance restée sous une montée déclarée dit ce que le verrou sait de ce qui la tient, et il est imputé à la
+  plateforme quand la révision est en faute (pnpm, Bun) ; l’archive d’approvisionnement de la release vient en parties.
+
+## v2.109.1 — 2026-11-26
+
+- **CLI `paas-apps` 2.109.1**, vérifiée contre l’API client **2.109.1** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.109.1 et de ses quatre corrections : la liste produite pour
+  une version limitée à un parent est livrée puis relue ; forcer la version d’un pair en pnpm garde ses dépendants à
+  leur version ; un projet pnpm qui nomme une archive de son arbre est refusé avant toute production, l’archive nommée ;
+  un backend de l’arbre qui appelle maturin est refusé au plan.
+
+## v2.109.0 — 2026-11-26
+
+- **CLI `paas-apps` 2.109.0**, vérifiée contre l’API client **2.109.0** : le contrat public garde ses 446
+  opérations ; il décrit l’adoption de la release que sert une application (`current_release.adopted`, schéma
+  `ReleaseAdoption`), que le SDK porte.
+- **`paas-apps apps info`** : la ligne `adopted` dit qu’une release que la porte de stabilité avait refusée a été
+  adoptée ensuite (l’heure, la raison, la preuve), puis le bloc « Error lifted when the release was adopted » donne
+  l’erreur que cette adoption a levée. Sans adoption, rien ne change.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.109.0 : une version forcée peut se limiter aux instances
+  que demande un parent (`parent>nom@X.Y.Z` ; en npm, `.>nom@X.Y.Z` pour la dépendance du projet lui-même) ; trois
+  corrections : le plan d’un gros build voyage une fois et ce build va jusqu’à sa fin ; un plan est borné par ce qui
+  le limite vraiment ; un processus qui sort en erreur puis sert de nouveau est la piste du client, son journal.
+
+## v2.108.2 — 2026-11-25
+
+- **CLI `paas-apps` 2.108.2**, vérifiée contre l’API client **2.108.2** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Pages de la CLI et de l’API** : le guide de la CLI, le guide de l’API et les deux skills donnent la version de la
+  CLI, celle de l’API contre laquelle elle est vérifiée et le nombre d’opérations du contrat, comme le README ; ils
+  gardaient ceux de leur écriture.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.108.2 et de ses quatre corrections : une liste pnpm 12 est
+  livrée ; une installation PHP arrêtée à une étape de l’app est rejouée au démarrage suivant ; une release refusée
+  puis adoptée le dit, avec l’erreur levée ; sous pnpm 12, des montées face à des overrides écrits en flux sont
+  refusées avant toute production.
+
+## v2.108.1 — 2026-11-25
+
+- **CLI `paas-apps` 2.108.1**, vérifiée contre l’API client **2.108.1** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.108.1 et de ses sept corrections : le plan d’une app PHP
+  à frontal Node porte une seule identité ; une liste Bun produite ne change que les paquets déclarés ; la production
+  npm garde une archive d’étiquette GitHub ; pnpm porte les correctifs du verrou quand seules des versions sont
+  forcées ; pnpm 12 révise le verrou sans le dédupliquer ; le résolveur pnpm a le tas de son étape ; une montée npm
+  d’un paquet que les overrides de l’app fixent est refusée au plan.
+
+## v2.108.0 — 2026-11-25
+
+- **CLI `paas-apps` 2.108.0**, vérifiée contre l’API client **2.108.0** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.108.0 : les versions forcées en Bun
+  (`build.bun.dependency_overrides`) et en pnpm (`build.node.dependency_overrides`, déclarées là où le pnpm de l’app
+  lit ses overrides) ; les montées npm à côté d’un instantané du registre et d’un correctif de verrou publiés ; trois
+  corrections : le plan d’une app PHP à frontal Node, les listes Bun produites, les overrides que lit pnpm 10.
+
+## v2.107.5 — 2026-11-24
+
+- **CLI `paas-apps` 2.107.5**, vérifiée contre l’API client **2.107.5** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.107.5, quatre corrections : le Node à déclarer nommé
+  d’abord quand la plateforme doit produire la liste de dépendances ; la correction de sécurité d’une app Go à
+  frontal Node, qui déclare le Node de son catalogue ; Ruby 4.0 sur une ligne à elle (catalogue
+  `2026.11.24.ruby40.1`), sur des images corrigées ; le refus d’un instantané npm qui nomme l’entrée manquante. Les
+  exemples et le squelette Node sont redéclarés sur Node 24.22.3.
+
+## v2.107.4 — 2026-11-24
+
+- **CLI `paas-apps` 2.107.4**, vérifiée contre l’API client **2.107.4** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.107.4, six corrections : la ligne npm de Node 24 sur une
+  chaîne qui porte `make` et npm à son chemin habituel ; le frontal PHP construit après Composer, sur le Node du runtime
+  de la recette npm ; les frontaux des recettes Go préparés et testés sur Node 24.22.3 (catalogues go.18 et go126.5) ;
+  le runtime git des recettes Go 1.26 ; l’enveloppe du plan d’un monorepo Yarn ; la reprise des étapes de la purge.
+
+## v2.107.3 — 2026-11-24
+
+- **CLI `paas-apps` 2.107.3**, vérifiée contre l’API client **2.107.3** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.107.3, six corrections : les tests d’une app Go à frontal
+  pnpm ; le `/tmp` du pod de test, collant, et le `HOME` et les caches du locataire à lui ; la purge d’une app supprimée
+  juste après son build ; Forgejo Actions coupé, qui bloquait l’intégration de certaines listes produites ; le refus
+  d’un Node non servi, qui nomme la version à déclarer ; le code d’un refus gardé hors d’une restauration réussie.
+
+## v2.107.2 — 2026-11-24
+
+- **CLI `paas-apps` 2.107.2**, vérifiée contre l’API client **2.107.2** : le contrat public garde ses 446
+  opérations ; la récupération d’une app supprimée (`GET /v1/apps/{app_id}/recovery`) donne sa dernière restauration
+  (`last_restore` : génération, état, code du refus, heure).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.107.2, cinq corrections : une restauration refusée une
+  première fois laisse l’app restaurable ; la montée d’un paquet Yarn Berry produit sa liste quand le verrou applique
+  des correctifs, et le plan hors ligne lit les espaces de travail comme la plateforme ; les six recettes Node 24
+  servies passent à Node 24.22.3 (une app qui déclare 24.20.0 se redéclare en 24.22.3) ; Yarn 4.18.0 publié sur
+  Node 24 ; Bun sur le Node 24.22.3 de Wolfi.
+
+## v2.107.1 — 2026-11-23
+
+- **CLI `paas-apps` 2.107.1**, vérifiée contre l’API client **2.107.1** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.107.1, cinq corrections : les lignes mesurées de
+  `build.php.test_manifests` dans la référence ; la montée d’un paquet Yarn Berry dans un monorepo lit chaque espace
+  de travail, à toute profondeur ; une release d’une autre image rend ses réplicas à une app qu’une quarantaine avait
+  laissée à 0 ; une faille d’un composant que seul un SBOM embarqué dans l’image déclare n’est plus comptée à l’app ;
+  Yarn 4.18.0 publié sur Node 22 (catalogue `2026.11.23.node-yarn-berry-22.2`).
+
+## v2.107.0 — 2026-11-23
+
+- **CLI `paas-apps` 2.107.0**, vérifiée contre l’API client **2.107.0** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.107.0 : `ignoreWorkspaceCycles` admis dans
+  `pnpm-workspace.yaml` ; le générateur de secrets `base64url` ; `accounts[].after_create`, la commande qui donne son
+  rôle à un compte déclaré, une seule fois ; `build.php.test_manifests`, un manifeste d’outils de test jamais installé ;
+  un `vendor/` commité sans `installed.json` lu par son `installed.php` ; `storage.writable` et `storage.removable`
+  exécutés par la recette npm ; les montées et versions forcées npm sur un verrou à espaces de travail ; deux
+  corrections : les tests Go lisent leurs modules depuis le proxy, le verrou de `build.node.runtime_dependencies` est
+  vérifié à l’acquisition.
+
+## v2.106.2 — 2026-11-23
+
+- **CLI `paas-apps` 2.106.2**, vérifiée contre l’API client **2.106.2** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.106.2 : `paas config plan` joue les contrôles de
+  `source.ignore` à côté d’une liste de dépendances à produire ; la montée déclarée d’un module que l’amont remplace
+  par lui-même donne leurs lignes `go.sum` aux modules qu’il fait monter ; un projet Python qui construit sa propre
+  extension native est refusé au plan, nommé ; le correctif intégré de Yarn sur un paquet alias est lu hors ligne ;
+  `build.php.composer_version` est contrôlée dans tous les modes.
+
+## v2.106.1 — 2026-11-23
+
+- **CLI `paas-apps` 2.106.1**, vérifiée contre l’API client **2.106.1** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.106.1 : `paas config plan` nomme une configuration qui ne
+  valide pas (son code, code de sortie 1) au lieu de refuser un lien qu’elle déclare ; `source.limits.archive_files`
+  atteint la préparation pnpm ; la montée déclarée d’un module que l’amont remplace par lui-même reçoit ses lignes
+  `go.sum`.
+
+## v2.106.0 — 2026-11-22
+
+- **CLI `paas-apps` 2.106.0**, vérifiée contre l’API client **2.106.0** : le contrat public garde ses 446
+  opérations ; la réponse de la suppression d’une app (`DELETE /v1/apps/{app_id}`) gagne `terms`, ce que la
+  suppression implique : le délai pendant lequel l’app se restaure, puis l’effacement (`DeleteAppResponse.terms`
+  dans le SDK).
+- **Documentation du `paas.xml`** à jour de la plateforme 2.106.0 : `web.extensionless` pour les sites publiés ;
+  `healthcheck.startup_failure_threshold` raccordé pour toutes les recettes, son budget borné par les 600 s d’un
+  déploiement ; `minimumReleaseAgeStrict` dans `pnpm-workspace.yaml` ; un lien symbolique de `source.ignore` se
+  déclare par la SHA-256 de son blob ; le plan nomme le refus d’un Dockerfile déclaré qui a changé avant une liste
+  de dépendances à produire.
+
 ## v2.105.0 — 2026-11-21
 
 - **CLI `paas-apps` 2.105.0**, vérifiée contre l’API client **2.105.0** : le contrat public garde ses 446
