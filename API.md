@@ -4,7 +4,7 @@ Ce guide explique les règles communes à toute l'API. Le détail des **446
 opérations** de l'API client, domaine par domaine, est dans la
 **[référence générée](API-REFERENCE.md)**. Le contrat machine, qui fait foi, est
 [`openapi.yaml`](openapi.yaml) (OpenAPI 3.0.3), vérifié contre
-l'API **2.110.1**.
+l'API **2.111.1**.
 
 | Élément | Valeur |
 |---|---|

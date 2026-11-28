@@ -3,6 +3,25 @@
 La version publiée porte un tag Git `vX.Y.Z`. `paas-apps --version` donne la
 version installée.
 
+## v2.111.1 — 2026-11-28
+
+- **CLI `paas-apps` 2.111.1**, vérifiée contre l’API client **2.111.1** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.111.1 : un plan nomme toutes les montées déclarées qu’il
+  refuse, chacune avec son code et ce qui la retient ; le refus d’une montée pnpm nomme aussi la règle `trustPolicy`
+  du `pnpm-workspace.yaml` ; le plan de l’installateur montre une migration refusée ; le catalogue Ruby 4.0
+  `2026.11.28.ruby40.2`, sur Ruby 4.0.10.
+
+## v2.111.0 — 2026-11-28
+
+- **CLI `paas-apps` 2.111.0**, vérifiée contre l’API client **2.111.0** : le contrat public garde ses 446
+  opérations, inchangées.
+- **Documentation du `paas.xml`** à jour de la plateforme 2.111.0 : versions forcées en Yarn berry
+  (`build.node.dependency_overrides`), une montée Yarn berry sur sa ligne, les révisions de pnpm 11 et 12, les montées
+  npm sur un verrou à compléter, un `vendor/` Go refait pour ses montées, la version de Ruby du verrou produit, les
+  montées NuGet sans NU1510 ; un refus du plan nomme toujours son code, son chemin et sa raison ; les catalogues .NET
+  10.0.115, Node 26 officiel et PHP sur libxml2 2.13.9 ; l’installateur applique les migrations du plan de contrôle.
+
 ## v2.110.1 — 2026-11-27
 
 - **CLI `paas-apps` 2.110.1**, vérifiée contre l’API client **2.110.1** : le contrat public garde ses 446

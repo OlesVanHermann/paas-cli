@@ -1,6 +1,6 @@
 # Fonctionnalités du paas.xml — disponibles et prévues
 
-État au 2026-11-27 : plateforme v2.110.1, CLI 2.110.1, catalogue de production du même jour. « Disponible » veut dire
+État au 2026-11-28 : plateforme v2.111.1, CLI 2.111.1, catalogue de production du même jour. « Disponible » veut dire
 accepté par `paas config plan` ; « prouvé » veut dire en service depuis un exemple de cette bibliothèque. La
 liste de toutes les clés, avec leur statut, est dans [PAASXML-REFERENCE.md](PAASXML-REFERENCE.md) : depuis v2.38.4, chaque statut y est
 mesuré recette par recette (npm, pnpm, Yarn, PHP, Python, Python fermé, Ruby, Go, Go + npm, Go + Yarn, Dockerfile) sur un exemple minimal, et un test
@@ -1282,6 +1282,35 @@ La recette de v2.81.0 sur des apps réelles : chaque défaut trouvé est corrig�
 | `build.php.composer_lock_from_vendor` mesurée (v2.110.1) | La référence mesure l'option : utilisable en PHP, sans objet ailleurs. |
 | Verrou Ruby d'un arbre de modules, corrigé (v2.110.1) | Le verrou que la plateforme produit part de 128 fichiers au plus : chaque `Gemfile`, les parties qu'il évalue (`Gemfile.<nom>`, par exemple `Gemfile.modules`, sauf un verrou), les gemspecs. Une gem prise sur GitHub à un commit se résout. Un refus de Bundler (`ENV_DEPENDENCY_RESOLUTION_FAILED`) cite son erreur et la ligne du `Gemfile`, plus sa pile. |
 | `install.py test` au fil des tests, corrigé (v2.110.1) | La commande dit chaque test à sa fin, sur la sortie d'erreur : une commande coupée par une limite de temps laisse ses tests terminés. |
+
+## 5 septoctogies. v2.111.0 (en production depuis le 2026-11-28)
+
+| Fonction | Ce qui change |
+|---|---|
+| Migrations appliquées par l'installateur (v2.111.0) | L'étape du plan de contrôle applique ses migrations avant de le déployer. Une base vide reçoit la référence puis chaque migration ; une base en service, chaque migration que `_sqlx_migrations` ne tient pas, sous le rôle des tables, inscrite comme sqlx l'inscrit. Une migration posée à la main est inscrite sans être rejouée : par ses objets, ou sur la parole de l'opérateur (`--migrations-applied-through`). `verify` refuse un registre incomplet. |
+| Versions forcées en Yarn berry (v2.111.0) | `build.node.dependency_overrides` (`nom@X.Y.Z`) vaut aussi pour Yarn berry. La production écrit les versions forcées en `resolutions` du `package.json` du projet, que la copie de build porte ; chaque descripteur du paquet forcé est à sa version, rien d'autre ne bouge. Jusqu'ici refusé. |
+| .NET 10.0.115 (v2.111.0) | Le catalogue `2026.11.27.dotnet.2` publie la recette `dotnet-10.0.115-v1` : le SDK 10.0.115 et les runtimes 10.0.15 tirés des archives officielles de Microsoft, chacune vérifiée par son SHA-512 publié. C'est la mise à jour de sécurité de `dotnet-10.0.114-v1` (CVE-2026-114149). |
+| Montées Go sur un arbre vendorisé (v2.111.0) | Une montée déclarée (`build.go.module_updates`) sur un arbre vendorisé reconstruit son `vendor/` depuis le `go.mod` révisé, et le reçu de la préparation le dit. |
+| Montées npm sur un verrou à compléter (v2.111.0) | Avec des montées déclarées sur un verrou dont des entrées sont à compléter, la plateforme complète le verrou, puis le révise pour les montées. |
+| Version de Ruby du verrou produit, corrigé (v2.111.0) | Un verrou produit reçoit la version de Ruby servie une fois copié : le build ne refuse plus la version que portait le verrou produit. |
+| PHP sur libxml2 2.13.9, corrigé (v2.111.0) | Le catalogue `2026.11.27.php.35` sert les dix-sept recettes de php.34 sur libxml2 2.13.9-r5 et expat 2.11.0. |
+| SBOM porté par l'image, corrigé (v2.111.0) | Un fichier SBOM que porte l'image (une fixture de test, un document livré) n'est plus pris pour son inventaire : l'image est inventoriée par ce qu'elle installe. |
+| Révisions pnpm 11 et 12, corrigé (v2.111.0) | Un pair câblé vers une version tenue n'est plus compté comme un paquet qui apparaît ; une révision de pnpm 11 ou 12 garde ce que tient le reste de l'arbre et lit chaque membre de l'espace de travail. |
+| Montée Yarn berry sur sa ligne, corrigé (v2.111.0) | Une montée vise sa propre ligne, la plage de chaque descripteur ; les autres lignes du paquet ne bougent plus. |
+| Refus nommés et plan Yarn, corrigé (v2.111.0) | Un refus du plan nomme toujours son code, son chemin et sa raison. Un plan Yarn, classique ou berry, a l'enveloppe de 256 Kio des plans pnpm : un plan admis ne dépasse plus l'enveloppe au build. |
+| Cache de BuildKit borné, corrigé (v2.111.0) | Le cache de BuildKit est borné à 50 GiB par sa propre collecte ; le défaut gardait 10 % du disque par démon. |
+| Copie de la base de vulnérabilités, corrigé (v2.111.0) | La copie s'écrit là où les scans la lisent, dans le projet public `scan-db`, en HTTPS vérifié et avec son propre robot. Jusqu'ici elle n'avait jamais réussi. |
+| Node 26 officiel, corrigé (v2.111.0) | Le catalogue `2026.11.27.node26.3` sert `node-26.13.1-pnpm-workspace-v5` sur le Node 26.13.1 officiel de Node.js et son ICU embarquée (78.3, CLDR 48.0), comme la CI des apps ; le catalogue publie l'Intl de la recette. |
+| Montées NuGet et NU1510, corrigé (v2.111.0) | La référence qu'ajoute une montée déclarée ne fait plus échouer la restauration là où un framework fournit le paquet (NU1510 sous `TreatWarningsAsErrors`). |
+
+## 5 octooctogies. v2.111.1 (en production depuis le 2026-11-28)
+
+| Fonction | Ce qui change |
+|---|---|
+| Montées refusées toutes nommées, corrigé (v2.111.1) | Un plan qui refuse des montées déclarées les nomme toutes, chacune en son diagnostic (son code, la montée, ce qui la retient), et non plus la première seule ; sans elles, le plan admet le reste de la liste. Pour npm, Yarn classique et berry, pnpm, Bun, Composer et Bundler. |
+| Règle de confiance de pnpm nommée, corrigé (v2.111.1) | Quand une montée déclarée laisse une instance sous sa version et que le `pnpm-workspace.yaml` de l'arbre pose `trustPolicy: no-downgrade` sans exclure cette version, le refus nomme aussi cette règle, autre cause possible à côté de la plage de ce qui la demande. |
+| Migrations refusées au plan de l'installateur, corrigé (v2.111.1) | Une migration que l'étape ne peut décider est « refused » au plan, comptée à part, et le plan sort en erreur ; le refus nomme `--migrations-applied-through N`, N la dernière migration posée à la main, et la plus récente migration dont les objets sont là. |
+| Ruby 4.0.10, corrigé (v2.111.1) | Le catalogue `2026.11.28.ruby40.2` sert `ruby40-bundler-offline-v1` sur Ruby 4.0.10 et nginx-mainline 1.31.10, qui corrigent les failles de Ruby 4.0.9 et de nginx-mainline 1.31.8 ; une app sur ce catalogue déclare `runtime_version` 4.0.10. |
 
 ## 6. Prévu
 

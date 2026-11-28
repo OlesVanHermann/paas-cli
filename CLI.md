@@ -3,7 +3,7 @@
 `paas-apps` est la nouvelle CLI du PaaS di2amp.
 
 Elle s'installe à côté de `paas`, sans le remplacer. Sa version suit celle de la
-plateforme : la 2.110.1, vérifiée contre l'API 2.110.1, offre deux niveaux :
+plateforme : la 2.111.1, vérifiée contre l'API 2.111.1, offre deux niveaux :
 - `paas-apps api`, qui donne accès aux **446 opérations** de l'API client ;
 - des commandes métier, pour la session, la lecture des applications, des
   builds et des releases, et le diagnostic complet d'un échec (voir
